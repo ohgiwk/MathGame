@@ -101,9 +101,11 @@ function confirmQuit() {
         <div class="diff-badge">
           {{ DIFFICULTY_LABELS[state.settings.difficulty] }}
         </div>
-        <div class="question-expr">
-          {{ formatQuestion(question) }} <span class="question-eq">= ?</span>
-        </div>
+        <Transition name="question" mode="out-in">
+          <div :key="question.id" class="question-expr">
+            {{ formatQuestion(question) }} <span class="question-eq">= ?</span>
+          </div>
+        </Transition>
 
         <!-- Feedback -->
         <div class="feedback-slot">
@@ -266,6 +268,38 @@ function confirmQuit() {
   font-weight: 800;
   color: var(--gold);
   filter: drop-shadow(0 0 8px rgba(201, 168, 54, 0.4));
+}
+
+/* Question change: the old one slides out to the left, the next slides in from the right */
+.question-leave-active {
+  transition:
+    opacity 0.14s ease-in,
+    transform 0.14s ease-in;
+}
+.question-leave-to {
+  opacity: 0;
+  transform: translateX(-28px);
+}
+.question-enter-active {
+  animation: question-in 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes question-in {
+  from {
+    opacity: 0;
+    transform: translateX(32px) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .question-leave-active {
+    transition: none;
+  }
+  .question-enter-active {
+    animation: none;
+  }
 }
 
 /* Feedback sits in the card's bottom padding */
