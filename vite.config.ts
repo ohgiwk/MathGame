@@ -12,7 +12,7 @@ export default defineConfig({
     vue(),
     VitePWA({
       registerType: 'prompt',
-      includeAssets: ['favicon.svg'],
+      includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
         name: '数の王国',
         short_name: '数の王国',
