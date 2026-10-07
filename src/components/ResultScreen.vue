@@ -3,10 +3,21 @@ import { computed } from 'vue'
 import { useGameStore } from '../stores/gameStore'
 import { formatElapsedTime } from '../logic/resultCalculator'
 import { formatScore } from '../logic/scoreCalculator'
+import { useCountUp } from '../composables/useCountUp'
 
 const store = useGameStore()
 const result = computed(() => store.result)
 const isGameOver = computed(() => result.value?.endReason === 'gameover')
+
+// The result is fixed while this screen is shown, so the numbers count up once on entry.
+// Delays follow the order in which the tiles pop in.
+const r = store.result
+const mistakes = r ? r.totalAnswered - r.correctCount : 0
+const shownScore = useCountUp(r?.score.score ?? 0, { duration: 1000, delay: 250 })
+const shownCorrect = useCountUp(r?.correctCount ?? 0, { duration: 600, delay: 370 })
+const shownAccuracy = useCountUp(r?.accuracy ?? 0, { duration: 600, delay: 490 })
+const shownMistakes = useCountUp(mistakes, { duration: 600, delay: 610 })
+const shownSeconds = useCountUp(r?.elapsedSeconds ?? 0, { duration: 600, delay: 730 })
 </script>
 
 <template>
@@ -18,8 +29,9 @@ const isGameOver = computed(() => result.value?.endReason === 'gameover')
         <h1 class="result-title" :class="isGameOver ? 'title-over' : 'title-clear'">
           {{ isGameOver ? 'ゲームオーバー' : 'ゲームクリア！' }}
         </h1>
-        <p v-if="!isGameOver" class="result-sub">見事な勝利だ、勇者よ</p>
-        <p v-else class="result-sub">到達 {{ result.totalAnswered }} / {{ result.totalCount }}問</p>
+        <p v-if="isGameOver" class="result-sub">
+          到達 {{ result.totalAnswered }} / {{ result.totalCount }}問
+        </p>
       </div>
 
       <!-- Divider -->
@@ -31,33 +43,30 @@ const isGameOver = computed(() => result.value?.endReason === 'gameover')
 
       <!-- Stats grid -->
       <div class="stats-grid rpg-card">
-        <div class="stat-tile stat-wide score-tile">
+        <div class="stat-tile stat-wide score-tile" style="--i: 0">
           <div class="stat-label">スコア</div>
-          <div class="score-value">{{ formatScore(result.score.score) }}</div>
+          <div class="score-value">{{ formatScore(shownScore) }}</div>
           <div v-if="result.isBestScore" class="best-badge">自己ベスト更新！</div>
         </div>
-        <div class="stat-tile">
+        <div class="stat-tile" style="--i: 1">
           <div class="stat-label">正解数</div>
           <div class="stat-value">
-            {{ result.correctCount }}<span class="stat-denom"> / {{ result.totalAnswered }}</span>
+            {{ shownCorrect }}<span class="stat-denom"> / {{ result.totalAnswered }}</span>
           </div>
         </div>
-        <div class="stat-tile">
+        <div class="stat-tile" style="--i: 2">
           <div class="stat-label">正答率</div>
-          <div class="stat-value accent">{{ result.accuracy }}<span class="stat-unit">%</span></div>
+          <div class="stat-value accent">{{ shownAccuracy }}<span class="stat-unit">%</span></div>
         </div>
-        <div class="stat-tile">
+        <div class="stat-tile" style="--i: 3">
           <div class="stat-label">ミス数</div>
-          <div
-            class="stat-value"
-            :class="result.totalAnswered - result.correctCount > 0 ? 'danger' : ''"
-          >
-            {{ result.totalAnswered - result.correctCount }}
+          <div class="stat-value" :class="mistakes > 0 ? 'danger' : ''">
+            {{ shownMistakes }}
           </div>
         </div>
-        <div class="stat-tile">
+        <div class="stat-tile" style="--i: 4">
           <div class="stat-label">タイム</div>
-          <div class="stat-time">{{ formatElapsedTime(result.elapsedSeconds) }}</div>
+          <div class="stat-time">{{ formatElapsedTime(shownSeconds) }}</div>
         </div>
       </div>
 
@@ -68,7 +77,10 @@ const isGameOver = computed(() => result.value?.endReason === 'gameover')
           <span class="btn-gold-label">TRY AGAIN</span>
           <span class="btn-gold-gem">◆</span>
         </button>
-        <button class="btn-ghost" @click="store.resetGame()">ホームに戻る</button>
+        <div class="result-links">
+          <button class="btn-ghost" @click="store.resetGame()">ホームに戻る</button>
+          <button class="btn-ghost" @click="store.openStats()">My Records</button>
+        </div>
       </div>
     </div>
   </div>
@@ -142,6 +154,26 @@ const isGameOver = computed(() => result.value?.endReason === 'gameover')
   padding: 0.7rem 0.8rem;
   text-align: center;
 }
+/* Tiles pop in one after another while their numbers count up */
+.stat-tile {
+  animation: tile-pop 0.4s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  animation-delay: calc(var(--i) * 120ms + 150ms);
+}
+@keyframes tile-pop {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.94);
+  }
+}
+.best-badge {
+  animation: pop-in 0.3s ease 1.35s backwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .stat-tile,
+  .best-badge {
+    animation: none;
+  }
+}
 .stat-wide {
   grid-column: 1 / -1;
 }
@@ -206,5 +238,14 @@ const isGameOver = computed(() => result.value?.endReason === 'gameover')
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+}
+.result-links {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+.result-links .btn-ghost {
+  padding: 13px 4px;
+  font-size: 0.95rem;
 }
 </style>
