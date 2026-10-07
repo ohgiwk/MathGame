@@ -36,7 +36,10 @@ html {
 }
 body {
   background: radial-gradient(ellipse at 30% 20%, #0e1a35 0%, #080d1a 60%, #050a14 100%);
-  font-family: 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', 'Hiragino Sans', sans-serif;
+  /* Cinzel covers Latin letters only (see index.html); digits and Japanese use Shippori Mincho B1 */
+  font-family:
+    'Cinzel', 'Shippori Mincho B1', 'Hiragino Mincho ProN', 'Hiragino Kaku Gothic ProN',
+    'Noto Sans JP', serif;
   -webkit-tap-highlight-color: transparent;
   -webkit-text-size-adjust: 100%;
   /* no text selection or long-press callout anywhere in the app */
@@ -46,6 +49,9 @@ body {
   color: var(--text-main);
 }
 /* --app-height follows the visual viewport (see main.ts) so the layout fits above the keyboard */
+button {
+  font-family: inherit;
+}
 #app {
   height: 100vh;
   height: var(--app-height, 100dvh);
