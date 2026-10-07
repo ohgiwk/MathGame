@@ -108,7 +108,7 @@ function handleStart() {
 
       <!-- スタートボタン -->
       <button class="btn-gem start-btn" @click="handleStart">
-        ⚔ ゲーム開始
+        ゲーム開始
       </button>
     </div>
   </div>
