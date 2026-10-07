@@ -6,57 +6,50 @@ defineProps<{
 </script>
 
 <template>
-  <div class="feedback-overlay" :class="correct ? 'correct' : 'incorrect'">
-    <div class="feedback-content pop-in">
-      <div class="feedback-icon">{{ correct ? '◎' : '✕' }}</div>
-      <div class="feedback-label">{{ correct ? '正解！' : '不正解' }}</div>
-      <div v-if="!correct" class="feedback-answer">
-        正解は <span class="answer-val">{{ correctAnswer }}</span>
-      </div>
-    </div>
+  <div class="feedback-pill pop-in" :class="correct ? 'correct' : 'incorrect'">
+    <span class="feedback-icon">{{ correct ? '◎' : '✕' }}</span>
+    <span class="feedback-label">{{ correct ? '正解！' : '不正解' }}</span>
+    <span v-if="!correct" class="feedback-answer">
+      正解は <span class="answer-val">{{ correctAnswer }}</span>
+    </span>
   </div>
 </template>
 
 <style scoped>
-.feedback-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.feedback-pill {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  padding: 6px 16px;
+  border-radius: 99px;
+  border: 1px solid;
+  font-weight: 800;
+  white-space: nowrap;
 }
 .correct {
-  background: radial-gradient(circle at center, rgba(10,190,130,0.95) 0%, rgba(4,90,70,0.97) 100%);
+  color: #5EF0B5;
+  border-color: rgba(16,200,122,0.6);
+  background: rgba(16,200,122,0.14);
+  box-shadow: 0 0 14px rgba(16,200,122,0.3);
 }
 .incorrect {
-  background: radial-gradient(circle at center, rgba(200,40,70,0.95) 0%, rgba(90,10,30,0.97) 100%);
+  color: #FF8AA5;
+  border-color: rgba(224,48,96,0.6);
+  background: rgba(224,48,96,0.14);
+  box-shadow: 0 0 14px rgba(224,48,96,0.3);
 }
 
-.feedback-content {
-  text-align: center;
-  color: #fff;
-  padding: 2rem;
-}
-
-.feedback-icon {
-  font-size: 5rem;
-  line-height: 1;
-  margin-bottom: 0.5rem;
-  filter: drop-shadow(0 0 20px rgba(255,255,255,0.4));
-}
-.feedback-label {
-  font-size: 2rem;
-  font-weight: 900;
-  letter-spacing: 0.1em;
-}
+.feedback-icon { font-size: 0.95rem; }
+.feedback-label { font-size: 0.95rem; letter-spacing: 0.08em; }
 .feedback-answer {
-  margin-top: 0.8rem;
-  font-size: 1.1rem;
-  opacity: 0.9;
+  margin-left: 0.3rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-main);
 }
 .answer-val {
-  font-size: 1.8rem;
+  font-size: 1.05rem;
   font-weight: 900;
+  font-variant-numeric: tabular-nums;
 }
 </style>

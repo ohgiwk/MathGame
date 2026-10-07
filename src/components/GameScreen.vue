@@ -102,6 +102,17 @@ function confirmQuit() {
         </div>
         <div class="question-expr">{{ formatQuestion(question) }} <span class="question-eq">= ?</span></div>
 
+        <!-- Feedback -->
+        <div class="feedback-slot">
+          <Transition name="feedback">
+            <FeedbackDisplay
+              v-if="state.feedback"
+              :correct="state.feedback.correct"
+              :correct-answer="state.feedback.correctAnswer"
+            />
+          </Transition>
+        </div>
+
         <div class="gem-corner tl">◆</div>
         <div class="gem-corner tr">◆</div>
         <div class="gem-corner bl">◆</div>
@@ -111,7 +122,14 @@ function confirmQuit() {
 
     <!-- Input area -->
     <div class="input-area">
-      <div class="answer-input answer-display" :class="{ empty: !inputValue }">
+      <div
+        class="answer-input answer-display"
+        :class="{
+          empty: !inputValue,
+          correct: state.feedback?.correct === true,
+          incorrect: state.feedback?.correct === false,
+        }"
+      >
         {{ inputValue || '答えを入力' }}
       </div>
       <div class="num-pad">
@@ -136,15 +154,6 @@ function confirmQuit() {
         </button>
       </div>
     </div>
-
-    <!-- Feedback overlay -->
-    <Transition name="feedback">
-      <FeedbackDisplay
-        v-if="state.feedback"
-        :correct="state.feedback.correct"
-        :correct-answer="state.feedback.correctAnswer"
-      />
-    </Transition>
 
     <!-- Quit confirmation dialog -->
     <Transition name="dialog">
@@ -266,6 +275,17 @@ function confirmQuit() {
   filter: drop-shadow(0 0 8px rgba(201,168,54,0.4));
 }
 
+/* Feedback sits in the card's bottom padding */
+.feedback-slot {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 1.4rem;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
 .gem-corner {
   position: absolute;
   font-size: 0.55rem;
@@ -295,6 +315,16 @@ function confirmQuit() {
   font-size: 32px;
   line-height: 1.2;
   padding: 10px;
+}
+.answer-display.correct {
+  border-color: var(--gem-emerald);
+  color: #5EF0B5;
+  box-shadow: 0 0 0 3px rgba(16,200,122,0.2);
+}
+.answer-display.incorrect {
+  border-color: var(--gem-ruby);
+  color: #FF8AA5;
+  box-shadow: 0 0 0 3px rgba(224,48,96,0.2);
 }
 .answer-display.empty {
   color: #3A4E70;
@@ -339,6 +369,7 @@ function confirmQuit() {
   .question-area { padding: 0.6rem 1.2rem; }
   .question-card { padding: 1.2rem 1.5rem calc(1.2rem + 26px + 0.5rem); }
   .diff-badge { margin-bottom: 0.5rem; }
+  .feedback-slot { bottom: 0.6rem; }
   .input-area { gap: 0.5rem; }
   .num-pad { gap: 0.45rem; }
 }

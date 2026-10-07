@@ -145,6 +145,11 @@ function handleStart() {
   background-clip: text;
   letter-spacing: 0.08em;
   line-height: 1.2;
+  animation: title-glow 2.2s ease-in-out infinite;
+}
+@keyframes title-glow {
+  0%, 100% { filter: drop-shadow(0 0 4px rgba(201,168,54,0.25)); }
+  50%      { filter: drop-shadow(0 0 14px rgba(224,192,96,0.7)); }
 }
 
 .setup-sub {
@@ -235,6 +240,7 @@ function handleStart() {
 @media (prefers-reduced-motion: reduce) {
   .opt-btn.active { animation: none; border-color: var(--gold); }
   .opt-btn.active::before { display: none; }
+  .setup-title { animation: none; }
 }
 
 .opt-main { font-size: 1rem; font-weight: 700; }
