@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useGameStore } from '../stores/gameStore'
 import { useStatsStore } from '../stores/statsStore'
 import { summarize } from '../logic/statsCalculator'
@@ -38,6 +38,29 @@ function showSlide(index: number) {
   const el = slidesRef.value
   el?.scrollTo({ left: index * el.clientWidth })
 }
+
+// Once the numbers have finished counting up and had a moment to be read, the panel moves on to
+// the totals by itself. Touching the panel first means the player is steering, so it stays put.
+const COUNT_UP_END_MS = 1330
+const RESULT_HOLD_MS = 2500
+let autoSlideTimer: ReturnType<typeof setTimeout> | null = null
+
+function cancelAutoSlide() {
+  if (autoSlideTimer !== null) {
+    clearTimeout(autoSlideTimer)
+    autoSlideTimer = null
+  }
+}
+
+onMounted(() => {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+  autoSlideTimer = setTimeout(() => {
+    autoSlideTimer = null
+    showSlide(1)
+  }, COUNT_UP_END_MS + RESULT_HOLD_MS)
+})
+
+onBeforeUnmount(cancelAutoSlide)
 </script>
 
 <template>
@@ -63,7 +86,13 @@ function showSlide(index: number) {
 
       <!-- Result panel: this game / totals -->
       <div class="result-panel rpg-card">
-        <div ref="slidesRef" class="slides" @scroll.passive="syncActiveSlide">
+        <div
+          ref="slidesRef"
+          class="slides"
+          @scroll.passive="syncActiveSlide"
+          @pointerdown.passive="cancelAutoSlide"
+          @wheel.passive="cancelAutoSlide"
+        >
           <div class="stats-grid">
             <div class="tile stat-tile stat-wide score-tile" style="--i: 0">
               <div class="stat-label">スコア</div>
@@ -129,7 +158,7 @@ function showSlide(index: number) {
             :class="{ active: activeSlide === i }"
             :aria-label="label"
             :aria-current="activeSlide === i"
-            @click="showSlide(i)"
+            @click="(cancelAutoSlide(), showSlide(i))"
           ></button>
         </div>
       </div>
