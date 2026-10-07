@@ -3,6 +3,7 @@ import type {
   ActualOperation,
   QuestionCount,
   GameOutcome,
+  Rating,
   ScoreBreakdown,
 } from '../types/game'
 import { FEEDBACK_DURATION_MS } from './constants'
@@ -88,4 +89,27 @@ export function calculateScore(input: GameOutcome): ScoreBreakdown {
     clearMultiplier: clear,
     score: Math.round(base * speed * mistake * clear),
   }
+}
+
+/** Lowest share of the best possible score that earns each rating; anything below is 'nice' */
+const RATING_THRESHOLDS: [Rating, number][] = [
+  ['excellent', 0.85],
+  ['great', 0.6],
+  ['good', 0.4],
+]
+
+/**
+ * Rates a cleared game by its score relative to the best possible one for the same settings
+ * (every answer correct at full speed), so every difficulty and operation is rated alike.
+ */
+export function calculateRating(outcome: GameOutcome, score: number): Rating | null {
+  if (outcome.endReason !== 'clear') return null
+  const best = calculateScore({
+    ...outcome,
+    correctCount: outcome.questionCount,
+    totalAnswered: outcome.questionCount,
+    elapsedSeconds: 0,
+  }).score
+  const share = score / best
+  return RATING_THRESHOLDS.find(([, min]) => share >= min)?.[0] ?? 'nice'
 }

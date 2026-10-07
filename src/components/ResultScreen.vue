@@ -4,6 +4,7 @@ import { useGameStore } from '../stores/gameStore'
 import { useStatsStore } from '../stores/statsStore'
 import { summarize } from '../logic/statsCalculator'
 import { formatScore, formatElapsedTime, formatTotalTime } from '../logic/format'
+import { RATING_LABELS } from '../logic/labels'
 import { useCountUp } from '../composables/useCountUp'
 
 const store = useGameStore()
@@ -70,7 +71,7 @@ onBeforeUnmount(cancelAutoSlide)
       <div class="result-header">
         <div class="result-icon">{{ isGameOver ? '💀' : '🏆' }}</div>
         <h1 class="result-title" :class="isGameOver ? 'title-over' : 'title-clear'">
-          {{ isGameOver ? 'ゲームオーバー' : 'ゲームクリア！' }}
+          {{ result.rating ? RATING_LABELS[result.rating] : 'ゲームオーバー' }}
         </h1>
         <p v-if="isGameOver" class="result-sub">
           到達 {{ outcome.totalAnswered }} / {{ outcome.questionCount }}問

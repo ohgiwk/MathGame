@@ -1,5 +1,5 @@
 import type { GameState, GameResult, GameEndReason, GameOutcome } from '../types/game'
-import { calculateScore } from './scoreCalculator'
+import { calculateScore, calculateRating } from './scoreCalculator'
 
 /** `now` is the timestamp (ms) at which the game ended. */
 export function calculateResult(
@@ -17,9 +17,11 @@ export function calculateResult(
     elapsedSeconds: Math.round((now - state.startedAt) / 1000),
   }
 
+  const score = calculateScore(outcome)
   return {
     outcome,
     accuracy: Math.round((outcome.correctCount / outcome.totalAnswered) * 100),
-    score: calculateScore(outcome),
+    score,
+    rating: calculateRating(outcome, score.score),
   }
 }

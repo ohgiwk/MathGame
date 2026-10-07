@@ -4,6 +4,8 @@ export type ActualOperation = Exclude<Operation, 'mixed'>
 export type Screen = 'setup' | 'game' | 'result' | 'stats'
 export type GameEndReason = 'clear' | 'gameover'
 export type QuestionCount = 5 | 10 | 15
+/** How good a cleared game's score is, best first */
+export type Rating = 'excellent' | 'great' | 'good' | 'nice'
 
 export interface GameSettings {
   questionCount: QuestionCount
@@ -64,6 +66,8 @@ export interface GameResult {
   /** 0-100 */
   accuracy: number
   score: ScoreBreakdown
+  /** null on a game over */
+  rating: Rating | null
   /** true when this beats every earlier score for the same difficulty and operation */
   isBestScore: boolean
 }

@@ -1,4 +1,4 @@
-import type { Difficulty, Operation, ActualOperation, QuestionCount } from '../types/game'
+import type { Difficulty, Operation, ActualOperation, QuestionCount, Rating } from '../types/game'
 
 export const QUESTION_COUNTS: QuestionCount[] = [5, 10, 15]
 export const DIFFICULTIES: Difficulty[] = ['easy', 'normal', 'hard']
@@ -31,6 +31,13 @@ export const OPERATION_LABELS: Record<Operation, string> = {
   multiplication: '掛け算',
   division: '割り算',
   mixed: 'ミックス',
+}
+
+export const RATING_LABELS: Record<Rating, string> = {
+  excellent: 'EXCELLENT!',
+  great: 'GREAT!',
+  good: 'GOOD!',
+  nice: 'NICE!',
 }
 
 export const DIFFICULTY_DESCRIPTIONS: Record<Difficulty, string> = {

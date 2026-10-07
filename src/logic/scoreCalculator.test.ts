@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import type { GameOutcome } from '../types/game'
-import { calculateScore } from './scoreCalculator'
+import { calculateScore, calculateRating } from './scoreCalculator'
 
 const base: GameOutcome = {
   difficulty: 'easy',
@@ -80,5 +80,43 @@ describe('calculateScore', () => {
   it('scores zero when nothing was answered correctly', () => {
     const s = calculateScore({ ...base, endReason: 'gameover', correctCount: 0, totalAnswered: 3 })
     expect(s.score).toBe(0)
+  })
+})
+
+describe('calculateRating', () => {
+  const rate = (overrides: Partial<GameOutcome>) => {
+    const outcome: GameOutcome = {
+      ...base,
+      questionCount: 10,
+      correctCount: 10,
+      totalAnswered: 10,
+      ...overrides,
+    }
+    return calculateRating(outcome, calculateScore(outcome).score)
+  }
+
+  it('rates a fast perfect clear excellent on any settings', () => {
+    expect(rate({ elapsedSeconds: 20 })).toBe('excellent')
+    expect(
+      rate({
+        difficulty: 'hard',
+        operation: 'mixed',
+        questionCount: 15,
+        correctCount: 15,
+        totalAnswered: 15,
+        elapsedSeconds: 60,
+      }),
+    ).toBe('excellent')
+  })
+
+  it('rates lower as mistakes and time add up', () => {
+    expect(rate({ correctCount: 9, elapsedSeconds: 20 })).toBe('great')
+    expect(rate({ elapsedSeconds: 120 })).toBe('great')
+    expect(rate({ correctCount: 8, elapsedSeconds: 20 })).toBe('good')
+    expect(rate({ correctCount: 8, elapsedSeconds: 120 })).toBe('nice')
+  })
+
+  it('gives no rating on a game over', () => {
+    expect(rate({ endReason: 'gameover', correctCount: 7 })).toBeNull()
   })
 })
