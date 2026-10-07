@@ -162,7 +162,6 @@ function confirmQuit() {
   flex-shrink: 0;
   padding: calc(0.8rem + max(1rem, env(safe-area-inset-top))) 1.2rem 0.6rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  background: rgba(0, 0, 0, 0.2);
 }
 .header-top {
   display: flex;

@@ -31,11 +31,19 @@ body {
 }
 /* pan only: disables pinch and double-tap zoom */
 html {
-  background: #080d1a;
+  background: #0e1a35;
   touch-action: pan-x pan-y;
 }
 body {
-  background: radial-gradient(ellipse at 30% 20%, #0e1a35 0%, #080d1a 60%, #050a14 100%);
+  /* The top band is a flat #0e1a35 (same as theme-color) under the status bar, fading into the gradient */
+  background:
+    linear-gradient(
+      to bottom,
+      #0e1a35 0,
+      #0e1a35 env(safe-area-inset-top, 0px),
+      rgba(14, 26, 53, 0) calc(env(safe-area-inset-top, 0px) + 140px)
+    ),
+    radial-gradient(ellipse at 30% 20%, #0e1a35 0%, #080d1a 60%, #050a14 100%);
   /* Cinzel covers Latin letters only (see index.html); digits and Japanese use Shippori Mincho B1 */
   font-family:
     'Cinzel', 'Shippori Mincho B1', 'Hiragino Mincho ProN', 'Hiragino Kaku Gothic ProN',

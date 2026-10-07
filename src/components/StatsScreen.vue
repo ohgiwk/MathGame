@@ -32,7 +32,7 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
       <!-- Header -->
       <div class="stats-header">
         <button class="back-btn" aria-label="ホームに戻る" @click="store.resetGame()">‹</button>
-        <h1 class="stats-title">記録</h1>
+        <h1 class="stats-title">My Records</h1>
       </div>
 
       <!-- 累計 -->
@@ -194,7 +194,7 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
 .stats-title {
   font-size: 1.4rem;
   font-weight: 900;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.12em;
   color: var(--gold-light);
 }
 

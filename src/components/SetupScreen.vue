@@ -98,7 +98,7 @@ function handleStart() {
 
       <!-- スタートボタン -->
       <button class="btn-gem start-btn" @click="handleStart">START</button>
-      <button class="btn-ghost" @click="store.openStats()">記録を見る</button>
+      <button class="btn-ghost" @click="store.openStats()">My Records</button>
     </div>
   </div>
 </template>
