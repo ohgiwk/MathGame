@@ -4,10 +4,8 @@ import { useGameStore } from '../stores/gameStore'
 import { useStatsStore } from '../stores/statsStore'
 import type { Difficulty } from '../types/game'
 import { formatElapsedTime } from '../logic/resultCalculator'
+import { DIFFICULTIES, DIFFICULTY_LABELS, OPERATION_LABELS } from '../logic/labels'
 import {
-  DIFFICULTIES,
-  DIFFICULTY_LABELS,
-  OPERATION_LABELS,
   summarize,
   summarizeByOperation,
   formatTotalTime,
@@ -22,14 +20,15 @@ const statsStore = useStatsStore()
 const selectedDifficulty = ref<Difficulty>(store.settings.difficulty)
 
 const total = computed(() => summarize(statsStore.records))
-const byOperation = computed(() => summarizeByOperation(statsStore.records, selectedDifficulty.value))
+const byOperation = computed(() =>
+  summarizeByOperation(statsStore.records, selectedDifficulty.value),
+)
 const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
 </script>
 
 <template>
   <div class="stats-root">
     <div class="stats-inner fade-in-up">
-
       <!-- Header -->
       <div class="stats-header">
         <button class="back-btn" aria-label="ホームに戻る" @click="store.resetGame()">‹</button>
@@ -60,7 +59,8 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
           <div class="total-item">
             <div class="total-label">正答率</div>
             <div class="total-value accent">
-              {{ total.accuracy ?? '–' }}<span v-if="total.accuracy !== null" class="total-unit">%</span>
+              {{ total.accuracy ?? '–'
+              }}<span v-if="total.accuracy !== null" class="total-unit">%</span>
             </div>
           </div>
         </div>
@@ -93,7 +93,11 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
             </tr>
           </thead>
           <tbody>
-            <tr v-for="row in byOperation" :key="row.operation" :class="{ unplayed: row.summary.playCount === 0 }">
+            <tr
+              v-for="row in byOperation"
+              :key="row.operation"
+              :class="{ unplayed: row.summary.playCount === 0 }"
+            >
               <td class="col-name">{{ OPERATION_LABELS[row.operation] }}</td>
               <td>{{ row.summary.playCount }}</td>
               <td>{{ row.summary.clearCount }}</td>
@@ -101,7 +105,11 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
                 {{ row.summary.accuracy !== null ? `${row.summary.accuracy}%` : '–' }}
               </td>
               <td>
-                {{ row.summary.secondsPerQuestion !== null ? `${row.summary.secondsPerQuestion.toFixed(1)}秒` : '–' }}
+                {{
+                  row.summary.secondsPerQuestion !== null
+                    ? `${row.summary.secondsPerQuestion.toFixed(1)}秒`
+                    : '–'
+                }}
               </td>
             </tr>
           </tbody>
@@ -112,14 +120,17 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
       <div class="rpg-card stats-section history-section">
         <h2 class="section-label">
           <span class="section-gem">◆</span> 履歴
-          <span v-if="statsStore.records.length > HISTORY_LIMIT" class="section-note">最新{{ HISTORY_LIMIT }}件</span>
+          <span v-if="statsStore.records.length > HISTORY_LIMIT" class="section-note"
+            >最新{{ HISTORY_LIMIT }}件</span
+          >
         </h2>
         <p v-if="history.length === 0" class="empty-note">まだ記録がありません</p>
         <ul v-else class="history-list">
           <li v-for="r in history" :key="r.id" class="history-row">
             <div class="history-main">
               <div class="history-mode">
-                {{ DIFFICULTY_LABELS[r.difficulty] }} · {{ OPERATION_LABELS[r.operation] }} · {{ r.questionCount }}問
+                {{ DIFFICULTY_LABELS[r.difficulty] }} · {{ OPERATION_LABELS[r.operation] }} ·
+                {{ r.questionCount }}問
               </div>
               <div class="history-date">{{ formatPlayedAt(r.playedAt) }}</div>
             </div>
@@ -135,7 +146,6 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
           </li>
         </ul>
       </div>
-
     </div>
   </div>
 </template>
@@ -178,7 +188,9 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
   padding-bottom: 4px;
   cursor: pointer;
 }
-.back-btn:active { background: rgba(255,255,255,0.05); }
+.back-btn:active {
+  background: rgba(255, 255, 255, 0.05);
+}
 .stats-title {
   font-size: 1.4rem;
   font-weight: 900;
@@ -186,36 +198,40 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
   color: var(--gold-light);
 }
 
-.stats-section { padding: 0.8rem 1rem; flex-shrink: 0; }
+.stats-section {
+  padding: 0.8rem 1rem;
+  flex-shrink: 0;
+}
 .section-label {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--text-sub);
-  letter-spacing: 0.12em;
   margin-bottom: 0.6rem;
   min-height: 26px;
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
 }
-.section-gem {
-  color: var(--gem-blue);
-  font-size: 0.6rem;
-  filter: drop-shadow(0 0 4px var(--gem-blue));
+.section-note {
+  margin-left: auto;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  opacity: 0.8;
 }
-.section-note { margin-left: auto; font-weight: 500; letter-spacing: 0.04em; opacity: 0.8; }
 
 /* 累計 */
-.total-row { display: grid; grid-template-columns: 1fr 1fr 1.6fr 1fr; gap: 0.4rem; }
+.total-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.6fr 1fr;
+  gap: 0.4rem;
+}
 .total-item {
-  background: rgba(255,255,255,0.03);
+  background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 6px 2px 7px;
   text-align: center;
   min-width: 0;
 }
-.total-label { font-size: 0.62rem; color: var(--text-sub); letter-spacing: 0.06em; }
+.total-label {
+  font-size: 0.62rem;
+  color: var(--text-sub);
+  letter-spacing: 0.06em;
+}
 .total-value {
   font-size: 1.15rem;
   font-weight: 900;
@@ -223,11 +239,22 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
-.total-value.accent { color: var(--gem-teal); }
-.total-unit { font-size: 0.65rem; font-weight: 600; color: var(--text-sub); margin-left: 1px; }
+.total-value.accent {
+  color: var(--gem-teal);
+}
+.total-unit {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-sub);
+  margin-left: 1px;
+}
 
 /* 難易度・種類ごと */
-.diff-tabs { margin-left: auto; display: flex; gap: 4px; }
+.diff-tabs {
+  margin-left: auto;
+  display: flex;
+  gap: 4px;
+}
 .diff-tab {
   background: transparent;
   border: 1px solid var(--border);
@@ -243,7 +270,7 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
 .diff-tab.active {
   border-color: var(--gold);
   color: var(--gold-light);
-  background: linear-gradient(135deg, #1C2B50, #162040);
+  background: linear-gradient(135deg, #1c2b50, #162040);
 }
 
 .op-table {
@@ -264,17 +291,38 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
   font-weight: 700;
   text-align: right;
   padding: 6px 0;
-  border-top: 1px solid rgba(255,255,255,0.06);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
-.op-table .col-name { text-align: left; font-weight: 600; color: var(--text-main); }
-.op-table th.col-name { color: var(--text-sub); }
-.col-accuracy { color: var(--gem-teal); }
-.unplayed td { color: #4A5E85; font-weight: 500; }
+.op-table .col-name {
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-main);
+}
+.op-table th.col-name {
+  color: var(--text-sub);
+}
+.col-accuracy {
+  color: var(--gem-teal);
+}
+.unplayed td {
+  color: #4a5e85;
+  font-weight: 500;
+}
 
 /* 履歴 */
-.empty-note { text-align: center; color: var(--text-sub); font-size: 0.85rem; padding: 1rem 0; }
+.empty-note {
+  text-align: center;
+  color: var(--text-sub);
+  font-size: 0.85rem;
+  padding: 1rem 0;
+}
 /* The page itself never scrolls; only the history list does, inside its card */
-.history-section { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.history-section {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
 .history-list {
   list-style: none;
   flex: 1;
@@ -288,17 +336,51 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
   align-items: center;
   gap: 0.7rem;
   padding: 0.5rem 0;
-  border-top: 1px solid rgba(255,255,255,0.06);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
-.history-row:first-child { border-top: none; padding-top: 0; }
-.history-row:last-child { padding-bottom: 0; }
-.history-main { flex: 1; min-width: 0; }
-.history-mode { font-size: 0.82rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.history-date { font-size: 0.7rem; color: var(--text-sub); margin-top: 2px; font-variant-numeric: tabular-nums; }
-.history-result { text-align: right; font-variant-numeric: tabular-nums; }
-.history-score { font-size: 1rem; font-weight: 900; color: var(--gold-light); }
-.history-denom { font-size: 0.75rem; font-weight: 600; color: var(--text-sub); }
-.history-time { font-size: 0.7rem; color: var(--text-sub); margin-top: 1px; }
+.history-row:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+.history-row:last-child {
+  padding-bottom: 0;
+}
+.history-main {
+  flex: 1;
+  min-width: 0;
+}
+.history-mode {
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.history-date {
+  font-size: 0.7rem;
+  color: var(--text-sub);
+  margin-top: 2px;
+  font-variant-numeric: tabular-nums;
+}
+.history-result {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.history-score {
+  font-size: 1rem;
+  font-weight: 900;
+  color: var(--gold-light);
+}
+.history-denom {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-sub);
+}
+.history-time {
+  font-size: 0.7rem;
+  color: var(--text-sub);
+  margin-top: 1px;
+}
 .history-badge {
   flex-shrink: 0;
   width: 3.4rem;
@@ -309,6 +391,14 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
   border-radius: 99px;
   border: 1px solid;
 }
-.history-badge.clear { color: #5EF0B5; border-color: rgba(16,200,122,0.5); background: rgba(16,200,122,0.12); }
-.history-badge.gameover { color: #FF8AA5; border-color: rgba(224,48,96,0.5); background: rgba(224,48,96,0.12); }
+.history-badge.clear {
+  color: #5ef0b5;
+  border-color: rgba(16, 200, 122, 0.5);
+  background: rgba(16, 200, 122, 0.12);
+}
+.history-badge.gameover {
+  color: #ff8aa5;
+  border-color: rgba(224, 48, 96, 0.5);
+  background: rgba(224, 48, 96, 0.12);
+}
 </style>

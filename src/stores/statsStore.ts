@@ -29,7 +29,11 @@ export const useStatsStore = defineStore('stats', () => {
 
   function addRecord(record: Omit<GameRecord, 'id' | 'playedAt'>) {
     const playedAt = Date.now()
-    records.value.unshift({ ...record, id: `${playedAt}-${Math.random().toString(36).slice(2, 8)}`, playedAt })
+    records.value.unshift({
+      ...record,
+      id: `${playedAt}-${Math.random().toString(36).slice(2, 8)}`,
+      playedAt,
+    })
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(records.value))
     } catch {

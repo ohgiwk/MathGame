@@ -2,7 +2,6 @@
 import { useRegisterSW } from 'virtual:pwa-register/vue'
 
 const { needRefresh, updateServiceWorker } = useRegisterSW({
-  onRegisteredSW(_swUrl: string, _r: ServiceWorkerRegistration | undefined) {},
   onRegisterError(error: unknown) {
     console.error('SW registration error', error)
   },
@@ -44,11 +43,13 @@ function dismiss() {
   z-index: 100;
   width: calc(100% - 2rem);
   max-width: 420px;
-  background: linear-gradient(135deg, #162040 0%, #1A2744 100%);
-  border: 1px solid #3B5CF0;
+  background: linear-gradient(135deg, #162040 0%, #1a2744 100%);
+  border: 1px solid #3b5cf0;
   border-radius: 16px;
   padding: 1rem 1rem 1rem 1.1rem;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 16px rgba(59,92,240,0.3);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.6),
+    0 0 16px rgba(59, 92, 240, 0.3);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -65,21 +66,23 @@ function dismiss() {
 
 .pwa-gem {
   font-size: 1.4rem;
-  color: #4C7CFF;
-  filter: drop-shadow(0 0 6px #4C7CFF);
+  color: #4c7cff;
+  filter: drop-shadow(0 0 6px #4c7cff);
   flex-shrink: 0;
 }
 
-.pwa-text { min-width: 0; }
+.pwa-text {
+  min-width: 0;
+}
 .pwa-title {
   font-size: 0.9rem;
   font-weight: 800;
-  color: #D6E0F5;
+  color: #d6e0f5;
   white-space: nowrap;
 }
 .pwa-sub {
   font-size: 0.72rem;
-  color: #7A95BF;
+  color: #7a95bf;
   margin-top: 2px;
   white-space: nowrap;
   overflow: hidden;
@@ -94,7 +97,7 @@ function dismiss() {
 }
 
 .pwa-update-btn {
-  background: linear-gradient(135deg, #3B5CF0, #5B3CF0);
+  background: linear-gradient(135deg, #3b5cf0, #5b3cf0);
   color: #fff;
   font-size: 0.82rem;
   font-weight: 700;
@@ -103,28 +106,36 @@ function dismiss() {
   padding: 8px 14px;
   cursor: pointer;
   white-space: nowrap;
-  box-shadow: 0 2px 10px rgba(76,124,255,0.4);
+  box-shadow: 0 2px 10px rgba(76, 124, 255, 0.4);
   transition: transform 0.1s;
 }
-.pwa-update-btn:active { transform: scale(0.95); }
+.pwa-update-btn:active {
+  transform: scale(0.95);
+}
 
 .pwa-dismiss-btn {
   background: transparent;
   border: none;
-  color: #7A95BF;
+  color: #7a95bf;
   font-size: 1rem;
   cursor: pointer;
   padding: 4px 6px;
   line-height: 1;
   transition: color 0.15s;
 }
-.pwa-dismiss-btn:hover { color: #D6E0F5; }
+.pwa-dismiss-btn:hover {
+  color: #d6e0f5;
+}
 
 .pwa-toast-enter-active {
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
 }
 .pwa-toast-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
 }
 .pwa-toast-enter-from {
   opacity: 0;

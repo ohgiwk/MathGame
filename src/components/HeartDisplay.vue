@@ -5,15 +5,17 @@ import { MAX_LIVES } from '../types/game'
 const props = defineProps<{ lives: number }>()
 
 const shaking = ref(false)
-let prevLives = props.lives
-
-watch(() => props.lives, (newVal) => {
-  if (newVal < prevLives) {
-    shaking.value = true
-    setTimeout(() => { shaking.value = false }, 400)
-  }
-  prevLives = newVal
-})
+watch(
+  () => props.lives,
+  (lives, prevLives) => {
+    if (lives < prevLives) {
+      shaking.value = true
+      setTimeout(() => {
+        shaking.value = false
+      }, 400)
+    }
+  },
+)
 </script>
 
 <template>
@@ -23,7 +25,8 @@ watch(() => props.lives, (newVal) => {
       :key="i"
       class="heart"
       :class="i <= props.lives ? 'heart-on' : 'heart-off'"
-    >{{ i <= props.lives ? '❤' : '♡' }}</span>
+      >{{ i <= props.lives ? '❤' : '♡' }}</span
+    >
   </div>
 </template>
 
@@ -39,10 +42,10 @@ watch(() => props.lives, (newVal) => {
   user-select: none;
 }
 .heart-on {
-  color: #FF3355;
-  filter: drop-shadow(0 0 5px rgba(255,50,80,0.7));
+  color: #ff3355;
+  filter: drop-shadow(0 0 5px rgba(255, 50, 80, 0.7));
 }
 .heart-off {
-  color: #2A3A55;
+  color: #2a3a55;
 }
 </style>

@@ -1,21 +1,5 @@
 import type { Difficulty, Operation, GameRecord } from '../types/game'
-
-export const DIFFICULTIES: Difficulty[] = ['easy', 'normal', 'hard']
-export const OPERATIONS: Operation[] = ['addition', 'subtraction', 'multiplication', 'division', 'mixed']
-
-export const DIFFICULTY_LABELS: Record<Difficulty, string> = {
-  easy: '易しい',
-  normal: '普通',
-  hard: '難しい',
-}
-
-export const OPERATION_LABELS: Record<Operation, string> = {
-  addition: '足し算',
-  subtraction: '引き算',
-  multiplication: '掛け算',
-  division: '割り算',
-  mixed: 'ミックス',
-}
+import { OPERATIONS } from './labels'
 
 export interface StatsSummary {
   playCount: number
@@ -59,7 +43,9 @@ export function summarizeByOperation(
 ): { operation: Operation; summary: StatsSummary }[] {
   return OPERATIONS.map((operation) => ({
     operation,
-    summary: summarize(records.filter((r) => r.difficulty === difficulty && r.operation === operation)),
+    summary: summarize(
+      records.filter((r) => r.difficulty === difficulty && r.operation === operation),
+    ),
   }))
 }
 

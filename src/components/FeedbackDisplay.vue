@@ -27,20 +27,25 @@ defineProps<{
   white-space: nowrap;
 }
 .correct {
-  color: #5EF0B5;
-  border-color: rgba(16,200,122,0.6);
-  background: rgba(16,200,122,0.14);
-  box-shadow: 0 0 14px rgba(16,200,122,0.3);
+  color: #5ef0b5;
+  border-color: rgba(16, 200, 122, 0.6);
+  background: rgba(16, 200, 122, 0.14);
+  box-shadow: 0 0 14px rgba(16, 200, 122, 0.3);
 }
 .incorrect {
-  color: #FF8AA5;
-  border-color: rgba(224,48,96,0.6);
-  background: rgba(224,48,96,0.14);
-  box-shadow: 0 0 14px rgba(224,48,96,0.3);
+  color: #ff8aa5;
+  border-color: rgba(224, 48, 96, 0.6);
+  background: rgba(224, 48, 96, 0.14);
+  box-shadow: 0 0 14px rgba(224, 48, 96, 0.3);
 }
 
-.feedback-icon { font-size: 0.95rem; }
-.feedback-label { font-size: 0.95rem; letter-spacing: 0.08em; }
+.feedback-icon {
+  font-size: 0.95rem;
+}
+.feedback-label {
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+}
 .feedback-answer {
   margin-left: 0.3rem;
   font-size: 0.8rem;

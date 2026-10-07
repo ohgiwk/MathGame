@@ -1,4 +1,5 @@
 import type { Difficulty, Operation, ActualOperation, Question, GameSettings } from '../types/game'
+import { OPERATOR_SYMBOLS } from './labels'
 
 function randomInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min
@@ -36,7 +37,9 @@ function tryGenerate(
     operandA = randomInt(range[0], range[1])
     operandB = randomInt(range[0], range[1])
     if (operandB > operandA) {
-      const tmp = operandA; operandA = operandB; operandB = tmp
+      const tmp = operandA
+      operandA = operandB
+      operandB = tmp
     }
     answer = operandA - operandB
   } else if (op === 'multiplication') {
@@ -47,7 +50,8 @@ function tryGenerate(
     answer = operandA * operandB
   } else {
     // division: generate quotient × divisor to guarantee integer result
-    const quotientRange = difficulty === 'easy' ? [1, 9] : difficulty === 'normal' ? [2, 12] : [10, 99]
+    const quotientRange =
+      difficulty === 'easy' ? [1, 9] : difficulty === 'normal' ? [2, 12] : [10, 99]
     const divisorRange = [2, 9]
     const quotient = randomInt(quotientRange[0], quotientRange[1])
     const divisor = randomInt(divisorRange[0], divisorRange[1])
@@ -79,13 +83,6 @@ export function generateQuestions(settings: GameSettings): Question[] {
   }
 
   return questions
-}
-
-const OPERATOR_SYMBOLS: Record<ActualOperation, string> = {
-  addition: '+',
-  subtraction: '−',
-  multiplication: '×',
-  division: '÷',
 }
 
 export function formatQuestion(q: Question): string {

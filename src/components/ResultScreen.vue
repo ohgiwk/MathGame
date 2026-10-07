@@ -11,7 +11,6 @@ const isGameOver = computed(() => result.value?.endReason === 'gameover')
 <template>
   <div v-if="result" class="result-root">
     <div class="result-inner fade-in-up">
-
       <!-- Title -->
       <div class="result-header">
         <div class="result-icon">{{ isGameOver ? '💀' : '🏆' }}</div>
@@ -43,7 +42,10 @@ const isGameOver = computed(() => result.value?.endReason === 'gameover')
         </div>
         <div class="stat-tile">
           <div class="stat-label">ミス数</div>
-          <div class="stat-value" :class="(result.totalAnswered - result.correctCount) > 0 ? 'danger' : ''">
+          <div
+            class="stat-value"
+            :class="result.totalAnswered - result.correctCount > 0 ? 'danger' : ''"
+          >
             {{ result.totalAnswered - result.correctCount }}
           </div>
         </div>
@@ -53,20 +55,17 @@ const isGameOver = computed(() => result.value?.endReason === 'gameover')
         </div>
         <div v-if="isGameOver" class="stat-tile stat-wide">
           <div class="stat-label">到達問題</div>
-          <div class="stat-value">{{ result.totalAnswered }}<span class="stat-denom"> / {{ result.totalCount }}問</span></div>
+          <div class="stat-value">
+            {{ result.totalAnswered }}<span class="stat-denom"> / {{ result.totalCount }}問</span>
+          </div>
         </div>
       </div>
 
       <!-- Buttons -->
       <div class="result-actions">
-        <button class="btn-gem" @click="store.retryGame()">
-          もう一度挑む
-        </button>
-        <button class="btn-ghost" @click="store.resetGame()">
-          🏠 ホームに戻る
-        </button>
+        <button class="btn-gem" @click="store.retryGame()">もう一度挑む</button>
+        <button class="btn-ghost" @click="store.resetGame()">🏠 ホームに戻る</button>
       </div>
-
     </div>
   </div>
 </template>
@@ -87,11 +86,13 @@ const isGameOver = computed(() => result.value?.endReason === 'gameover')
   gap: 1.4rem;
 }
 
-.result-header { text-align: center; }
+.result-header {
+  text-align: center;
+}
 .result-icon {
   font-size: 3.5rem;
   margin-bottom: 0.5rem;
-  filter: drop-shadow(0 0 16px rgba(201,168,54,0.5));
+  filter: drop-shadow(0 0 16px rgba(201, 168, 54, 0.5));
 }
 .result-title {
   font-size: 2rem;
@@ -104,8 +105,15 @@ const isGameOver = computed(() => result.value?.endReason === 'gameover')
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
-.title-over { color: #8090B0; }
-.result-sub { color: var(--text-sub); font-size: 0.82rem; margin-top: 0.3rem; letter-spacing: 0.08em; }
+.title-over {
+  color: #8090b0;
+}
+.result-sub {
+  color: var(--text-sub);
+  font-size: 0.82rem;
+  margin-top: 0.3rem;
+  letter-spacing: 0.08em;
+}
 
 .result-divider {
   display: flex;
@@ -123,13 +131,15 @@ const isGameOver = computed(() => result.value?.endReason === 'gameover')
   padding: 1.2rem;
 }
 .stat-tile {
-  background: rgba(255,255,255,0.03);
+  background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 1rem 0.8rem;
   text-align: center;
 }
-.stat-wide { grid-column: 1 / -1; }
+.stat-wide {
+  grid-column: 1 / -1;
+}
 .stat-label {
   font-size: 0.7rem;
   color: var(--text-sub);
@@ -142,11 +152,25 @@ const isGameOver = computed(() => result.value?.endReason === 'gameover')
   font-weight: 900;
   color: var(--gold-light);
 }
-.stat-value.accent { color: var(--gem-teal); }
-.stat-value.danger  { color: var(--gem-ruby); }
-.stat-denom { font-size: 0.9rem; font-weight: 600; color: var(--text-sub); }
-.stat-unit  { font-size: 1rem; }
-.stat-time  { font-size: 1.3rem; font-weight: 800; color: var(--text-main); }
+.stat-value.accent {
+  color: var(--gem-teal);
+}
+.stat-value.danger {
+  color: var(--gem-ruby);
+}
+.stat-denom {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-sub);
+}
+.stat-unit {
+  font-size: 1rem;
+}
+.stat-time {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
 
 .result-actions {
   display: flex;

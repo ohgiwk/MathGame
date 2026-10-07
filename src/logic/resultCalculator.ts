@@ -3,9 +3,7 @@ import type { GameState, GameResult, GameEndReason } from '../types/game'
 export function calculateResult(state: GameState, endReason: GameEndReason): GameResult {
   const totalAnswered = state.currentIndex + 1
   const elapsedSeconds = Math.round((Date.now() - state.startedAt) / 1000)
-  const accuracy = totalAnswered > 0
-    ? Math.round((state.correctCount / totalAnswered) * 100)
-    : 0
+  const accuracy = totalAnswered > 0 ? Math.round((state.correctCount / totalAnswered) * 100) : 0
 
   return {
     endReason,

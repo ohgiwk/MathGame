@@ -29,12 +29,6 @@ export const useGameStore = defineStore('game', () => {
     return s.questions[s.currentIndex] ?? null
   })
 
-  const progressRatio = computed(() => {
-    const s = gameState.value
-    if (!s || s.questions.length === 0) return 0
-    return s.currentIndex / s.questions.length
-  })
-
   function startGame(newSettings?: GameSettings) {
     if (newSettings) settings.value = newSettings
 
@@ -133,7 +127,6 @@ export const useGameStore = defineStore('game', () => {
     gameState,
     result,
     currentQuestion,
-    progressRatio,
     startGame,
     submitAnswer,
     resetGame,
