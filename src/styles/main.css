@@ -1,5 +1,8 @@
 :root {
   --bg-deep: #080d1a;
+  /* flat color the page fades to at its bottom edge, and the color of whatever shows below it */
+  --bg-floor: #070c18;
+  --bg-floor-rgb: 7, 12, 24;
   --bg-mid: #0d1628;
   --bg-card: #111e38;
   --bg-card2: #162040;
@@ -38,13 +41,20 @@ body {
 }
 /* pan only: disables pinch and double-tap zoom */
 html {
-  /* shows where iOS standalone leaves a strip below the page; matches the bottom of the body gradient */
-  background: #070c18;
+  /* shows where iOS standalone leaves a strip below the page; the body fades to this same color */
+  background: var(--bg-floor);
   touch-action: pan-x pan-y;
 }
 body {
-  /* The top band is a flat #0e1a35 (same as theme-color) under the status bar, fading into the gradient */
+  /* The top band is a flat #0e1a35 (same as theme-color) under the status bar, fading into the gradient.
+     The bottom fades to the flat --bg-floor so the page's edge cannot be told from the html behind it. */
   background:
+    linear-gradient(
+      to top,
+      var(--bg-floor) 0,
+      var(--bg-floor) env(safe-area-inset-bottom, 0px),
+      rgba(var(--bg-floor-rgb), 0) calc(env(safe-area-inset-bottom, 0px) + 140px)
+    ),
     linear-gradient(
       to bottom,
       #0e1a35 0,
@@ -94,16 +104,20 @@ body::before {
     radial-gradient(circle at 15% 15%, rgba(76, 124, 255, 0.06) 0%, transparent 50%),
     radial-gradient(circle at 85% 80%, rgba(123, 92, 246, 0.06) 0%, transparent 50%),
     radial-gradient(circle at 50% 50%, rgba(11, 191, 160, 0.03) 0%, transparent 60%);
-  /* fade the shimmer in below the status bar so the top band stays one flat color */
+  /* fade the shimmer in below the status bar and out again at the bottom, so both edges stay flat */
   -webkit-mask-image: linear-gradient(
     to bottom,
     transparent env(safe-area-inset-top, 0px),
-    #000 calc(env(safe-area-inset-top, 0px) + 140px)
+    #000 calc(env(safe-area-inset-top, 0px) + 140px),
+    #000 calc(100% - env(safe-area-inset-bottom, 0px) - 140px),
+    transparent calc(100% - env(safe-area-inset-bottom, 0px))
   );
   mask-image: linear-gradient(
     to bottom,
     transparent env(safe-area-inset-top, 0px),
-    #000 calc(env(safe-area-inset-top, 0px) + 140px)
+    #000 calc(env(safe-area-inset-top, 0px) + 140px),
+    #000 calc(100% - env(safe-area-inset-bottom, 0px) - 140px),
+    transparent calc(100% - env(safe-area-inset-bottom, 0px))
   );
   pointer-events: none;
   z-index: 0;
