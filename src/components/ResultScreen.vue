@@ -214,10 +214,6 @@ function showSlide(index: number) {
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
   overscroll-behavior-x: contain;
-  scrollbar-width: none;
-}
-.slides::-webkit-scrollbar {
-  display: none;
 }
 .stats-grid {
   flex: 0 0 100%;

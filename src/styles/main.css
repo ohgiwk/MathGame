@@ -229,16 +229,12 @@ body::before {
   opacity: 0;
 }
 
-/* Custom scrollbar for dark theme */
+/* Scrollable areas still scroll, but never show a scrollbar */
+* {
+  scrollbar-width: none;
+}
 ::-webkit-scrollbar {
-  width: 4px;
-}
-::-webkit-scrollbar-track {
-  background: var(--bg-deep);
-}
-::-webkit-scrollbar-thumb {
-  background: var(--border-gem);
-  border-radius: 4px;
+  display: none;
 }
 
 /* Card base */
