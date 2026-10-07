@@ -31,7 +31,8 @@ body {
 }
 /* pan only: disables pinch and double-tap zoom */
 html {
-  background: #0e1a35;
+  /* shows where iOS standalone leaves a strip below the page; matches the bottom of the body gradient */
+  background: #070c18;
   touch-action: pan-x pan-y;
 }
 body {
