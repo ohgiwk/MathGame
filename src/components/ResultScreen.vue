@@ -73,7 +73,7 @@ const isGameOver = computed(() => result.value?.endReason === 'gameover')
 
 <style scoped>
 .result-root {
-  min-height: 100vh;
+  min-height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;

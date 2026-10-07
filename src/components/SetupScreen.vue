@@ -116,7 +116,7 @@ function handleStart() {
 
 <style scoped>
 .setup-root {
-  min-height: 100vh;
+  min-height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;

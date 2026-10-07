@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, nextTick, computed } from 'vue'
+import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useGameStore } from '../stores/gameStore'
 import { MAX_LIVES } from '../types/game'
 import { formatQuestion } from '../logic/questionGenerator'
@@ -8,7 +8,6 @@ import HeartDisplay from './HeartDisplay.vue'
 import FeedbackDisplay from './FeedbackDisplay.vue'
 
 const store = useGameStore()
-const inputRef = ref<HTMLInputElement | null>(null)
 const inputValue = ref('')
 const showQuitDialog = ref(false)
 
@@ -22,21 +21,37 @@ const progressCurrent = computed(() => {
 })
 const progressTotal = computed(() => state.value?.questions.length ?? 1)
 
-watch(question, (q) => {
-  if (q) {
-    inputValue.value = ''
-    nextTick(() => inputRef.value?.focus())
-  }
+const answerLength = computed(() => String(question.value?.answer ?? '').length)
+const padDisabled = computed(() => !!state.value?.isSubmitting || showQuitDialog.value)
+
+const PAD_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
+
+watch(question, () => {
+  inputValue.value = ''
 }, { immediate: true })
 
-function handleSubmit() {
-  const val = inputValue.value.trim()
-  if (!val) return
-  if (state.value?.isSubmitting) return
-  if (showQuitDialog.value) return
-  store.submitAnswer(val)
-  inputValue.value = ''
+// The answer is confirmed automatically once as many digits as the answer has are entered
+function pressDigit(digit: string) {
+  if (padDisabled.value) return
+  if (inputValue.value.length >= answerLength.value) return
+  inputValue.value += digit
+  if (inputValue.value.length >= answerLength.value) {
+    store.submitAnswer(inputValue.value)
+  }
 }
+
+function pressDelete() {
+  if (padDisabled.value) return
+  inputValue.value = inputValue.value.slice(0, -1)
+}
+
+function handleKeydown(e: KeyboardEvent) {
+  if (/^[0-9]$/.test(e.key)) pressDigit(e.key)
+  else if (e.key === 'Backspace') pressDelete()
+}
+
+onMounted(() => window.addEventListener('keydown', handleKeydown))
+onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown))
 
 function openQuitDialog() {
   showQuitDialog.value = true
@@ -44,7 +59,6 @@ function openQuitDialog() {
 
 function cancelQuit() {
   showQuitDialog.value = false
-  nextTick(() => inputRef.value?.focus())
 }
 
 function confirmQuit() {
@@ -86,8 +100,7 @@ function confirmQuit() {
         <div class="diff-badge">
           {{ state.settings.difficulty === 'easy' ? '易しい' : state.settings.difficulty === 'normal' ? '普通' : '難しい' }}
         </div>
-        <div class="question-expr">{{ formatQuestion(question) }}</div>
-        <div class="question-eq">= ?</div>
+        <div class="question-expr">{{ formatQuestion(question) }} <span class="question-eq">= ?</span></div>
 
         <div class="gem-corner tl">◆</div>
         <div class="gem-corner tr">◆</div>
@@ -98,24 +111,30 @@ function confirmQuit() {
 
     <!-- Input area -->
     <div class="input-area">
-      <input
-        ref="inputRef"
-        v-model="inputValue"
-        type="tel"
-        inputmode="numeric"
-        pattern="[0-9]*"
-        placeholder="答えを入力"
-        class="answer-input"
-        :disabled="state.isSubmitting || showQuitDialog"
-        @keydown.enter="handleSubmit"
-      />
-      <button
-        class="btn-gem"
-        :disabled="state.isSubmitting || !inputValue.trim() || showQuitDialog"
-        @click="handleSubmit"
-      >
-        回答する
-      </button>
+      <div class="answer-input answer-display" :class="{ empty: !inputValue }">
+        {{ inputValue || '答えを入力' }}
+      </div>
+      <div class="num-pad">
+        <button
+          v-for="key in PAD_KEYS"
+          :key="key"
+          class="pad-key"
+          :disabled="padDisabled"
+          @click="pressDigit(key)"
+        >
+          {{ key }}
+        </button>
+        <span></span>
+        <button class="pad-key" :disabled="padDisabled" @click="pressDigit('0')">0</button>
+        <button
+          class="pad-key pad-delete"
+          :disabled="padDisabled || !inputValue"
+          aria-label="1文字消す"
+          @click="pressDelete"
+        >
+          ⌫
+        </button>
+      </div>
     </div>
 
     <!-- Feedback overlay -->
@@ -146,15 +165,16 @@ function confirmQuit() {
 
 <style scoped>
 .game-root {
-  min-height: 100vh;
+  height: 100%;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  padding-top: max(1rem, env(safe-area-inset-top));
   padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
 }
 
 .game-header {
-  padding: 0.8rem 1.2rem 0.6rem;
+  flex-shrink: 0;
+  padding: calc(0.8rem + max(1rem, env(safe-area-inset-top))) 1.2rem 0.6rem;
   border-bottom: 1px solid rgba(255,255,255,0.05);
   background: rgba(0,0,0,0.2);
 }
@@ -204,17 +224,18 @@ function confirmQuit() {
 
 /* Question */
 .question-area {
-  flex: 1;
+  flex-shrink: 0;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: 1.5rem 1.2rem;
+  padding: 1.5rem 1.2rem 1rem;
 }
 .question-card {
   width: 100%;
   max-width: 360px;
   text-align: center;
-  padding: 2.5rem 1.5rem 2rem;
+  /* bottom = top + badge height + badge margin, so the expression sits at the vertical center */
+  padding: 2.5rem 1.5rem calc(2.5rem + 26px + 1.2rem);
   position: relative;
   animation: gem-pulse 3s ease infinite;
 }
@@ -231,7 +252,7 @@ function confirmQuit() {
   text-transform: uppercase;
 }
 .question-expr {
-  font-size: clamp(1.4rem, 7vw, 3rem);
+  font-size: clamp(1.2rem, 6.5vw, 2.6rem);
   font-weight: 900;
   color: var(--text-main);
   letter-spacing: 0.03em;
@@ -240,10 +261,8 @@ function confirmQuit() {
   white-space: nowrap;
 }
 .question-eq {
-  font-size: 2.2rem;
   font-weight: 800;
   color: var(--gold);
-  margin-top: 0.5rem;
   filter: drop-shadow(0 0 8px rgba(201,168,54,0.4));
 }
 
@@ -261,7 +280,9 @@ function confirmQuit() {
 
 /* Input */
 .input-area {
-  padding: 0 1.2rem 0;
+  flex: 1;
+  min-height: 0;
+  padding: 0 1.2rem;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -269,7 +290,58 @@ function confirmQuit() {
   margin: 0 auto;
   width: 100%;
 }
-.btn-gem { font-size: 1.1rem; padding: 17px; }
+.answer-display {
+  flex-shrink: 0;
+  font-size: 32px;
+  line-height: 1.2;
+  padding: 10px;
+}
+.answer-display.empty {
+  color: #3A4E70;
+  font-size: 20px;
+  line-height: 1.92;
+}
+
+.num-pad {
+  flex: 1;
+  min-height: 0;
+  max-height: 320px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: 1fr;
+  gap: 0.6rem;
+}
+.pad-key {
+  background: var(--bg-card);
+  border: 1px solid var(--border-gem);
+  border-radius: 14px;
+  color: var(--text-main);
+  font-size: 1.7rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+  transition: transform 0.08s ease, background 0.08s ease;
+}
+.pad-key:active:not(:disabled) {
+  transform: scale(0.95);
+  background: #1C2B50;
+  border-color: var(--gem-blue);
+}
+.pad-key:disabled { opacity: 0.45; cursor: default; }
+.pad-delete { color: var(--text-sub); font-size: 1.4rem; }
+
+/* Compact layout for short screens */
+@media (max-height: 700px) {
+  .question-area { padding: 0.6rem 1.2rem; }
+  .question-card { padding: 1.2rem 1.5rem calc(1.2rem + 26px + 0.5rem); }
+  .diff-badge { margin-bottom: 0.5rem; }
+  .input-area { gap: 0.5rem; }
+  .num-pad { gap: 0.45rem; }
+}
 
 /* Quit dialog */
 .dialog-overlay {
