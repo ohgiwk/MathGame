@@ -59,7 +59,7 @@ function confirmQuit() {
 <template>
   <div v-if="state && question" class="game-root">
     <!-- Header -->
-    <div class="game-header">
+    <div class="game-header enter-drop">
       <div class="header-top">
         <div class="header-left">
           <button
@@ -96,8 +96,8 @@ function confirmQuit() {
     </div>
 
     <!-- Question card -->
-    <div class="question-area">
-      <div class="question-card rpg-card fade-in-up">
+    <div class="question-area enter-pop">
+      <div class="question-card rpg-card">
         <div class="diff-badge">
           {{ DIFFICULTY_LABELS[state.settings.difficulty] }}
         </div>
@@ -128,7 +128,7 @@ function confirmQuit() {
     <!-- Input area -->
     <div class="input-area">
       <div
-        class="answer-input answer-display"
+        class="answer-input answer-display enter-rise"
         :class="{
           empty: !inputValue,
           correct: state.feedback?.correct === true,
@@ -138,6 +138,7 @@ function confirmQuit() {
         {{ inputValue || '答えを入力' }}
       </div>
       <NumberPad
+        class="enter-rise enter-late"
         :disabled="padDisabled"
         :can-delete="!!inputValue"
         @digit="pressDigit"
@@ -223,6 +224,45 @@ function confirmQuit() {
 }
 .sep-dot {
   margin: 0 4px;
+}
+
+/* Entrance when the game starts: header drops in, the card pops, the input and pad rise */
+.enter-drop {
+  animation: enter-drop 0.4s ease-out backwards;
+}
+.enter-pop {
+  animation: enter-pop 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.1s backwards;
+}
+.enter-rise {
+  animation: enter-rise 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.2s backwards;
+}
+.enter-late {
+  animation-delay: 0.28s;
+}
+@keyframes enter-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-18px);
+  }
+}
+@keyframes enter-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+}
+@keyframes enter-rise {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .enter-drop,
+  .enter-pop,
+  .enter-rise {
+    animation: none;
+  }
 }
 
 /* Question */
