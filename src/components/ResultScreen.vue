@@ -60,7 +60,7 @@ const isGameOver = computed(() => result.value?.endReason === 'gameover')
       <!-- Buttons -->
       <div class="result-actions">
         <button class="btn-gem" @click="store.retryGame()">
-          ⚔ もう一度挑む
+          もう一度挑む
         </button>
         <button class="btn-ghost" @click="store.resetGame()">
           🏠 ホームに戻る

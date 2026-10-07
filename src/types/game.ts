@@ -1,7 +1,7 @@
 export type Difficulty = 'easy' | 'normal' | 'hard'
 export type Operation = 'addition' | 'subtraction' | 'multiplication' | 'division' | 'mixed'
 export type ActualOperation = Exclude<Operation, 'mixed'>
-export type Screen = 'setup' | 'game' | 'result'
+export type Screen = 'setup' | 'game' | 'result' | 'stats'
 export type GameEndReason = 'clear' | 'gameover'
 export type QuestionCount = 5 | 10 | 15
 
@@ -41,6 +41,18 @@ export interface GameResult {
   totalAnswered: number
   totalCount: number
   accuracy: number
+  elapsedSeconds: number
+}
+
+export interface GameRecord {
+  id: string
+  playedAt: number
+  difficulty: Difficulty
+  operation: Operation
+  questionCount: QuestionCount
+  endReason: GameEndReason
+  correctCount: number
+  totalAnswered: number
   elapsedSeconds: number
 }
 

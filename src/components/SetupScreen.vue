@@ -110,6 +110,9 @@ function handleStart() {
       <button class="btn-gem start-btn" @click="handleStart">
         ゲーム開始
       </button>
+      <button class="btn-ghost" @click="store.openStats()">
+        記録を見る
+      </button>
     </div>
   </div>
 </template>
@@ -125,11 +128,13 @@ function handleStart() {
 
 .setup-header {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-top: auto;
+  margin-bottom: 1.25rem;
 }
 
 .temple-icon {
-  font-size: 2.8rem;
+  font-size: 2.4rem;
+  line-height: 1.2;
   color: var(--gold);
   filter: drop-shadow(0 0 10px rgba(201,168,54,0.5));
   margin-bottom: 0.4rem;
@@ -164,10 +169,11 @@ function handleStart() {
   max-width: 380px;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.85rem;
+  margin-bottom: auto;
 }
 
-.setup-section { padding: 1.1rem; }
+.setup-section { padding: 1rem 1.1rem; }
 
 .section-label {
   font-size: 0.75rem;
@@ -189,7 +195,9 @@ function handleStart() {
 
 .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
 
-.grid-ops { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+.grid-ops { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.4rem; }
+.grid-ops .opt-btn { padding: 10px 0; }
+.grid-ops .opt-sub { font-size: 0.6rem; white-space: nowrap; }
 
 /* Active option: pop when selected, then a light keeps circling the border */
 @property --opt-angle {
@@ -248,11 +256,24 @@ function handleStart() {
 .opt-symbol { font-size: 1.3rem; font-weight: 800; }
 
 .start-btn {
-  margin-top: 0.5rem;
+  margin-top: 0.25rem;
   font-size: 1.1rem;
   letter-spacing: 0.1em;
   padding: 18px;
   background: linear-gradient(135deg, #2A4AD0 0%, #5B2ED0 100%);
   box-shadow: 0 4px 24px rgba(76,90,255,0.45), inset 0 1px 0 rgba(255,255,255,0.15);
+}
+
+/* Compact layout so short screens fit without scrolling */
+@media (max-height: 780px) {
+  .setup-root { padding-top: max(0.8rem, env(safe-area-inset-top)); padding-bottom: max(0.8rem, env(safe-area-inset-bottom)); }
+  .setup-header { margin-bottom: 0.7rem; }
+  .temple-icon { font-size: 1.8rem; margin-bottom: 0; }
+  .setup-title { font-size: 1.8rem; }
+  .setup-body { gap: 0.6rem; }
+  .setup-section { padding: 0.7rem 0.9rem; }
+  .section-label { margin-bottom: 0.5rem; }
+  .start-btn { padding: 14px; margin-top: 0; }
+  .setup-body .btn-ghost { padding: 10px; }
 }
 </style>

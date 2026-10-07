@@ -5,8 +5,11 @@ import { MAX_LIVES, FEEDBACK_DURATION_MS } from '../types/game'
 import { generateQuestions } from '../logic/questionGenerator'
 import { checkAnswer } from '../logic/answerChecker'
 import { calculateResult } from '../logic/resultCalculator'
+import { useStatsStore } from './statsStore'
 
 export const useGameStore = defineStore('game', () => {
+  const statsStore = useStatsStore()
+
   const screen = ref<Screen>('setup')
 
   const settings = ref<GameSettings>({
@@ -84,7 +87,17 @@ export const useGameStore = defineStore('game', () => {
 
       if (isGameOver || isLastQuestion) {
         const endReason = isGameOver ? 'gameover' : 'clear'
-        result.value = calculateResult(s, endReason)
+        const r = calculateResult(s, endReason)
+        result.value = r
+        statsStore.addRecord({
+          difficulty: s.settings.difficulty,
+          operation: s.settings.operation,
+          questionCount: s.settings.questionCount,
+          endReason,
+          correctCount: r.correctCount,
+          totalAnswered: r.totalAnswered,
+          elapsedSeconds: r.elapsedSeconds,
+        })
         gameState.value = null
         screen.value = 'result'
         return
@@ -106,6 +119,10 @@ export const useGameStore = defineStore('game', () => {
     screen.value = 'setup'
   }
 
+  function openStats() {
+    screen.value = 'stats'
+  }
+
   function retryGame() {
     startGame()
   }
@@ -120,6 +137,7 @@ export const useGameStore = defineStore('game', () => {
     startGame,
     submitAnswer,
     resetGame,
+    openStats,
     retryGame,
   }
 })
