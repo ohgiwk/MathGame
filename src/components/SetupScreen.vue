@@ -117,7 +117,7 @@ function handleStart() {
               v-for="op in ACTUAL_OPERATIONS"
               :key="op"
               class="opt-btn mix-btn"
-              :class="{ on: selectedMixed.includes(op), locked: isMixLocked(op) }"
+              :class="{ active: selectedMixed.includes(op), locked: isMixLocked(op) }"
               :aria-pressed="selectedMixed.includes(op)"
               :aria-disabled="isMixLocked(op)"
               :aria-label="OPERATION_LABELS[op]"
@@ -276,11 +276,8 @@ function handleStart() {
   font-weight: 800;
   opacity: 0.6;
 }
-.mix-btn.on {
+.mix-btn.active {
   opacity: 1;
-  border-color: var(--gold);
-  color: var(--gold-light);
-  background: linear-gradient(135deg, #1c2b50, #162040);
 }
 /* the last two cannot be turned off */
 .mix-btn.locked {
