@@ -3,6 +3,7 @@ import { useGameStore } from './stores/gameStore'
 import SetupScreen from './components/SetupScreen.vue'
 import GameScreen from './components/GameScreen.vue'
 import ResultScreen from './components/ResultScreen.vue'
+import PWAPrompt from './components/PWAPrompt.vue'
 
 const store = useGameStore()
 </script>
@@ -13,4 +14,5 @@ const store = useGameStore()
     <GameScreen v-else-if="store.screen === 'game'" key="game" />
     <ResultScreen v-else-if="store.screen === 'result'" key="result" />
   </Transition>
+  <PWAPrompt />
 </template>
