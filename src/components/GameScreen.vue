@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
 import { useGameStore } from '../stores/gameStore'
-import { MAX_LIVES } from '../types/game'
-import { formatQuestion } from '../logic/questionGenerator'
+import { MAX_LIVES } from '../logic/constants'
+import { formatQuestion } from '../logic/format'
 import { DIFFICULTY_LABELS } from '../logic/labels'
 import ProgressBar from './ProgressBar.vue'
 import HeartDisplay from './HeartDisplay.vue'
 import FeedbackDisplay from './FeedbackDisplay.vue'
 import NumberPad from './NumberPad.vue'
 import QuitDialog from './QuitDialog.vue'
+import CloseIcon from './CloseIcon.vue'
 
 const store = useGameStore()
 const inputValue = ref('')
@@ -68,15 +69,7 @@ function confirmQuit() {
             aria-label="ゲームを中断"
             @click="showQuitDialog = true"
           >
-            <svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true">
-              <path
-                d="M2 2 10 10M10 2 2 10"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.6"
-                stroke-linecap="round"
-              />
-            </svg>
+            <CloseIcon />
           </button>
           <div class="progress-label">
             <span class="prog-cur">{{ progressCurrent }}</span>

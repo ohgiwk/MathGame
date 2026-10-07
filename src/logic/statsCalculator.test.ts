@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import type { GameRecord } from '../types/game'
-import { summarize, summarizeByOperation, formatTotalTime } from './statsCalculator'
+import { summarize, summarizeByOperation } from './statsCalculator'
 
 function record(overrides: Partial<GameRecord> = {}): GameRecord {
   return {
@@ -77,13 +77,5 @@ describe('summarizeByOperation', () => {
     ])
     expect(rows.map((r) => r.summary.playCount)).toEqual([1, 0, 0, 1, 0])
     expect(rows[0].summary.bestScore).toBe(900)
-  })
-})
-
-describe('formatTotalTime', () => {
-  it('uses the largest two units that apply', () => {
-    expect(formatTotalTime(45)).toBe('45秒')
-    expect(formatTotalTime(125)).toBe('2分5秒')
-    expect(formatTotalTime(3725)).toBe('1時間2分')
   })
 })

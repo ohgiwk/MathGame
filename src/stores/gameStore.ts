@@ -1,7 +1,7 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import type { Screen, GameSettings, GameState, GameResult, GameEndReason } from '../types/game'
-import { MAX_LIVES, FEEDBACK_DURATION_MS } from '../types/game'
+import { MAX_LIVES, FEEDBACK_DURATION_MS } from '../logic/constants'
 import { generateQuestions } from '../logic/questionGenerator'
 import { checkAnswer } from '../logic/answerChecker'
 import { calculateResult } from '../logic/resultCalculator'
@@ -91,19 +91,9 @@ export const useGameStore = defineStore('game', () => {
 
   function finishGame(state: GameState, endReason: GameEndReason) {
     const r = calculateResult(state, endReason, Date.now())
-    const { difficulty, operation, questionCount } = state.settings
-    const previousBest = statsStore.bestScore(difficulty, operation)
+    const previousBest = statsStore.bestScore(r.outcome.difficulty, r.outcome.operation)
     result.value = { ...r, isBestScore: r.score.score > previousBest }
-    statsStore.addRecord({
-      difficulty,
-      operation,
-      questionCount,
-      endReason,
-      correctCount: r.correctCount,
-      totalAnswered: r.totalAnswered,
-      elapsedSeconds: r.elapsedSeconds,
-      score: r.score.score,
-    })
+    statsStore.addRecord({ ...r.outcome, score: r.score.score })
     gameState.value = null
     screen.value = 'result'
   }

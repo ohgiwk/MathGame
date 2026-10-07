@@ -1,5 +1,6 @@
-import type { Difficulty, Operation, ActualOperation } from '../types/game'
+import type { Difficulty, Operation, ActualOperation, QuestionCount } from '../types/game'
 
+export const QUESTION_COUNTS: QuestionCount[] = [5, 10, 15]
 export const DIFFICULTIES: Difficulty[] = ['easy', 'normal', 'hard']
 export const OPERATIONS: Operation[] = [
   'addition',

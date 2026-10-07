@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import type { GameState } from '../types/game'
-import { calculateResult, formatElapsedTime } from './resultCalculator'
+import { calculateResult } from './resultCalculator'
 
 function state(overrides: Partial<GameState> = {}): GameState {
   return {
@@ -18,18 +18,21 @@ function state(overrides: Partial<GameState> = {}): GameState {
 describe('calculateResult', () => {
   it('measures elapsed time from the start of the game to the given end time', () => {
     const r = calculateResult(state(), 'clear', 11_400)
-    expect(r.elapsedSeconds).toBe(10)
+    expect(r.outcome.elapsedSeconds).toBe(10)
   })
 
   it('reports a perfect clear', () => {
     const r = calculateResult(state(), 'clear', 11_000)
-    expect(r).toMatchObject({
+    expect(r.outcome).toEqual({
+      questionCount: 5,
+      difficulty: 'easy',
+      operation: 'addition',
       endReason: 'clear',
       correctCount: 5,
       totalAnswered: 5,
-      totalCount: 5,
-      accuracy: 100,
+      elapsedSeconds: 10,
     })
+    expect(r.accuracy).toBe(100)
     expect(r.score.score).toBe(975)
   })
 
@@ -39,13 +42,7 @@ describe('calculateResult', () => {
       'gameover',
       21_000,
     )
-    expect(r).toMatchObject({ totalAnswered: 4, totalCount: 5, accuracy: 25 })
-  })
-})
-
-describe('formatElapsedTime', () => {
-  it('pads the seconds to two digits', () => {
-    expect(formatElapsedTime(5)).toBe('0分05秒')
-    expect(formatElapsedTime(83)).toBe('1分23秒')
+    expect(r.outcome).toMatchObject({ totalAnswered: 4, questionCount: 5 })
+    expect(r.accuracy).toBe(25)
   })
 })

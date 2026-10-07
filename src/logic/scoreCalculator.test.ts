@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import { calculateScore, formatScore, type ScoreInput } from './scoreCalculator'
+import type { GameOutcome } from '../types/game'
+import { calculateScore } from './scoreCalculator'
 
-const base: ScoreInput = {
+const base: GameOutcome = {
   difficulty: 'easy',
   operation: 'addition',
   questionCount: 5,
@@ -69,11 +70,5 @@ describe('calculateScore', () => {
   it('scores zero when nothing was answered correctly', () => {
     const s = calculateScore({ ...base, endReason: 'gameover', correctCount: 0, totalAnswered: 3 })
     expect(s.score).toBe(0)
-  })
-})
-
-describe('formatScore', () => {
-  it('groups thousands', () => {
-    expect(formatScore(1234567)).toBe('1,234,567')
   })
 })

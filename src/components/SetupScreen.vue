@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useGameStore } from '../stores/gameStore'
 import type { QuestionCount, Difficulty, Operation } from '../types/game'
 import {
+  QUESTION_COUNTS,
   DIFFICULTIES,
   OPERATIONS,
   DIFFICULTY_LABELS,
@@ -15,8 +16,6 @@ const store = useGameStore()
 const selectedCount = ref<QuestionCount>(store.settings.questionCount)
 const selectedDifficulty = ref<Difficulty>(store.settings.difficulty)
 const selectedOperation = ref<Operation>(store.settings.operation)
-
-const counts: QuestionCount[] = [5, 10, 15]
 
 // full-width symbols for the option buttons
 const operationSymbols: Record<Operation, string> = {
@@ -51,7 +50,7 @@ function handleStart() {
         <h2 class="section-label"><span class="section-gem">◆</span> 問題数</h2>
         <div class="grid-3">
           <button
-            v-for="c in counts"
+            v-for="c in QUESTION_COUNTS"
             :key="c"
             class="opt-btn"
             :class="{ active: selectedCount === c }"

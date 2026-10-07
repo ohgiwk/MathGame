@@ -3,15 +3,9 @@ import { ref, computed } from 'vue'
 import { useGameStore } from '../stores/gameStore'
 import { useStatsStore } from '../stores/statsStore'
 import type { Difficulty } from '../types/game'
-import { formatElapsedTime } from '../logic/resultCalculator'
-import { formatScore } from '../logic/scoreCalculator'
 import { DIFFICULTIES, DIFFICULTY_LABELS, OPERATION_LABELS } from '../logic/labels'
-import {
-  summarize,
-  summarizeByOperation,
-  formatTotalTime,
-  formatPlayedAt,
-} from '../logic/statsCalculator'
+import { summarize, summarizeByOperation } from '../logic/statsCalculator'
+import { formatScore, formatElapsedTime, formatTotalTime, formatPlayedAt } from '../logic/format'
 
 const HISTORY_LIMIT = 30
 
@@ -46,22 +40,22 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
           </span>
         </h2>
         <div class="total-row">
-          <div class="total-item">
+          <div class="tile total-item">
             <div class="total-label">プレイ</div>
             <div class="total-value">{{ total.playCount }}<span class="total-unit">回</span></div>
           </div>
-          <div class="total-item">
+          <div class="tile total-item">
             <div class="total-label">クリア</div>
             <div class="total-value">{{ total.clearCount }}<span class="total-unit">回</span></div>
           </div>
-          <div class="total-item">
+          <div class="tile total-item">
             <div class="total-label">正答率</div>
             <div class="total-value accent">
               {{ total.accuracy ?? '–'
               }}<span v-if="total.accuracy !== null" class="total-unit">%</span>
             </div>
           </div>
-          <div class="total-item">
+          <div class="tile total-item">
             <div class="total-label">累計スコア</div>
             <div class="total-value">{{ formatScore(total.totalScore) }}</div>
           </div>
@@ -139,7 +133,10 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
                 {{ formatElapsedTime(r.elapsedSeconds) }}
               </div>
             </div>
-            <span class="history-badge" :class="r.endReason">
+            <span
+              class="history-badge pill"
+              :class="r.endReason === 'clear' ? 'pill-success' : 'pill-danger'"
+            >
               {{ r.endReason === 'clear' ? 'クリア' : '失敗' }}
             </span>
           </li>
@@ -219,11 +216,8 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
   gap: 0.4rem;
 }
 .total-item {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 6px 2px 7px;
-  text-align: center;
   min-width: 0;
 }
 .total-label {
@@ -383,19 +377,6 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
   width: 3.4rem;
   text-align: center;
   font-size: 0.68rem;
-  font-weight: 800;
   padding: 3px 0;
-  border-radius: 99px;
-  border: 1px solid;
-}
-.history-badge.clear {
-  color: var(--success-text);
-  border-color: rgba(var(--emerald-rgb), 0.5);
-  background: rgba(var(--emerald-rgb), 0.12);
-}
-.history-badge.gameover {
-  color: var(--danger-text);
-  border-color: rgba(var(--ruby-rgb), 0.5);
-  background: rgba(var(--ruby-rgb), 0.12);
 }
 </style>

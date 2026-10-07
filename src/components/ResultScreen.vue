@@ -1,27 +1,27 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useGameStore } from '../stores/gameStore'
-import { formatElapsedTime } from '../logic/resultCalculator'
-import { formatScore } from '../logic/scoreCalculator'
+import { formatScore, formatElapsedTime } from '../logic/format'
 import { useCountUp } from '../composables/useCountUp'
 
 const store = useGameStore()
 const result = computed(() => store.result)
-const isGameOver = computed(() => result.value?.endReason === 'gameover')
+const outcome = computed(() => store.result?.outcome)
+const isGameOver = computed(() => outcome.value?.endReason === 'gameover')
 
 // The result is fixed while this screen is shown, so the numbers count up once on entry.
 // Delays follow the order in which the tiles pop in.
 const r = store.result
-const mistakes = r ? r.totalAnswered - r.correctCount : 0
+const mistakes = r ? r.outcome.totalAnswered - r.outcome.correctCount : 0
 const shownScore = useCountUp(r?.score.score ?? 0, { duration: 1000, delay: 250 })
-const shownCorrect = useCountUp(r?.correctCount ?? 0, { duration: 600, delay: 370 })
+const shownCorrect = useCountUp(r?.outcome.correctCount ?? 0, { duration: 600, delay: 370 })
 const shownAccuracy = useCountUp(r?.accuracy ?? 0, { duration: 600, delay: 490 })
 const shownMistakes = useCountUp(mistakes, { duration: 600, delay: 610 })
-const shownSeconds = useCountUp(r?.elapsedSeconds ?? 0, { duration: 600, delay: 730 })
+const shownSeconds = useCountUp(r?.outcome.elapsedSeconds ?? 0, { duration: 600, delay: 730 })
 </script>
 
 <template>
-  <div v-if="result" class="result-root">
+  <div v-if="result && outcome" class="result-root">
     <div class="result-inner fade-in-up">
       <!-- Title -->
       <div class="result-header">
@@ -30,7 +30,7 @@ const shownSeconds = useCountUp(r?.elapsedSeconds ?? 0, { duration: 600, delay: 
           {{ isGameOver ? 'ゲームオーバー' : 'ゲームクリア！' }}
         </h1>
         <p v-if="isGameOver" class="result-sub">
-          到達 {{ result.totalAnswered }} / {{ result.totalCount }}問
+          到達 {{ outcome.totalAnswered }} / {{ outcome.questionCount }}問
         </p>
       </div>
 
@@ -43,28 +43,28 @@ const shownSeconds = useCountUp(r?.elapsedSeconds ?? 0, { duration: 600, delay: 
 
       <!-- Stats grid -->
       <div class="stats-grid rpg-card">
-        <div class="stat-tile stat-wide score-tile" style="--i: 0">
+        <div class="tile stat-tile stat-wide score-tile" style="--i: 0">
           <div class="stat-label">スコア</div>
           <div class="score-value">{{ formatScore(shownScore) }}</div>
-          <div v-if="result.isBestScore" class="best-badge">自己ベスト更新！</div>
+          <div v-if="result.isBestScore" class="best-badge pill pill-success">自己ベスト更新！</div>
         </div>
-        <div class="stat-tile" style="--i: 1">
+        <div class="tile stat-tile" style="--i: 1">
           <div class="stat-label">正解数</div>
           <div class="stat-value">
-            {{ shownCorrect }}<span class="stat-denom"> / {{ result.totalAnswered }}</span>
+            {{ shownCorrect }}<span class="stat-denom"> / {{ outcome.totalAnswered }}</span>
           </div>
         </div>
-        <div class="stat-tile" style="--i: 2">
+        <div class="tile stat-tile" style="--i: 2">
           <div class="stat-label">正答率</div>
           <div class="stat-value accent">{{ shownAccuracy }}<span class="stat-unit">%</span></div>
         </div>
-        <div class="stat-tile" style="--i: 3">
+        <div class="tile stat-tile" style="--i: 3">
           <div class="stat-label">ミス数</div>
           <div class="stat-value" :class="mistakes > 0 ? 'danger' : ''">
             {{ shownMistakes }}
           </div>
         </div>
-        <div class="stat-tile" style="--i: 4">
+        <div class="tile stat-tile" style="--i: 4">
           <div class="stat-label">タイム</div>
           <div class="stat-time">{{ formatElapsedTime(shownSeconds) }}</div>
         </div>
@@ -147,15 +147,9 @@ const shownSeconds = useCountUp(r?.elapsedSeconds ?? 0, { duration: 600, delay: 
   gap: 0.6rem;
   padding: 1rem;
 }
-.stat-tile {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 0.7rem 0.8rem;
-  text-align: center;
-}
 /* Tiles pop in one after another while their numbers count up */
 .stat-tile {
+  padding: 0.7rem 0.8rem;
   animation: tile-pop 0.4s cubic-bezier(0.22, 1, 0.36, 1) backwards;
   animation-delay: calc(var(--i) * 120ms + 150ms);
 }
@@ -166,6 +160,11 @@ const shownSeconds = useCountUp(r?.elapsedSeconds ?? 0, { duration: 600, delay: 
   }
 }
 .best-badge {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 2px 12px;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
   animation: pop-in 0.3s ease 1.35s backwards;
 }
 @media (prefers-reduced-motion: reduce) {
@@ -188,18 +187,6 @@ const shownSeconds = useCountUp(r?.elapsedSeconds ?? 0, { duration: 600, delay: 
   color: var(--gold-light);
   font-variant-numeric: tabular-nums;
   text-shadow: 0 0 14px rgba(224, 192, 96, 0.45);
-}
-.best-badge {
-  display: inline-block;
-  margin-top: 4px;
-  padding: 2px 12px;
-  border-radius: 99px;
-  border: 1px solid rgba(var(--emerald-rgb), 0.6);
-  background: rgba(var(--emerald-rgb), 0.14);
-  color: var(--success-text);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
 }
 .stat-label {
   font-size: 0.7rem;

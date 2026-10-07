@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import type { ActualOperation, Difficulty, Question } from '../types/game'
 import { DIFFICULTIES, OPERATIONS } from './labels'
-import { generateQuestions, formatQuestion } from './questionGenerator'
+import { generateQuestions } from './questionGenerator'
 
 // generation is random, so every property is checked over many runs
 const RUNS = 30
@@ -77,13 +77,5 @@ describe('generateQuestions', () => {
       expectInRange(q.answer, range)
       expectInRange(q.operandB, [2, 9])
     }
-  })
-})
-
-describe('formatQuestion', () => {
-  it('joins the operands with the operator symbol', () => {
-    expect(
-      formatQuestion({ id: 'x', operandA: 12, operandB: 3, operation: 'division', answer: 4 }),
-    ).toBe('12 ÷ 3')
   })
 })

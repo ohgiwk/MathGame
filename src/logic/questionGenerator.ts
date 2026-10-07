@@ -1,5 +1,4 @@
 import type { Difficulty, Operation, ActualOperation, Question, GameSettings } from '../types/game'
-import { OPERATOR_SYMBOLS } from './labels'
 
 function randomInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min
@@ -95,8 +94,4 @@ export function generateQuestions(settings: GameSettings): Question[] {
   }
 
   return questions
-}
-
-export function formatQuestion(q: Question): string {
-  return `${q.operandA} ${OPERATOR_SYMBOLS[q.operation]} ${q.operandB}`
 }

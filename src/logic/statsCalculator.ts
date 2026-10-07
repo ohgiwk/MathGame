@@ -46,30 +46,20 @@ export function summarize(records: GameRecord[]): StatsSummary {
   }
 }
 
+export function recordsFor(
+  records: GameRecord[],
+  difficulty: Difficulty,
+  operation: Operation,
+): GameRecord[] {
+  return records.filter((r) => r.difficulty === difficulty && r.operation === operation)
+}
+
 export function summarizeByOperation(
   records: GameRecord[],
   difficulty: Difficulty,
 ): { operation: Operation; summary: StatsSummary }[] {
   return OPERATIONS.map((operation) => ({
     operation,
-    summary: summarize(
-      records.filter((r) => r.difficulty === difficulty && r.operation === operation),
-    ),
+    summary: summarize(recordsFor(records, difficulty, operation)),
   }))
-}
-
-export function formatTotalTime(seconds: number): string {
-  const h = Math.floor(seconds / 3600)
-  const m = Math.floor((seconds % 3600) / 60)
-  const s = seconds % 60
-  if (h > 0) return `${h}時間${m}分`
-  if (m > 0) return `${m}分${s}秒`
-  return `${s}秒`
-}
-
-export function formatPlayedAt(timestamp: number): string {
-  const d = new Date(timestamp)
-  const hh = d.getHours().toString().padStart(2, '0')
-  const mm = d.getMinutes().toString().padStart(2, '0')
-  return `${d.getMonth() + 1}/${d.getDate()} ${hh}:${mm}`
 }

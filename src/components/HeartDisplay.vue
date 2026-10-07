@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { MAX_LIVES } from '../types/game'
+import { MAX_LIVES } from '../logic/constants'
 
 const props = defineProps<{ lives: number }>()
 

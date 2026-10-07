@@ -1,29 +1,15 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import type { Difficulty, Operation, GameRecord } from '../types/game'
-import { calculateScore } from '../logic/scoreCalculator'
+import { parseRecords } from '../logic/recordParser'
+import { summarize, recordsFor } from '../logic/statsCalculator'
 
 const STORAGE_KEY = 'math-kingdom:records'
 
 function loadRecords(): GameRecord[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return []
-    const parsed: unknown = JSON.parse(raw)
-    if (!Array.isArray(parsed)) return []
-    return (
-      parsed
-        .filter(
-          (r): r is GameRecord =>
-            !!r &&
-            typeof r.playedAt === 'number' &&
-            typeof r.correctCount === 'number' &&
-            typeof r.totalAnswered === 'number' &&
-            typeof r.elapsedSeconds === 'number',
-        )
-        // records saved before scoring existed get their score from the same formula
-        .map((r) => (typeof r.score === 'number' ? r : { ...r, score: calculateScore(r).score }))
-    )
+    return raw ? parseRecords(JSON.parse(raw)) : []
   } catch {
     return []
   }
@@ -47,10 +33,9 @@ export const useStatsStore = defineStore('stats', () => {
     }
   }
 
+  /** 0 when the combination has never been played */
   function bestScore(difficulty: Difficulty, operation: Operation): number {
-    return records.value
-      .filter((r) => r.difficulty === difficulty && r.operation === operation)
-      .reduce((best, r) => Math.max(best, r.score), 0)
+    return summarize(recordsFor(records.value, difficulty, operation)).bestScore ?? 0
   }
 
   return { records, addRecord, bestScore }

@@ -1,4 +1,4 @@
-import type { GameState, GameResult, GameEndReason } from '../types/game'
+import type { GameState, GameResult, GameEndReason, GameOutcome } from '../types/game'
 import { calculateScore } from './scoreCalculator'
 
 /** `now` is the timestamp (ms) at which the game ended. */
@@ -7,33 +7,17 @@ export function calculateResult(
   endReason: GameEndReason,
   now: number,
 ): Omit<GameResult, 'isBestScore'> {
-  const totalAnswered = state.currentIndex + 1
-  const elapsedSeconds = Math.round((now - state.startedAt) / 1000)
-  const accuracy = totalAnswered > 0 ? Math.round((state.correctCount / totalAnswered) * 100) : 0
-
-  const score = calculateScore({
-    difficulty: state.settings.difficulty,
-    operation: state.settings.operation,
-    questionCount: state.settings.questionCount,
+  const outcome: GameOutcome = {
+    ...state.settings,
     endReason,
     correctCount: state.correctCount,
-    totalAnswered,
-    elapsedSeconds,
-  })
+    totalAnswered: state.currentIndex + 1,
+    elapsedSeconds: Math.round((now - state.startedAt) / 1000),
+  }
 
   return {
-    endReason,
-    correctCount: state.correctCount,
-    totalAnswered,
-    totalCount: state.settings.questionCount,
-    accuracy,
-    elapsedSeconds,
-    score,
+    outcome,
+    accuracy: Math.round((outcome.correctCount / outcome.totalAnswered) * 100),
+    score: calculateScore(outcome),
   }
-}
-
-export function formatElapsedTime(seconds: number): string {
-  const m = Math.floor(seconds / 60)
-  const s = seconds % 60
-  return `${m}分${s.toString().padStart(2, '0')}秒`
 }

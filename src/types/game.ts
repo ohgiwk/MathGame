@@ -1,5 +1,3 @@
-import type { ScoreBreakdown } from '../logic/scoreCalculator'
-
 export type Difficulty = 'easy' | 'normal' | 'hard'
 export type Operation = 'addition' | 'subtraction' | 'multiplication' | 'division' | 'mixed'
 export type ActualOperation = Exclude<Operation, 'mixed'>
@@ -37,21 +35,8 @@ export interface GameState {
   feedback: FeedbackState | null
 }
 
-export interface GameResult {
-  endReason: GameEndReason
-  correctCount: number
-  totalAnswered: number
-  totalCount: number
-  accuracy: number
-  elapsedSeconds: number
-  score: ScoreBreakdown
-  /** true when this beats every earlier score for the same difficulty and operation */
-  isBestScore: boolean
-}
-
-export interface GameRecord {
-  id: string
-  playedAt: number
+/** What happened in one finished game; everything the score is computed from. */
+export interface GameOutcome {
   difficulty: Difficulty
   operation: Operation
   questionCount: QuestionCount
@@ -59,8 +44,28 @@ export interface GameRecord {
   correctCount: number
   totalAnswered: number
   elapsedSeconds: number
+}
+
+export interface ScoreBreakdown {
+  /** correct answers × 100 × difficulty × operation */
+  base: number
+  speedMultiplier: number
+  mistakeMultiplier: number
+  clearMultiplier: number
   score: number
 }
 
-export const MAX_LIVES = 3
-export const FEEDBACK_DURATION_MS = 900
+export interface GameResult {
+  outcome: GameOutcome
+  /** 0-100 */
+  accuracy: number
+  score: ScoreBreakdown
+  /** true when this beats every earlier score for the same difficulty and operation */
+  isBestScore: boolean
+}
+
+export interface GameRecord extends GameOutcome {
+  id: string
+  playedAt: number
+  score: number
+}

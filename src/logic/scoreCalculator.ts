@@ -1,5 +1,11 @@
-import type { Difficulty, Operation, QuestionCount, GameEndReason } from '../types/game'
-import { FEEDBACK_DURATION_MS } from '../types/game'
+import type {
+  Difficulty,
+  Operation,
+  QuestionCount,
+  GameOutcome,
+  ScoreBreakdown,
+} from '../types/game'
+import { FEEDBACK_DURATION_MS } from './constants'
 
 const BASE_POINTS_PER_CORRECT = 100
 
@@ -37,26 +43,7 @@ const CLEAR_MULTIPLIER: Record<QuestionCount, number> = {
 }
 const PERFECT_BONUS = 0.2
 
-export interface ScoreInput {
-  difficulty: Difficulty
-  operation: Operation
-  questionCount: QuestionCount
-  endReason: GameEndReason
-  correctCount: number
-  totalAnswered: number
-  elapsedSeconds: number
-}
-
-export interface ScoreBreakdown {
-  /** correct answers × 100 × difficulty × operation */
-  base: number
-  speedMultiplier: number
-  mistakeMultiplier: number
-  clearMultiplier: number
-  score: number
-}
-
-function speedMultiplier(input: ScoreInput): number {
+function speedMultiplier(input: GameOutcome): number {
   if (input.totalAnswered === 0) return 1
   // elapsed time includes the feedback shown after every answer
   const thinking = Math.max(
@@ -69,7 +56,7 @@ function speedMultiplier(input: ScoreInput): number {
   return 1 + (MAX_SPEED_MULTIPLIER - 1) * ratio
 }
 
-export function calculateScore(input: ScoreInput): ScoreBreakdown {
+export function calculateScore(input: GameOutcome): ScoreBreakdown {
   const mistakes = input.totalAnswered - input.correctCount
   const cleared = input.endReason === 'clear'
 
@@ -91,8 +78,4 @@ export function calculateScore(input: ScoreInput): ScoreBreakdown {
     clearMultiplier: clear,
     score: Math.round(base * speed * mistake * clear),
   }
-}
-
-export function formatScore(score: number): string {
-  return score.toLocaleString('ja-JP')
 }

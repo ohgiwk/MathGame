@@ -6,7 +6,7 @@ defineProps<{
 </script>
 
 <template>
-  <div class="feedback-pill pop-in" :class="correct ? 'correct' : 'incorrect'">
+  <div class="feedback-pill pill pop-in" :class="correct ? 'pill-success' : 'pill-danger'">
     <span class="feedback-icon">{{ correct ? '◎' : '✕' }}</span>
     <span class="feedback-label">{{ correct ? '正解！' : '不正解' }}</span>
     <span v-if="!correct" class="feedback-answer">
@@ -21,22 +21,8 @@ defineProps<{
   align-items: baseline;
   gap: 0.4rem;
   padding: 6px 16px;
-  border-radius: 99px;
-  border: 1px solid;
-  font-weight: 800;
   white-space: nowrap;
-}
-.correct {
-  color: var(--success-text);
-  border-color: rgba(var(--emerald-rgb), 0.6);
-  background: rgba(var(--emerald-rgb), 0.14);
-  box-shadow: 0 0 14px rgba(var(--emerald-rgb), 0.3);
-}
-.incorrect {
-  color: var(--danger-text);
-  border-color: rgba(var(--ruby-rgb), 0.6);
-  background: rgba(var(--ruby-rgb), 0.14);
-  box-shadow: 0 0 14px rgba(var(--ruby-rgb), 0.3);
+  box-shadow: 0 0 14px rgba(var(--pill-rgb), 0.3);
 }
 
 .feedback-icon {

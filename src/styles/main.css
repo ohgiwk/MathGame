@@ -428,6 +428,30 @@ body::before {
   font-variant-numeric: tabular-nums;
 }
 
+/* Pill-shaped status badge; pick a tone with .pill-success or .pill-danger */
+.pill {
+  border: 1px solid rgba(var(--pill-rgb), 0.6);
+  border-radius: 99px;
+  background: rgba(var(--pill-rgb), 0.14);
+  font-weight: 800;
+}
+.pill-success {
+  --pill-rgb: var(--emerald-rgb);
+  color: var(--success-text);
+}
+.pill-danger {
+  --pill-rgb: var(--ruby-rgb);
+  color: var(--danger-text);
+}
+
+/* Small framed box holding one number and its label */
+.tile {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  text-align: center;
+}
+
 /* Section heading inside a card */
 .section-label {
   font-size: 0.75rem;

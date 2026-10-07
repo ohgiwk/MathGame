@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { FEEDBACK_DURATION_MS, MAX_LIVES } from '../types/game'
+import { FEEDBACK_DURATION_MS, MAX_LIVES } from '../logic/constants'
 import { useGameStore } from './gameStore'
 import { useStatsStore } from './statsStore'
 
@@ -54,7 +54,11 @@ describe('gameStore', () => {
     }
     expect(store.screen).toBe('result')
     expect(store.gameState).toBeNull()
-    expect(store.result).toMatchObject({ endReason: 'clear', correctCount: 5, totalAnswered: 5 })
+    expect(store.result!.outcome).toMatchObject({
+      endReason: 'clear',
+      correctCount: 5,
+      totalAnswered: 5,
+    })
     expect(stats.records).toHaveLength(before + 1)
     expect(stats.records[0]).toMatchObject({ ...settings, endReason: 'clear', correctCount: 5 })
   })
@@ -67,7 +71,7 @@ describe('gameStore', () => {
       vi.advanceTimersByTime(FEEDBACK_DURATION_MS)
     }
     expect(store.screen).toBe('result')
-    expect(store.result).toMatchObject({
+    expect(store.result!.outcome).toMatchObject({
       endReason: 'gameover',
       correctCount: 0,
       totalAnswered: MAX_LIVES,
