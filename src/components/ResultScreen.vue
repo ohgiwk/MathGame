@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import { useGameStore } from '../stores/gameStore'
-import { formatScore, formatElapsedTime } from '../logic/format'
+import { useStatsStore } from '../stores/statsStore'
+import { summarize } from '../logic/statsCalculator'
+import { formatScore, formatElapsedTime, formatTotalTime } from '../logic/format'
 import { useCountUp } from '../composables/useCountUp'
 
 const store = useGameStore()
+const statsStore = useStatsStore()
 const result = computed(() => store.result)
 const outcome = computed(() => store.result?.outcome)
 const isGameOver = computed(() => outcome.value?.endReason === 'gameover')
@@ -18,6 +21,23 @@ const shownCorrect = useCountUp(r?.outcome.correctCount ?? 0, { duration: 600, d
 const shownAccuracy = useCountUp(r?.accuracy ?? 0, { duration: 600, delay: 490 })
 const shownMistakes = useCountUp(mistakes, { duration: 600, delay: 610 })
 const shownSeconds = useCountUp(r?.outcome.elapsedSeconds ?? 0, { duration: 600, delay: 730 })
+
+// The panel has two slides side by side: this game's result, and the totals over every game
+// played so far (this one included). It is swiped like a carousel; the dots also switch slides.
+const SLIDE_LABELS = ['今回の結果', '累計']
+const total = computed(() => summarize(statsStore.records))
+const slidesRef = ref<HTMLElement | null>(null)
+const activeSlide = ref(0)
+
+function syncActiveSlide() {
+  const el = slidesRef.value
+  if (el) activeSlide.value = Math.round(el.scrollLeft / el.clientWidth)
+}
+
+function showSlide(index: number) {
+  const el = slidesRef.value
+  el?.scrollTo({ left: index * el.clientWidth })
+}
 </script>
 
 <template>
@@ -41,32 +61,76 @@ const shownSeconds = useCountUp(r?.outcome.elapsedSeconds ?? 0, { duration: 600,
         <span>◆</span>
       </div>
 
-      <!-- Stats grid -->
-      <div class="stats-grid rpg-card">
-        <div class="tile stat-tile stat-wide score-tile" style="--i: 0">
-          <div class="stat-label">スコア</div>
-          <div class="score-value">{{ formatScore(shownScore) }}</div>
-          <div v-if="result.isBestScore" class="best-badge pill pill-success">自己ベスト更新！</div>
-        </div>
-        <div class="tile stat-tile" style="--i: 1">
-          <div class="stat-label">正解数</div>
-          <div class="stat-value">
-            {{ shownCorrect }}<span class="stat-denom"> / {{ outcome.totalAnswered }}</span>
+      <!-- Result panel: this game / totals -->
+      <div class="result-panel rpg-card">
+        <div ref="slidesRef" class="slides" @scroll.passive="syncActiveSlide">
+          <div class="stats-grid">
+            <div class="tile stat-tile stat-wide score-tile" style="--i: 0">
+              <div class="stat-label">スコア</div>
+              <div class="score-value">{{ formatScore(shownScore) }}</div>
+              <div v-if="result.isBestScore" class="best-badge pill pill-success">
+                自己ベスト更新！
+              </div>
+            </div>
+            <div class="tile stat-tile" style="--i: 1">
+              <div class="stat-label">正解数</div>
+              <div class="stat-value">
+                {{ shownCorrect }}<span class="stat-denom"> / {{ outcome.totalAnswered }}</span>
+              </div>
+            </div>
+            <div class="tile stat-tile" style="--i: 2">
+              <div class="stat-label">正答率</div>
+              <div class="stat-value accent">
+                {{ shownAccuracy }}<span class="stat-unit">%</span>
+              </div>
+            </div>
+            <div class="tile stat-tile" style="--i: 3">
+              <div class="stat-label">ミス数</div>
+              <div class="stat-value" :class="mistakes > 0 ? 'danger' : ''">
+                {{ shownMistakes }}
+              </div>
+            </div>
+            <div class="tile stat-tile" style="--i: 4">
+              <div class="stat-label">タイム</div>
+              <div class="stat-time">{{ formatElapsedTime(shownSeconds) }}</div>
+            </div>
+          </div>
+          <div class="stats-grid">
+            <div class="tile stat-tile stat-wide score-tile">
+              <div class="stat-label">累計スコア</div>
+              <div class="score-value">{{ formatScore(total.totalScore) }}</div>
+            </div>
+            <div class="tile stat-tile">
+              <div class="stat-label">プレイ回数</div>
+              <div class="stat-value">{{ total.playCount }}<span class="stat-unit">回</span></div>
+            </div>
+            <div class="tile stat-tile">
+              <div class="stat-label">クリア回数</div>
+              <div class="stat-value">{{ total.clearCount }}<span class="stat-unit">回</span></div>
+            </div>
+            <div class="tile stat-tile">
+              <div class="stat-label">正答率</div>
+              <div class="stat-value accent">
+                {{ total.accuracy ?? '–'
+                }}<span v-if="total.accuracy !== null" class="stat-unit">%</span>
+              </div>
+            </div>
+            <div class="tile stat-tile">
+              <div class="stat-label">累計タイム</div>
+              <div class="stat-time">{{ formatTotalTime(total.elapsedSeconds) }}</div>
+            </div>
           </div>
         </div>
-        <div class="tile stat-tile" style="--i: 2">
-          <div class="stat-label">正答率</div>
-          <div class="stat-value accent">{{ shownAccuracy }}<span class="stat-unit">%</span></div>
-        </div>
-        <div class="tile stat-tile" style="--i: 3">
-          <div class="stat-label">ミス数</div>
-          <div class="stat-value" :class="mistakes > 0 ? 'danger' : ''">
-            {{ shownMistakes }}
-          </div>
-        </div>
-        <div class="tile stat-tile" style="--i: 4">
-          <div class="stat-label">タイム</div>
-          <div class="stat-time">{{ formatElapsedTime(shownSeconds) }}</div>
+        <div class="slide-dots">
+          <button
+            v-for="(label, i) in SLIDE_LABELS"
+            :key="label"
+            class="slide-dot"
+            :class="{ active: activeSlide === i }"
+            :aria-label="label"
+            :aria-current="activeSlide === i"
+            @click="showSlide(i)"
+          ></button>
         </div>
       </div>
 
@@ -78,7 +142,7 @@ const shownSeconds = useCountUp(r?.outcome.elapsedSeconds ?? 0, { duration: 600,
           <span class="btn-gold-gem">◆</span>
         </button>
         <div class="result-links">
-          <button class="btn-ghost" @click="store.goHome()">ホームに戻る</button>
+          <button class="btn-ghost" @click="store.goHome()">Go to Home</button>
           <button class="btn-ghost" @click="store.openStats()">My Records</button>
         </div>
       </div>
@@ -141,17 +205,65 @@ const shownSeconds = useCountUp(r?.outcome.elapsedSeconds ?? 0, { duration: 600,
   font-size: 0.6rem;
 }
 
+.result-panel {
+  overflow: hidden;
+}
+.slides {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+.slides::-webkit-scrollbar {
+  display: none;
+}
 .stats-grid {
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.6rem;
-  padding: 1rem;
+  padding: 1rem 1rem 0.7rem;
+}
+.slide-dots {
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+  padding-bottom: 0.5rem;
+}
+/* the dot is drawn by ::before so the button itself keeps a comfortable touch target */
+.slide-dot {
+  width: 24px;
+  height: 20px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.slide-dot::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--border-gem);
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+.slide-dot.active::before {
+  background: var(--gold-light);
+  transform: scale(1.3);
 }
 /* Tiles pop in one after another while their numbers count up */
 .stat-tile {
   padding: 0.7rem 0.8rem;
   animation: tile-pop 0.4s cubic-bezier(0.22, 1, 0.36, 1) backwards;
-  animation-delay: calc(var(--i) * 120ms + 150ms);
+  animation-delay: calc(var(--i, 0) * 120ms + 150ms);
 }
 @keyframes tile-pop {
   from {
@@ -171,6 +283,9 @@ const shownSeconds = useCountUp(r?.outcome.elapsedSeconds ?? 0, { duration: 600,
   .stat-tile,
   .best-badge {
     animation: none;
+  }
+  .slides {
+    scroll-behavior: auto;
   }
 }
 .stat-wide {
