@@ -17,7 +17,7 @@ export default defineConfig({
         name: '数の王国',
         short_name: '数の王国',
         description: '計算問題でダンジョンを攻略するRPG学習ゲーム',
-        theme_color: '#0D1628',
+        theme_color: '#0e1a35',
         background_color: '#080D1A',
         display: 'standalone',
         start_url: base,
