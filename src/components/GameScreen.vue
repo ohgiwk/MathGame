@@ -306,7 +306,7 @@ function confirmQuit() {
 .question-eq {
   font-weight: 800;
   color: var(--gold);
-  filter: drop-shadow(0 0 8px rgba(201, 168, 54, 0.4));
+  filter: drop-shadow(0 0 8px rgba(var(--gold-rgb), 0.4));
 }
 
 /* Question change: the old one slides out to the left, the next slides in from the right */
@@ -396,13 +396,13 @@ function confirmQuit() {
 }
 .answer-display.correct {
   border-color: var(--gem-emerald);
-  color: #5ef0b5;
-  box-shadow: 0 0 0 3px rgba(16, 200, 122, 0.2);
+  color: var(--success-text);
+  box-shadow: 0 0 0 3px rgba(var(--emerald-rgb), 0.2);
 }
 .answer-display.incorrect {
   border-color: var(--gem-ruby);
-  color: #ff8aa5;
-  box-shadow: 0 0 0 3px rgba(224, 48, 96, 0.2);
+  color: var(--danger-text);
+  box-shadow: 0 0 0 3px rgba(var(--ruby-rgb), 0.2);
 }
 .answer-display.empty {
   color: #3a4e70;

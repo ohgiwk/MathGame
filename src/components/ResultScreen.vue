@@ -109,7 +109,7 @@ const shownSeconds = useCountUp(r?.elapsedSeconds ?? 0, { duration: 600, delay: 
   font-size: 2.6rem;
   line-height: 1.2;
   margin-bottom: 0.2rem;
-  filter: drop-shadow(0 0 16px rgba(201, 168, 54, 0.5));
+  filter: drop-shadow(0 0 16px rgba(var(--gold-rgb), 0.5));
 }
 .result-title {
   font-size: 2rem;
@@ -178,8 +178,8 @@ const shownSeconds = useCountUp(r?.elapsedSeconds ?? 0, { duration: 600, delay: 
   grid-column: 1 / -1;
 }
 .score-tile {
-  border-color: rgba(201, 168, 54, 0.5);
-  background: rgba(201, 168, 54, 0.06);
+  border-color: rgba(var(--gold-rgb), 0.5);
+  background: rgba(var(--gold-rgb), 0.06);
 }
 .score-value {
   font-size: 2.6rem;
@@ -194,9 +194,9 @@ const shownSeconds = useCountUp(r?.elapsedSeconds ?? 0, { duration: 600, delay: 
   margin-top: 4px;
   padding: 2px 12px;
   border-radius: 99px;
-  border: 1px solid rgba(16, 200, 122, 0.6);
-  background: rgba(16, 200, 122, 0.14);
-  color: #5ef0b5;
+  border: 1px solid rgba(var(--emerald-rgb), 0.6);
+  background: rgba(var(--emerald-rgb), 0.14);
+  color: var(--success-text);
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.06em;

@@ -389,13 +389,13 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
   border: 1px solid;
 }
 .history-badge.clear {
-  color: #5ef0b5;
-  border-color: rgba(16, 200, 122, 0.5);
-  background: rgba(16, 200, 122, 0.12);
+  color: var(--success-text);
+  border-color: rgba(var(--emerald-rgb), 0.5);
+  background: rgba(var(--emerald-rgb), 0.12);
 }
 .history-badge.gameover {
-  color: #ff8aa5;
-  border-color: rgba(224, 48, 96, 0.5);
-  background: rgba(224, 48, 96, 0.12);
+  color: var(--danger-text);
+  border-color: rgba(var(--ruby-rgb), 0.5);
+  background: rgba(var(--ruby-rgb), 0.12);
 }
 </style>

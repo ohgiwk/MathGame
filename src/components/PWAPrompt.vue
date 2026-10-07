@@ -76,8 +76,8 @@ function dismiss() {
 
 .pwa-gem {
   font-size: 1.4rem;
-  color: #4c7cff;
-  filter: drop-shadow(0 0 6px #4c7cff);
+  color: var(--gem-blue);
+  filter: drop-shadow(0 0 6px var(--gem-blue));
   flex-shrink: 0;
 }
 
@@ -87,12 +87,12 @@ function dismiss() {
 .pwa-title {
   font-size: 0.9rem;
   font-weight: 800;
-  color: #d6e0f5;
+  color: var(--text-main);
   white-space: nowrap;
 }
 .pwa-sub {
   font-size: 0.72rem;
-  color: #7a95bf;
+  color: var(--text-sub);
   margin-top: 2px;
   white-space: nowrap;
   overflow: hidden;
@@ -126,7 +126,7 @@ function dismiss() {
 .pwa-dismiss-btn {
   background: transparent;
   border: none;
-  color: #7a95bf;
+  color: var(--text-sub);
   cursor: pointer;
   padding: 6px;
   display: flex;
@@ -134,7 +134,7 @@ function dismiss() {
   transition: color 0.15s;
 }
 .pwa-dismiss-btn:hover {
-  color: #d6e0f5;
+  color: var(--text-main);
 }
 
 .pwa-toast-enter-active {

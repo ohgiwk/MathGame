@@ -14,6 +14,13 @@
   --gem-teal: #0bbfa0;
   --gem-ruby: #e03060;
   --gem-emerald: #10c87a;
+  /* text on the translucent emerald / ruby fills used for correct / incorrect states */
+  --success-text: #5ef0b5;
+  --danger-text: #ff8aa5;
+  /* channel triplets of --gold, --gem-emerald and --gem-ruby, for rgba(var(--x-rgb), alpha) */
+  --gold-rgb: 201, 168, 54;
+  --emerald-rgb: 16, 200, 122;
+  --ruby-rgb: 224, 48, 96;
   --shadow-gem: 0 0 18px rgba(76, 124, 255, 0.25);
   --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.5);
 }
@@ -259,8 +266,8 @@ body::before {
   background: linear-gradient(135deg, #1c2b50, #162040);
   color: var(--gold-light);
   box-shadow:
-    0 0 12px rgba(201, 168, 54, 0.25),
-    inset 0 1px 0 rgba(201, 168, 54, 0.1);
+    0 0 12px rgba(var(--gold-rgb), 0.25),
+    inset 0 1px 0 rgba(var(--gold-rgb), 0.1);
 }
 
 /* Primary button */
@@ -339,13 +346,13 @@ body::before {
   text-shadow: 0 0 10px rgba(224, 192, 96, 0.5);
   background: linear-gradient(180deg, #1e2e58 0%, #131d3c 100%);
   border: 1px solid var(--gold);
-  outline: 1px solid rgba(201, 168, 54, 0.35);
+  outline: 1px solid rgba(var(--gold-rgb), 0.35);
   outline-offset: -5px;
   box-shadow:
-    0 0 18px rgba(201, 168, 54, 0.3),
+    0 0 18px rgba(var(--gold-rgb), 0.3),
     0 4px 20px rgba(0, 0, 0, 0.5),
     inset 0 1px 0 rgba(255, 236, 170, 0.25),
-    inset 0 0 16px rgba(201, 168, 54, 0.1);
+    inset 0 0 16px rgba(var(--gold-rgb), 0.1);
 }
 .btn-gold-label {
   /* letter-spacing adds a trailing gap; pull it back so the word stays centered */
@@ -359,7 +366,7 @@ body::before {
 }
 .btn-gem.btn-gold:active:not(:disabled) {
   box-shadow:
-    0 0 10px rgba(201, 168, 54, 0.25),
+    0 0 10px rgba(var(--gold-rgb), 0.25),
     inset 0 2px 8px rgba(0, 0, 0, 0.45);
 }
 @media (hover: hover) {
@@ -368,7 +375,7 @@ body::before {
       0 0 28px rgba(224, 192, 96, 0.55),
       0 8px 24px rgba(0, 0, 0, 0.5),
       inset 0 1px 0 rgba(255, 236, 170, 0.35),
-      inset 0 0 18px rgba(201, 168, 54, 0.18);
+      inset 0 0 18px rgba(var(--gold-rgb), 0.18);
   }
 }
 

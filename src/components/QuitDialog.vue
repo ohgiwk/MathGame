@@ -51,7 +51,7 @@ const emit = defineEmits<{
   font-size: 2.2rem;
   margin-bottom: 0.8rem;
   color: var(--gold);
-  filter: drop-shadow(0 0 8px rgba(201, 168, 54, 0.4));
+  filter: drop-shadow(0 0 8px rgba(var(--gold-rgb), 0.4));
 }
 .dialog-title {
   font-size: 1.1rem;

@@ -27,16 +27,16 @@ defineProps<{
   white-space: nowrap;
 }
 .correct {
-  color: #5ef0b5;
-  border-color: rgba(16, 200, 122, 0.6);
-  background: rgba(16, 200, 122, 0.14);
-  box-shadow: 0 0 14px rgba(16, 200, 122, 0.3);
+  color: var(--success-text);
+  border-color: rgba(var(--emerald-rgb), 0.6);
+  background: rgba(var(--emerald-rgb), 0.14);
+  box-shadow: 0 0 14px rgba(var(--emerald-rgb), 0.3);
 }
 .incorrect {
-  color: #ff8aa5;
-  border-color: rgba(224, 48, 96, 0.6);
-  background: rgba(224, 48, 96, 0.14);
-  box-shadow: 0 0 14px rgba(224, 48, 96, 0.3);
+  color: var(--danger-text);
+  border-color: rgba(var(--ruby-rgb), 0.6);
+  background: rgba(var(--ruby-rgb), 0.14);
+  box-shadow: 0 0 14px rgba(var(--ruby-rgb), 0.3);
 }
 
 .feedback-icon {
