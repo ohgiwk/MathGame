@@ -186,6 +186,57 @@ function handleStart() {
 
 .grid-ops { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
 
+/* Active option: pop when selected, then a light keeps circling the border */
+@property --opt-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+.opt-btn.active {
+  position: relative;
+  border-color: rgba(201,168,54,0.45);
+  animation: opt-select 0.35s ease, opt-glow 2.2s ease-in-out 0.35s infinite;
+}
+.opt-btn.active::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  padding: 2px;
+  background: conic-gradient(
+    from var(--opt-angle),
+    transparent 0%,
+    transparent 55%,
+    var(--gold) 75%,
+    #FFF3C4 92%,
+    transparent 100%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  filter: drop-shadow(0 0 3px rgba(224,192,96,0.5));
+  opacity: 0.55;
+  pointer-events: none;
+  animation: opt-spin 2.4s linear infinite;
+}
+@keyframes opt-select {
+  0%   { transform: scale(0.92); }
+  55%  { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+@keyframes opt-glow {
+  0%, 100% { box-shadow: 0 0 12px rgba(201,168,54,0.25), inset 0 1px 0 rgba(201,168,54,0.1); }
+  50%      { box-shadow: 0 0 22px rgba(201,168,54,0.55), inset 0 1px 0 rgba(201,168,54,0.2); }
+}
+@keyframes opt-spin {
+  to { --opt-angle: 360deg; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .opt-btn.active { animation: none; border-color: var(--gold); }
+  .opt-btn.active::before { display: none; }
+}
+
 .opt-main { font-size: 1rem; font-weight: 700; }
 .opt-sub  { font-size: 0.7rem; opacity: 0.65; margin-top: 2px; }
 .opt-symbol { font-size: 1.3rem; font-weight: 800; }
