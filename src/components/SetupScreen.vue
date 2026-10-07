@@ -42,7 +42,7 @@ function handleStart() {
     <div class="setup-header fade-in-up">
       <div class="temple-icon">⬡</div>
       <h1 class="setup-title">数の王国</h1>
-      <p class="setup-sub">神殿の試練を突破せよ</p>
+      <p class="setup-sub">KINGDOM OF NUMBERS</p>
     </div>
 
     <div class="setup-body fade-in-up">
@@ -97,7 +97,7 @@ function handleStart() {
       </div>
 
       <!-- スタートボタン -->
-      <button class="btn-gem start-btn" @click="handleStart">ゲーム開始</button>
+      <button class="btn-gem start-btn" @click="handleStart">START</button>
       <button class="btn-ghost" @click="store.openStats()">記録を見る</button>
     </div>
   </div>
@@ -127,32 +127,48 @@ function handleStart() {
   display: block;
 }
 
+/* A streak of light sweeps across the gold title from left to right */
 .setup-title {
+  display: inline-block;
   font-size: 2.2rem;
   font-weight: 900;
-  background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 60%, #a07820 100%);
+  background:
+    linear-gradient(100deg, transparent 44%, rgba(255, 250, 225, 0.95) 50%, transparent 56%)
+      no-repeat,
+    linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 60%, #a07820 100%);
+  background-size:
+    250% 100%,
+    100% 100%;
+  background-position:
+    100% 0,
+    0 0;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   letter-spacing: 0.08em;
   line-height: 1.2;
-  animation: title-glow 2.2s ease-in-out infinite;
+  filter: drop-shadow(0 0 6px rgba(201, 168, 54, 0.35));
+  animation: title-shine 3.2s ease-in-out infinite;
 }
-@keyframes title-glow {
-  0%,
-  100% {
-    filter: drop-shadow(0 0 4px rgba(201, 168, 54, 0.25));
+@keyframes title-shine {
+  0% {
+    background-position:
+      100% 0,
+      0 0;
   }
-  50% {
-    filter: drop-shadow(0 0 14px rgba(224, 192, 96, 0.7));
+  45%,
+  100% {
+    background-position:
+      0% 0,
+      0 0;
   }
 }
 
 .setup-sub {
   color: var(--text-sub);
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   margin-top: 0.3rem;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.28em;
 }
 
 .setup-body {
