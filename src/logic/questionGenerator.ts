@@ -1,13 +1,14 @@
-import type { Difficulty, Operation, ActualOperation, Question, GameSettings } from '../types/game'
+import type { Difficulty, ActualOperation, Question, GameSettings } from '../types/game'
+import { resolveMixedOperations } from './labels'
 
 function randomInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min
 }
 
-function getActualOperation(op: Operation): ActualOperation {
-  if (op !== 'mixed') return op
-  const ops: ActualOperation[] = ['addition', 'subtraction', 'multiplication', 'division']
-  return ops[randomInt(0, 3)]
+function getActualOperation(settings: GameSettings): ActualOperation {
+  if (settings.operation !== 'mixed') return settings.operation
+  const ops = resolveMixedOperations(settings.mixedOperations)
+  return ops[randomInt(0, ops.length - 1)]
 }
 
 function canonKey(a: number, b: number, op: ActualOperation): string {
@@ -84,7 +85,7 @@ export function generateQuestions(settings: GameSettings): Question[] {
   const MAX_ATTEMPTS = 200
 
   for (let i = 0; i < settings.questionCount; i++) {
-    const op = getActualOperation(settings.operation)
+    const op = getActualOperation(settings)
     let q: Question | null = null
     for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
       q = tryGenerate(settings.difficulty, op, usedKeys)

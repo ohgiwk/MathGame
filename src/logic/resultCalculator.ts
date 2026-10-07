@@ -7,8 +7,10 @@ export function calculateResult(
   endReason: GameEndReason,
   now: number,
 ): Omit<GameResult, 'isBestScore'> {
+  const { mixedOperations, ...settings } = state.settings
   const outcome: GameOutcome = {
-    ...state.settings,
+    ...settings,
+    ...(settings.operation === 'mixed' && mixedOperations ? { mixedOperations } : {}),
     endReason,
     correctCount: state.correctCount,
     totalAnswered: state.currentIndex + 1,

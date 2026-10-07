@@ -1,11 +1,12 @@
 import type {
   Difficulty,
-  Operation,
+  ActualOperation,
   QuestionCount,
   GameOutcome,
   ScoreBreakdown,
 } from '../types/game'
 import { FEEDBACK_DURATION_MS } from './constants'
+import { resolveMixedOperations } from './labels'
 
 const BASE_POINTS_PER_CORRECT = 100
 
@@ -15,12 +16,21 @@ const DIFFICULTY_MULTIPLIER: Record<Difficulty, number> = {
   hard: 2.5,
 }
 
-const OPERATION_MULTIPLIER: Record<Operation, number> = {
+const OPERATION_MULTIPLIER: Record<ActualOperation, number> = {
   addition: 1,
   subtraction: 1.1,
   multiplication: 1.3,
   division: 1.4,
-  mixed: 1.5,
+}
+/** Switching between operations is harder than any one of them; added per extra operation in a mix */
+const MIX_BONUS_PER_OPERATION = 0.1
+
+/** A mix is worth the average of its operations plus the switching bonus (1.5 for all four). */
+function operationMultiplier(input: GameOutcome): number {
+  if (input.operation !== 'mixed') return OPERATION_MULTIPLIER[input.operation]
+  const ops = resolveMixedOperations(input.mixedOperations)
+  const average = ops.reduce((sum, op) => sum + OPERATION_MULTIPLIER[op], 0) / ops.length
+  return average + MIX_BONUS_PER_OPERATION * (ops.length - 1)
 }
 
 /** Thinking time per question (seconds) that earns the full speed bonus */
@@ -64,7 +74,7 @@ export function calculateScore(input: GameOutcome): ScoreBreakdown {
     input.correctCount *
     BASE_POINTS_PER_CORRECT *
     DIFFICULTY_MULTIPLIER[input.difficulty] *
-    OPERATION_MULTIPLIER[input.operation]
+    operationMultiplier(input)
   const speed = speedMultiplier(input)
   const mistake = Math.max(1 - MISTAKE_PENALTY * mistakes, 0)
   const clear = cleared

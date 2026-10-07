@@ -9,6 +9,8 @@ export interface GameSettings {
   questionCount: QuestionCount
   difficulty: Difficulty
   operation: Operation
+  /** operations drawn from when `operation` is 'mixed'; all four when omitted */
+  mixedOperations?: ActualOperation[]
 }
 
 export interface Question {
@@ -39,6 +41,8 @@ export interface GameState {
 export interface GameOutcome {
   difficulty: Difficulty
   operation: Operation
+  /** only set for 'mixed' games; all four when omitted */
+  mixedOperations?: ActualOperation[]
   questionCount: QuestionCount
   endReason: GameEndReason
   correctCount: number

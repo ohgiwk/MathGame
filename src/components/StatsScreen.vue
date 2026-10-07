@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 import { useGameStore } from '../stores/gameStore'
 import { useStatsStore } from '../stores/statsStore'
 import type { Difficulty } from '../types/game'
-import { DIFFICULTIES, DIFFICULTY_LABELS, OPERATION_LABELS } from '../logic/labels'
+import { DIFFICULTIES, DIFFICULTY_LABELS, OPERATION_LABELS, operationLabel } from '../logic/labels'
 import { summarize, summarizeByOperation } from '../logic/statsCalculator'
 import { formatScore, formatElapsedTime, formatTotalTime, formatPlayedAt } from '../logic/format'
 
@@ -121,8 +121,8 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
           <li v-for="r in history" :key="r.id" class="history-row">
             <div class="history-main">
               <div class="history-mode">
-                {{ DIFFICULTY_LABELS[r.difficulty] }} · {{ OPERATION_LABELS[r.operation] }} ·
-                {{ r.questionCount }}問
+                {{ DIFFICULTY_LABELS[r.difficulty] }} ·
+                {{ operationLabel(r.operation, r.mixedOperations) }} · {{ r.questionCount }}問
               </div>
               <div class="history-date">{{ formatPlayedAt(r.playedAt) }}</div>
             </div>

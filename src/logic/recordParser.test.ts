@@ -24,6 +24,11 @@ describe('parseRecords', () => {
     expect(parseRecords([valid])).toEqual([valid])
   })
 
+  it('keeps the chosen operations of a mixed record', () => {
+    const mixed = { ...valid, operation: 'mixed', mixedOperations: ['addition', 'division'] }
+    expect(parseRecords([mixed])).toEqual([mixed])
+  })
+
   it('computes the score of records saved before scoring existed', () => {
     const legacy: Record<string, unknown> = { ...valid }
     delete legacy.score
@@ -35,6 +40,11 @@ describe('parseRecords', () => {
     ['null', null],
     ['an unknown difficulty', { ...valid, difficulty: 'extreme' }],
     ['an unknown operation', { ...valid, operation: 'modulo' }],
+    [
+      'an unknown mixed operation',
+      { ...valid, operation: 'mixed', mixedOperations: ['addition', 'modulo'] },
+    ],
+    ['a mix of one operation', { ...valid, operation: 'mixed', mixedOperations: ['addition'] }],
     ['an unknown question count', { ...valid, questionCount: 7 }],
     ['an unknown end reason', { ...valid, endReason: 'quit' }],
     ['a missing id', { ...valid, id: undefined }],

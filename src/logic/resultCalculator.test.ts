@@ -36,6 +36,18 @@ describe('calculateResult', () => {
     expect(r.score.score).toBe(975)
   })
 
+  it('records the chosen operations only for a mixed game', () => {
+    const mixedOperations: GameState['settings']['mixedOperations'] = ['addition', 'subtraction']
+    const single = state({
+      settings: { questionCount: 5, difficulty: 'easy', operation: 'addition', mixedOperations },
+    })
+    const mixed = state({
+      settings: { questionCount: 5, difficulty: 'easy', operation: 'mixed', mixedOperations },
+    })
+    expect(calculateResult(single, 'clear', 11_000).outcome).not.toHaveProperty('mixedOperations')
+    expect(calculateResult(mixed, 'clear', 11_000).outcome.mixedOperations).toEqual(mixedOperations)
+  })
+
   it('counts only the questions reached on a game over', () => {
     const r = calculateResult(
       state({ currentIndex: 3, lives: 0, correctCount: 1 }),

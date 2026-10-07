@@ -2,6 +2,7 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import type { Screen, GameSettings, GameState, GameResult, GameEndReason } from '../types/game'
 import { MAX_LIVES, FEEDBACK_DURATION_MS } from '../logic/constants'
+import { ACTUAL_OPERATIONS } from '../logic/labels'
 import { generateQuestions } from '../logic/questionGenerator'
 import { checkAnswer } from '../logic/answerChecker'
 import { calculateResult } from '../logic/resultCalculator'
@@ -16,6 +17,7 @@ export const useGameStore = defineStore('game', () => {
     questionCount: 10,
     difficulty: 'normal',
     operation: 'addition',
+    mixedOperations: [...ACTUAL_OPERATIONS],
   })
 
   const gameState = ref<GameState | null>(null)

@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useGameStore } from '../stores/gameStore'
-import type { QuestionCount, Difficulty, Operation } from '../types/game'
+import type { QuestionCount, Difficulty, Operation, ActualOperation } from '../types/game'
 import {
   QUESTION_COUNTS,
   DIFFICULTIES,
   OPERATIONS,
+  ACTUAL_OPERATIONS,
+  MIN_MIXED_OPERATIONS,
+  resolveMixedOperations,
   DIFFICULTY_LABELS,
   DIFFICULTY_DESCRIPTIONS,
   OPERATION_LABELS,
@@ -16,6 +19,7 @@ const store = useGameStore()
 const selectedCount = ref<QuestionCount>(store.settings.questionCount)
 const selectedDifficulty = ref<Difficulty>(store.settings.difficulty)
 const selectedOperation = ref<Operation>(store.settings.operation)
+const selectedMixed = ref<ActualOperation[]>(resolveMixedOperations(store.settings.mixedOperations))
 
 // full-width symbols for the option buttons
 const operationSymbols: Record<Operation, string> = {
@@ -26,11 +30,24 @@ const operationSymbols: Record<Operation, string> = {
   mixed: '✦',
 }
 
+function isMixLocked(op: ActualOperation): boolean {
+  return selectedMixed.value.includes(op) && selectedMixed.value.length <= MIN_MIXED_OPERATIONS
+}
+
+function toggleMixed(op: ActualOperation) {
+  if (isMixLocked(op)) return
+  const current = selectedMixed.value
+  selectedMixed.value = current.includes(op)
+    ? current.filter((o) => o !== op)
+    : ACTUAL_OPERATIONS.filter((o) => o === op || current.includes(o))
+}
+
 function handleStart() {
   store.startGame({
     questionCount: selectedCount.value,
     difficulty: selectedDifficulty.value,
     operation: selectedOperation.value,
+    mixedOperations: selectedMixed.value,
   })
 }
 </script>
@@ -92,6 +109,23 @@ function handleStart() {
             <div class="opt-symbol">{{ operationSymbols[op] }}</div>
             <div class="opt-sub">{{ OPERATION_LABELS[op] }}</div>
           </button>
+        </div>
+        <div v-if="selectedOperation === 'mixed'" class="mix-picker">
+          <p class="mix-note">出題する計算（{{ MIN_MIXED_OPERATIONS }}つ以上）</p>
+          <div class="grid-mix">
+            <button
+              v-for="op in ACTUAL_OPERATIONS"
+              :key="op"
+              class="opt-btn mix-btn"
+              :class="{ on: selectedMixed.includes(op), locked: isMixLocked(op) }"
+              :aria-pressed="selectedMixed.includes(op)"
+              :aria-disabled="isMixLocked(op)"
+              :aria-label="OPERATION_LABELS[op]"
+              @click="toggleMixed(op)"
+            >
+              {{ operationSymbols[op] }}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -218,6 +252,39 @@ function handleStart() {
 .grid-ops .opt-sub {
   font-size: 0.6rem;
   white-space: nowrap;
+}
+
+.mix-picker {
+  margin-top: 0.6rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--border);
+}
+.mix-note {
+  font-size: 0.65rem;
+  color: var(--text-sub);
+  letter-spacing: 0.08em;
+  margin-bottom: 0.4rem;
+}
+.grid-mix {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.4rem;
+}
+.mix-btn {
+  padding: 7px 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  opacity: 0.6;
+}
+.mix-btn.on {
+  opacity: 1;
+  border-color: var(--gold);
+  color: var(--gold-light);
+  background: linear-gradient(135deg, #1c2b50, #162040);
+}
+/* the last two cannot be turned off */
+.mix-btn.locked {
+  cursor: default;
 }
 
 /* Active option: pop when selected, then a light keeps circling the border */

@@ -67,6 +67,16 @@ describe('calculateScore', () => {
     expect(s.score).toBe(525)
   })
 
+  it('values a mix by the operations in it', () => {
+    const mix = (mixedOperations?: GameOutcome['mixedOperations']) =>
+      calculateScore({ ...base, operation: 'mixed', mixedOperations }).base
+    // all four, chosen or not, keep the full mix multiplier
+    expect(mix()).toBe(750)
+    expect(mix(['addition', 'subtraction', 'multiplication', 'division'])).toBe(750)
+    expect(mix(['addition', 'subtraction'])).toBe(575)
+    expect(mix(['multiplication', 'division'])).toBe(725)
+  })
+
   it('scores zero when nothing was answered correctly', () => {
     const s = calculateScore({ ...base, endReason: 'gameover', correctCount: 0, totalAnswered: 3 })
     expect(s.score).toBe(0)

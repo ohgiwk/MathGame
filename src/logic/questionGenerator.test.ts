@@ -46,6 +46,32 @@ describe('generateQuestions', () => {
     }
   })
 
+  it('a mix only draws from the chosen operations, and uses each of them', () => {
+    const questions = Array.from({ length: RUNS }, () =>
+      generateQuestions({
+        questionCount: 15,
+        difficulty: 'normal',
+        operation: 'mixed',
+        mixedOperations: ['addition', 'multiplication'],
+      }),
+    ).flat()
+    expect(new Set(questions.map((q) => q.operation))).toEqual(
+      new Set(['addition', 'multiplication']),
+    )
+  })
+
+  it('a mix with fewer than two chosen operations falls back to all four', () => {
+    const questions = Array.from({ length: RUNS }, () =>
+      generateQuestions({
+        questionCount: 15,
+        difficulty: 'normal',
+        operation: 'mixed',
+        mixedOperations: ['division'],
+      }),
+    ).flat()
+    expect(new Set(questions.map((q) => q.operation)).size).toBe(4)
+  })
+
   it.each<[Difficulty, [number, number]]>([
     ['easy', [1, 9]],
     ['normal', [10, 99]],
