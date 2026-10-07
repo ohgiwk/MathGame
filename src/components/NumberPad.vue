@@ -105,6 +105,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown))
     background 0.08s ease;
 }
 .pad-key:active:not(:disabled) {
+  filter: none;
   transform: scale(0.95);
   background: #1c2b50;
   border-color: var(--gem-blue);

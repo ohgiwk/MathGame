@@ -20,4 +20,7 @@ if (viewport) {
   syncAppHeight()
 }
 
+// iOS Safari only applies :active styles to elements when a touch listener exists
+document.addEventListener('touchstart', () => {}, { passive: true })
+
 createApp(App).use(createPinia()).mount('#app')
