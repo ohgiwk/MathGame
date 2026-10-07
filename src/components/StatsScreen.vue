@@ -32,7 +32,7 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
     <div class="stats-inner fade-in-up">
       <!-- Header -->
       <div class="stats-header">
-        <button class="back-btn" aria-label="ホームに戻る" @click="store.resetGame()">‹</button>
+        <button class="back-btn" aria-label="ホームに戻る" @click="store.goHome()">‹</button>
         <h1 class="stats-title">My Records</h1>
       </div>
 

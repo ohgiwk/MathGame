@@ -25,7 +25,7 @@ const progressCurrent = computed(() => {
 const progressTotal = computed(() => state.value?.questions.length ?? 1)
 
 const answerLength = computed(() => String(question.value?.answer ?? '').length)
-const padDisabled = computed(() => !!state.value?.isSubmitting || showQuitDialog.value)
+const padDisabled = computed(() => !!state.value?.feedback || showQuitDialog.value)
 
 watch(
   question,
@@ -52,7 +52,7 @@ function pressDelete() {
 
 function confirmQuit() {
   showQuitDialog.value = false
-  store.resetGame()
+  store.goHome()
 }
 </script>
 

@@ -33,7 +33,7 @@ export interface GameState {
   lives: number
   correctCount: number
   startedAt: number
-  isSubmitting: boolean
+  /** set while the result of the last answer is shown; no input is accepted meanwhile */
   feedback: FeedbackState | null
 }
 

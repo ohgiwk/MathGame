@@ -72,13 +72,13 @@ const shownSeconds = useCountUp(r?.elapsedSeconds ?? 0, { duration: 600, delay: 
 
       <!-- Buttons -->
       <div class="result-actions">
-        <button class="btn-gem btn-gold" @click="store.retryGame()">
+        <button class="btn-gem btn-gold" @click="store.startGame()">
           <span class="btn-gold-gem">◆</span>
           <span class="btn-gold-label">TRY AGAIN</span>
           <span class="btn-gold-gem">◆</span>
         </button>
         <div class="result-links">
-          <button class="btn-ghost" @click="store.resetGame()">ホームに戻る</button>
+          <button class="btn-ghost" @click="store.goHome()">ホームに戻る</button>
           <button class="btn-ghost" @click="store.openStats()">My Records</button>
         </div>
       </div>

@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
-import type { Screen, GameSettings, GameState, GameResult } from '../types/game'
+import type { Screen, GameSettings, GameState, GameResult, GameEndReason } from '../types/game'
 import { MAX_LIVES, FEEDBACK_DURATION_MS } from '../types/game'
 import { generateQuestions } from '../logic/questionGenerator'
 import { checkAnswer } from '../logic/answerChecker'
@@ -29,13 +29,18 @@ export const useGameStore = defineStore('game', () => {
     return s.questions[s.currentIndex] ?? null
   })
 
-  function startGame(newSettings?: GameSettings) {
-    if (newSettings) settings.value = newSettings
-
+  function clearFeedbackTimer() {
     if (feedbackTimer !== null) {
       clearTimeout(feedbackTimer)
       feedbackTimer = null
     }
+  }
+
+  /** Starts a game with the given settings, or with the previous ones when omitted (retry). */
+  function startGame(newSettings?: GameSettings) {
+    if (newSettings) settings.value = newSettings
+
+    clearFeedbackTimer()
 
     const s = settings.value
     const questions = generateQuestions(s)
@@ -47,7 +52,6 @@ export const useGameStore = defineStore('game', () => {
       lives: MAX_LIVES,
       correctCount: 0,
       startedAt: Date.now(),
-      isSubmitting: false,
       feedback: null,
     }
 
@@ -57,11 +61,9 @@ export const useGameStore = defineStore('game', () => {
 
   function submitAnswer(input: string) {
     const state = gameState.value
-    if (!state || state.isSubmitting) return
+    if (!state || state.feedback) return
     const q = currentQuestion.value
     if (!q) return
-
-    state.isSubmitting = true
 
     const correct = checkAnswer(q, input)
     if (correct) {
@@ -76,41 +78,39 @@ export const useGameStore = defineStore('game', () => {
       const s = gameState.value
       if (!s) return
 
-      const isGameOver = s.lives <= 0
-      const isLastQuestion = s.currentIndex + 1 >= s.questions.length
-
-      if (isGameOver || isLastQuestion) {
-        const endReason = isGameOver ? 'gameover' : 'clear'
-        const r = calculateResult(s, endReason)
-        const { difficulty, operation, questionCount } = s.settings
-        const previousBest = statsStore.bestScore(difficulty, operation)
-        result.value = { ...r, isBestScore: r.score.score > previousBest }
-        statsStore.addRecord({
-          difficulty,
-          operation,
-          questionCount,
-          endReason,
-          correctCount: r.correctCount,
-          totalAnswered: r.totalAnswered,
-          elapsedSeconds: r.elapsedSeconds,
-          score: r.score.score,
-        })
-        gameState.value = null
-        screen.value = 'result'
-        return
-      }
-
-      s.currentIndex++
-      s.feedback = null
-      s.isSubmitting = false
+      if (s.lives <= 0) finishGame(s, 'gameover')
+      else if (s.currentIndex + 1 >= s.questions.length) finishGame(s, 'clear')
+      else advanceQuestion(s)
     }, FEEDBACK_DURATION_MS)
   }
 
-  function resetGame() {
-    if (feedbackTimer !== null) {
-      clearTimeout(feedbackTimer)
-      feedbackTimer = null
-    }
+  function advanceQuestion(state: GameState) {
+    state.currentIndex++
+    state.feedback = null
+  }
+
+  function finishGame(state: GameState, endReason: GameEndReason) {
+    const r = calculateResult(state, endReason, Date.now())
+    const { difficulty, operation, questionCount } = state.settings
+    const previousBest = statsStore.bestScore(difficulty, operation)
+    result.value = { ...r, isBestScore: r.score.score > previousBest }
+    statsStore.addRecord({
+      difficulty,
+      operation,
+      questionCount,
+      endReason,
+      correctCount: r.correctCount,
+      totalAnswered: r.totalAnswered,
+      elapsedSeconds: r.elapsedSeconds,
+      score: r.score.score,
+    })
+    gameState.value = null
+    screen.value = 'result'
+  }
+
+  /** Back to the setup screen from anywhere, dropping any game in progress. */
+  function goHome() {
+    clearFeedbackTimer()
     gameState.value = null
     result.value = null
     screen.value = 'setup'
@@ -118,10 +118,6 @@ export const useGameStore = defineStore('game', () => {
 
   function openStats() {
     screen.value = 'stats'
-  }
-
-  function retryGame() {
-    startGame()
   }
 
   return {
@@ -132,8 +128,7 @@ export const useGameStore = defineStore('game', () => {
     currentQuestion,
     startGame,
     submitAnswer,
-    resetGame,
+    goHome,
     openStats,
-    retryGame,
   }
 })

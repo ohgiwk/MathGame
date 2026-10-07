@@ -1,12 +1,14 @@
 import type { GameState, GameResult, GameEndReason } from '../types/game'
 import { calculateScore } from './scoreCalculator'
 
+/** `now` is the timestamp (ms) at which the game ended. */
 export function calculateResult(
   state: GameState,
   endReason: GameEndReason,
+  now: number,
 ): Omit<GameResult, 'isBestScore'> {
   const totalAnswered = state.currentIndex + 1
-  const elapsedSeconds = Math.round((Date.now() - state.startedAt) / 1000)
+  const elapsedSeconds = Math.round((now - state.startedAt) / 1000)
   const accuracy = totalAnswered > 0 ? Math.round((state.correctCount / totalAnswered) * 100) : 0
 
   const score = calculateScore({
