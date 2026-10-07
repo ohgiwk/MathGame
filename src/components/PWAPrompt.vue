@@ -28,7 +28,17 @@ function dismiss() {
       </div>
       <div class="pwa-actions">
         <button class="pwa-update-btn" @click="update">今すぐ更新</button>
-        <button class="pwa-dismiss-btn" @click="dismiss">✕</button>
+        <button class="pwa-dismiss-btn" aria-label="閉じる" @click="dismiss">
+          <svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true">
+            <path
+              d="M2 2 10 10M10 2 2 10"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+            />
+          </svg>
+        </button>
       </div>
     </div>
   </Transition>
@@ -117,10 +127,10 @@ function dismiss() {
   background: transparent;
   border: none;
   color: #7a95bf;
-  font-size: 1rem;
   cursor: pointer;
-  padding: 4px 6px;
-  line-height: 1;
+  padding: 6px;
+  display: flex;
+  align-items: center;
   transition: color 0.15s;
 }
 .pwa-dismiss-btn:hover {
