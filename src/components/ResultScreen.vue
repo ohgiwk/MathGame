@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useGameStore } from '../stores/gameStore'
 import { formatElapsedTime } from '../logic/resultCalculator'
+import { formatScore } from '../logic/scoreCalculator'
 
 const store = useGameStore()
 const result = computed(() => store.result)
@@ -18,7 +19,7 @@ const isGameOver = computed(() => result.value?.endReason === 'gameover')
           {{ isGameOver ? 'ゲームオーバー' : 'ゲームクリア！' }}
         </h1>
         <p v-if="!isGameOver" class="result-sub">見事な勝利だ、勇者よ</p>
-        <p v-else class="result-sub">また挑め、勇者よ</p>
+        <p v-else class="result-sub">到達 {{ result.totalAnswered }} / {{ result.totalCount }}問</p>
       </div>
 
       <!-- Divider -->
@@ -30,6 +31,11 @@ const isGameOver = computed(() => result.value?.endReason === 'gameover')
 
       <!-- Stats grid -->
       <div class="stats-grid rpg-card">
+        <div class="stat-tile stat-wide score-tile">
+          <div class="stat-label">スコア</div>
+          <div class="score-value">{{ formatScore(result.score.score) }}</div>
+          <div v-if="result.isBestScore" class="best-badge">自己ベスト更新！</div>
+        </div>
         <div class="stat-tile">
           <div class="stat-label">正解数</div>
           <div class="stat-value">
@@ -53,17 +59,15 @@ const isGameOver = computed(() => result.value?.endReason === 'gameover')
           <div class="stat-label">タイム</div>
           <div class="stat-time">{{ formatElapsedTime(result.elapsedSeconds) }}</div>
         </div>
-        <div v-if="isGameOver" class="stat-tile stat-wide">
-          <div class="stat-label">到達問題</div>
-          <div class="stat-value">
-            {{ result.totalAnswered }}<span class="stat-denom"> / {{ result.totalCount }}問</span>
-          </div>
-        </div>
       </div>
 
       <!-- Buttons -->
       <div class="result-actions">
-        <button class="btn-gem" @click="store.retryGame()">もう一度</button>
+        <button class="btn-gem btn-gold" @click="store.retryGame()">
+          <span class="btn-gold-gem">◆</span>
+          <span class="btn-gold-label">TRY AGAIN</span>
+          <span class="btn-gold-gem">◆</span>
+        </button>
         <button class="btn-ghost" @click="store.resetGame()">ホームに戻る</button>
       </div>
     </div>
@@ -83,15 +87,16 @@ const isGameOver = computed(() => result.value?.endReason === 'gameover')
   max-width: 380px;
   display: flex;
   flex-direction: column;
-  gap: 1.4rem;
+  gap: 0.9rem;
 }
 
 .result-header {
   text-align: center;
 }
 .result-icon {
-  font-size: 3.5rem;
-  margin-bottom: 0.5rem;
+  font-size: 2.6rem;
+  line-height: 1.2;
+  margin-bottom: 0.2rem;
   filter: drop-shadow(0 0 16px rgba(201, 168, 54, 0.5));
 }
 .result-title {
@@ -127,18 +132,42 @@ const isGameOver = computed(() => result.value?.endReason === 'gameover')
 .stats-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
-  padding: 1.2rem;
+  gap: 0.6rem;
+  padding: 1rem;
 }
 .stat-tile {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 1rem 0.8rem;
+  padding: 0.7rem 0.8rem;
   text-align: center;
 }
 .stat-wide {
   grid-column: 1 / -1;
+}
+.score-tile {
+  border-color: rgba(201, 168, 54, 0.5);
+  background: rgba(201, 168, 54, 0.06);
+}
+.score-value {
+  font-size: 2.6rem;
+  font-weight: 800;
+  line-height: 1.15;
+  color: var(--gold-light);
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 14px rgba(224, 192, 96, 0.45);
+}
+.best-badge {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 2px 12px;
+  border-radius: 99px;
+  border: 1px solid rgba(16, 200, 122, 0.6);
+  background: rgba(16, 200, 122, 0.14);
+  color: #5ef0b5;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
 }
 .stat-label {
   font-size: 0.7rem;
@@ -148,8 +177,9 @@ const isGameOver = computed(() => result.value?.endReason === 'gameover')
   margin-bottom: 6px;
 }
 .stat-value {
-  font-size: 2rem;
+  font-size: 1.7rem;
   font-weight: 900;
+  line-height: 1.3;
   color: var(--gold-light);
 }
 .stat-value.accent {

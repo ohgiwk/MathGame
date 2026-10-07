@@ -97,10 +97,10 @@ function handleStart() {
       </div>
 
       <!-- スタートボタン -->
-      <button class="btn-gem start-btn enter-item" style="--i: 4" @click="handleStart">
-        <span class="start-gem">◆</span>
-        <span>START</span>
-        <span class="start-gem">◆</span>
+      <button class="btn-gem btn-gold start-btn enter-item" style="--i: 4" @click="handleStart">
+        <span class="btn-gold-gem">◆</span>
+        <span class="btn-gold-label">START</span>
+        <span class="btn-gold-gem">◆</span>
       </button>
       <button class="btn-ghost enter-item" style="--i: 5" @click="store.openStats()">
         My Records
@@ -320,50 +320,8 @@ function handleStart() {
   font-weight: 800;
 }
 
-/* Start button: a navy plate with a double gold frame, matching the cards and the gold title */
 .start-btn {
   margin-top: 0.25rem;
-  padding: 18px 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 1.15rem;
-  letter-spacing: 0.3em;
-  color: var(--gold-light);
-  text-shadow: 0 0 10px rgba(224, 192, 96, 0.5);
-  background: linear-gradient(180deg, #1e2e58 0%, #131d3c 100%);
-  border: 1px solid var(--gold);
-  outline: 1px solid rgba(201, 168, 54, 0.35);
-  outline-offset: -5px;
-  box-shadow:
-    0 0 18px rgba(201, 168, 54, 0.3),
-    0 4px 20px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 236, 170, 0.25),
-    inset 0 0 16px rgba(201, 168, 54, 0.1);
-}
-.start-btn > span:not(.start-gem) {
-  /* letter-spacing adds a trailing gap; pull it back so the word stays centered */
-  margin-right: -0.3em;
-}
-.start-gem {
-  font-size: 0.5rem;
-  letter-spacing: 0;
-  color: var(--gold);
-  filter: drop-shadow(0 0 4px rgba(224, 192, 96, 0.8));
-}
-.start-btn:active:not(:disabled) {
-  box-shadow:
-    0 0 10px rgba(201, 168, 54, 0.25),
-    inset 0 2px 8px rgba(0, 0, 0, 0.45);
-}
-@media (hover: hover) {
-  .start-btn:hover:not(:disabled):not(:active) {
-    box-shadow:
-      0 0 28px rgba(224, 192, 96, 0.55),
-      0 8px 24px rgba(0, 0, 0, 0.5),
-      inset 0 1px 0 rgba(255, 236, 170, 0.35),
-      inset 0 0 18px rgba(201, 168, 54, 0.18);
-  }
 }
 
 /* Compact layout so short screens fit without scrolling */

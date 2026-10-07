@@ -325,6 +325,52 @@ body::before {
   cursor: default;
 }
 
+/* Gold-framed primary button (START, TRY AGAIN): a navy plate with a double gold frame.
+   Use together with .btn-gem; put .btn-gold-gem ornaments on both sides of .btn-gold-label. */
+.btn-gem.btn-gold {
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 1.15rem;
+  letter-spacing: 0.14em;
+  color: var(--gold-light);
+  text-shadow: 0 0 10px rgba(224, 192, 96, 0.5);
+  background: linear-gradient(180deg, #1e2e58 0%, #131d3c 100%);
+  border: 1px solid var(--gold);
+  outline: 1px solid rgba(201, 168, 54, 0.35);
+  outline-offset: -5px;
+  box-shadow:
+    0 0 18px rgba(201, 168, 54, 0.3),
+    0 4px 20px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 236, 170, 0.25),
+    inset 0 0 16px rgba(201, 168, 54, 0.1);
+}
+.btn-gold-label {
+  /* letter-spacing adds a trailing gap; pull it back so the word stays centered */
+  margin-right: -0.14em;
+}
+.btn-gold-gem {
+  font-size: 0.5rem;
+  letter-spacing: 0;
+  color: var(--gold);
+  filter: drop-shadow(0 0 4px rgba(224, 192, 96, 0.8));
+}
+.btn-gem.btn-gold:active:not(:disabled) {
+  box-shadow:
+    0 0 10px rgba(201, 168, 54, 0.25),
+    inset 0 2px 8px rgba(0, 0, 0, 0.45);
+}
+@media (hover: hover) {
+  .btn-gem.btn-gold:hover:not(:disabled):not(:active) {
+    box-shadow:
+      0 0 28px rgba(224, 192, 96, 0.55),
+      0 8px 24px rgba(0, 0, 0, 0.5),
+      inset 0 1px 0 rgba(255, 236, 170, 0.35),
+      inset 0 0 18px rgba(201, 168, 54, 0.18);
+  }
+}
+
 /* Secondary button */
 .btn-ghost {
   display: block;

@@ -4,6 +4,7 @@ import { useGameStore } from '../stores/gameStore'
 import { useStatsStore } from '../stores/statsStore'
 import type { Difficulty } from '../types/game'
 import { formatElapsedTime } from '../logic/resultCalculator'
+import { formatScore } from '../logic/scoreCalculator'
 import { DIFFICULTIES, DIFFICULTY_LABELS, OPERATION_LABELS } from '../logic/labels'
 import {
   summarize,
@@ -39,7 +40,10 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
       <div class="rpg-card stats-section">
         <h2 class="section-label">
           <span class="section-gem">◆</span> 累計
-          <span class="section-note">総プレイ時間 {{ formatTotalTime(total.elapsedSeconds) }}</span>
+          <span class="section-note">
+            正解 {{ total.correctCount }} / {{ total.totalAnswered }}問 ·
+            {{ formatTotalTime(total.elapsedSeconds) }}
+          </span>
         </h2>
         <div class="total-row">
           <div class="total-item">
@@ -51,17 +55,15 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
             <div class="total-value">{{ total.clearCount }}<span class="total-unit">回</span></div>
           </div>
           <div class="total-item">
-            <div class="total-label">正解数</div>
-            <div class="total-value">
-              {{ total.correctCount }}<span class="total-unit"> / {{ total.totalAnswered }}</span>
-            </div>
-          </div>
-          <div class="total-item">
             <div class="total-label">正答率</div>
             <div class="total-value accent">
               {{ total.accuracy ?? '–'
               }}<span v-if="total.accuracy !== null" class="total-unit">%</span>
             </div>
+          </div>
+          <div class="total-item">
+            <div class="total-label">累計スコア</div>
+            <div class="total-value">{{ formatScore(total.totalScore) }}</div>
           </div>
         </div>
       </div>
@@ -89,7 +91,7 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
               <th>プレイ</th>
               <th>クリア</th>
               <th>正答率</th>
-              <th>1問あたり</th>
+              <th>ベスト</th>
             </tr>
           </thead>
           <tbody>
@@ -104,12 +106,8 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
               <td class="col-accuracy">
                 {{ row.summary.accuracy !== null ? `${row.summary.accuracy}%` : '–' }}
               </td>
-              <td>
-                {{
-                  row.summary.secondsPerQuestion !== null
-                    ? `${row.summary.secondsPerQuestion.toFixed(1)}秒`
-                    : '–'
-                }}
+              <td class="col-best">
+                {{ row.summary.bestScore !== null ? formatScore(row.summary.bestScore) : '–' }}
               </td>
             </tr>
           </tbody>
@@ -135,10 +133,11 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
               <div class="history-date">{{ formatPlayedAt(r.playedAt) }}</div>
             </div>
             <div class="history-result">
-              <div class="history-score">
-                {{ r.correctCount }}<span class="history-denom"> / {{ r.totalAnswered }}</span>
+              <div class="history-score">{{ formatScore(r.score) }}</div>
+              <div class="history-time">
+                {{ r.correctCount }} / {{ r.totalAnswered }} ·
+                {{ formatElapsedTime(r.elapsedSeconds) }}
               </div>
-              <div class="history-time">{{ formatElapsedTime(r.elapsedSeconds) }}</div>
             </div>
             <span class="history-badge" :class="r.endReason">
               {{ r.endReason === 'clear' ? 'クリア' : '失敗' }}
@@ -216,7 +215,7 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
 /* 累計 */
 .total-row {
   display: grid;
-  grid-template-columns: 1fr 1fr 1.6fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr 1.6fr;
   gap: 0.4rem;
 }
 .total-item {
@@ -301,6 +300,9 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
 .op-table th.col-name {
   color: var(--text-sub);
 }
+.col-best {
+  color: var(--gold-light);
+}
 .col-accuracy {
   color: var(--gem-teal);
 }
@@ -370,11 +372,6 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
   font-size: 1rem;
   font-weight: 900;
   color: var(--gold-light);
-}
-.history-denom {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--text-sub);
 }
 .history-time {
   font-size: 0.7rem;

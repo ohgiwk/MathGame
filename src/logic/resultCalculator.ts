@@ -1,9 +1,23 @@
 import type { GameState, GameResult, GameEndReason } from '../types/game'
+import { calculateScore } from './scoreCalculator'
 
-export function calculateResult(state: GameState, endReason: GameEndReason): GameResult {
+export function calculateResult(
+  state: GameState,
+  endReason: GameEndReason,
+): Omit<GameResult, 'isBestScore'> {
   const totalAnswered = state.currentIndex + 1
   const elapsedSeconds = Math.round((Date.now() - state.startedAt) / 1000)
   const accuracy = totalAnswered > 0 ? Math.round((state.correctCount / totalAnswered) * 100) : 0
+
+  const score = calculateScore({
+    difficulty: state.settings.difficulty,
+    operation: state.settings.operation,
+    questionCount: state.settings.questionCount,
+    endReason,
+    correctCount: state.correctCount,
+    totalAnswered,
+    elapsedSeconds,
+  })
 
   return {
     endReason,
@@ -12,6 +26,7 @@ export function calculateResult(state: GameState, endReason: GameEndReason): Gam
     totalCount: state.settings.questionCount,
     accuracy,
     elapsedSeconds,
+    score,
   }
 }
 

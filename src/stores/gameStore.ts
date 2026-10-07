@@ -82,15 +82,18 @@ export const useGameStore = defineStore('game', () => {
       if (isGameOver || isLastQuestion) {
         const endReason = isGameOver ? 'gameover' : 'clear'
         const r = calculateResult(s, endReason)
-        result.value = r
+        const { difficulty, operation, questionCount } = s.settings
+        const previousBest = statsStore.bestScore(difficulty, operation)
+        result.value = { ...r, isBestScore: r.score.score > previousBest }
         statsStore.addRecord({
-          difficulty: s.settings.difficulty,
-          operation: s.settings.operation,
-          questionCount: s.settings.questionCount,
+          difficulty,
+          operation,
+          questionCount,
           endReason,
           correctCount: r.correctCount,
           totalAnswered: r.totalAnswered,
           elapsedSeconds: r.elapsedSeconds,
+          score: r.score.score,
         })
         gameState.value = null
         screen.value = 'result'
