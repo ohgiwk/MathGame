@@ -10,6 +10,7 @@ import FeedbackDisplay from './FeedbackDisplay.vue'
 const store = useGameStore()
 const inputValue = ref('')
 const showQuitDialog = ref(false)
+const padRef = ref<HTMLElement | null>(null)
 
 const state = computed(() => store.gameState)
 const question = computed(() => store.currentQuestion)
@@ -45,9 +46,30 @@ function pressDelete() {
   inputValue.value = inputValue.value.slice(0, -1)
 }
 
+// Restart the tap animation on every press so quick repeated taps each get feedback
+function playTap(key: HTMLButtonElement | null | undefined) {
+  if (!key || key.disabled) return
+  key.classList.remove('tapped')
+  void key.offsetWidth
+  key.classList.add('tapped')
+  navigator.vibrate?.(8)
+}
+
+function handlePadPointerDown(e: PointerEvent) {
+  playTap((e.target as HTMLElement).closest<HTMLButtonElement>('.pad-key'))
+}
+
+function handlePadAnimationEnd(e: AnimationEvent) {
+  const el = e.target as HTMLElement
+  if (el.classList.contains('pad-key')) el.classList.remove('tapped')
+}
+
 function handleKeydown(e: KeyboardEvent) {
-  if (/^[0-9]$/.test(e.key)) pressDigit(e.key)
-  else if (e.key === 'Backspace') pressDelete()
+  const padKey = /^[0-9]$/.test(e.key) ? e.key : e.key === 'Backspace' ? 'delete' : null
+  if (!padKey) return
+  playTap(padRef.value?.querySelector<HTMLButtonElement>(`[data-key="${padKey}"]`))
+  if (padKey === 'delete') pressDelete()
+  else pressDigit(padKey)
 }
 
 onMounted(() => window.addEventListener('keydown', handleKeydown))
@@ -132,20 +154,27 @@ function confirmQuit() {
       >
         {{ inputValue || '答えを入力' }}
       </div>
-      <div class="num-pad">
+      <div
+        ref="padRef"
+        class="num-pad"
+        @pointerdown="handlePadPointerDown"
+        @animationend="handlePadAnimationEnd"
+      >
         <button
           v-for="key in PAD_KEYS"
           :key="key"
           class="pad-key"
+          :data-key="key"
           :disabled="padDisabled"
           @click="pressDigit(key)"
         >
           {{ key }}
         </button>
         <span></span>
-        <button class="pad-key" :disabled="padDisabled" @click="pressDigit('0')">0</button>
+        <button class="pad-key" data-key="0" :disabled="padDisabled" @click="pressDigit('0')">0</button>
         <button
           class="pad-key pad-delete"
+          data-key="delete"
           :disabled="padDisabled || !inputValue"
           aria-label="1文字消す"
           @click="pressDelete"
@@ -360,6 +389,21 @@ function confirmQuit() {
   transform: scale(0.95);
   background: #1C2B50;
   border-color: var(--gem-blue);
+}
+/* Tap feedback: the key dips and flashes */
+.pad-key.tapped { animation: pad-tap 0.32s ease-out; }
+@keyframes pad-tap {
+  0% {
+    transform: scale(0.9);
+    background: #24376A;
+    border-color: var(--gem-blue);
+    box-shadow: 0 0 18px rgba(76,124,255,0.6), inset 0 1px 0 rgba(255,255,255,0.1);
+  }
+  60% { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pad-key.tapped { animation: none; }
 }
 .pad-key:disabled { opacity: 0.45; cursor: default; }
 .pad-delete { color: var(--text-sub); font-size: 1.4rem; }
