@@ -2,7 +2,7 @@
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="theme-color" content="#080D1A" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -30,7 +30,8 @@
 
       * { box-sizing: border-box; margin: 0; padding: 0; }
       html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
-      html { background: #080D1A; }
+      /* pan only: disables pinch and double-tap zoom */
+      html { background: #080D1A; touch-action: pan-x pan-y; }
       body {
         background: radial-gradient(ellipse at 30% 20%, #0E1A35 0%, #080D1A 60%, #050A14 100%);
         font-family: 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', 'Hiragino Sans', sans-serif;
