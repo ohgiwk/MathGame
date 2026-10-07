@@ -39,15 +39,15 @@ function handleStart() {
 <template>
   <div class="setup-root">
     <!-- Header -->
-    <div class="setup-header fade-in-up">
+    <div class="setup-header enter-item" style="--i: 0">
       <div class="temple-icon">⬡</div>
       <h1 class="setup-title">数の王国</h1>
       <p class="setup-sub">KINGDOM OF NUMBERS</p>
     </div>
 
-    <div class="setup-body fade-in-up">
+    <div class="setup-body">
       <!-- 問題数 -->
-      <div class="rpg-card setup-section">
+      <div class="rpg-card setup-section enter-item" style="--i: 1">
         <h2 class="section-label"><span class="section-gem">◆</span> 問題数</h2>
         <div class="grid-3">
           <button
@@ -63,7 +63,7 @@ function handleStart() {
       </div>
 
       <!-- 難易度 -->
-      <div class="rpg-card setup-section">
+      <div class="rpg-card setup-section enter-item" style="--i: 2">
         <h2 class="section-label"><span class="section-gem">◆</span> 難易度</h2>
         <div class="grid-3">
           <button
@@ -80,7 +80,7 @@ function handleStart() {
       </div>
 
       <!-- 計算の種類 -->
-      <div class="rpg-card setup-section">
+      <div class="rpg-card setup-section enter-item" style="--i: 3">
         <h2 class="section-label"><span class="section-gem">◆</span> 計算の種類</h2>
         <div class="grid-ops">
           <button
@@ -97,8 +97,12 @@ function handleStart() {
       </div>
 
       <!-- スタートボタン -->
-      <button class="btn-gem start-btn" @click="handleStart">START</button>
-      <button class="btn-ghost" @click="store.openStats()">My Records</button>
+      <button class="btn-gem start-btn enter-item" style="--i: 4" @click="handleStart">
+        START
+      </button>
+      <button class="btn-ghost enter-item" style="--i: 5" @click="store.openStats()">
+        My Records
+      </button>
     </div>
   </div>
 </template>
@@ -110,6 +114,18 @@ function handleStart() {
   flex-direction: column;
   align-items: center;
   padding: max(2rem, env(safe-area-inset-top)) 1rem max(2rem, env(safe-area-inset-bottom));
+}
+
+/* Entrance: items fade in one after another from the top of the screen down */
+.enter-item {
+  animation: enter-fade 0.5s ease-out backwards;
+  animation-delay: calc(var(--i) * 90ms + 80ms);
+}
+@keyframes enter-fade {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
 }
 
 .setup-header {
@@ -273,6 +289,9 @@ function handleStart() {
   }
 }
 @media (prefers-reduced-motion: reduce) {
+  .enter-item {
+    animation: none;
+  }
   .opt-btn.active {
     animation: none;
     border-color: var(--gold);
