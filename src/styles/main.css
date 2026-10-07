@@ -86,6 +86,20 @@ body::before {
   z-index: 1;
 }
 
+/* On wide screens (PC), mark the phone-width column with a shadow; the page gradient stays behind it */
+@media (min-width: 600px) {
+  #app {
+    max-width: 430px;
+    margin: 0 auto;
+    box-shadow:
+      0 0 0 1px rgba(120, 150, 220, 0.18),
+      0 0 50px rgba(0, 0, 0, 0.85),
+      0 0 110px rgba(0, 0, 0, 0.6);
+    /* keeps fixed overlays (dialogs, toasts) inside the column */
+    transform: translateZ(0);
+  }
+}
+
 @keyframes shake {
   0%,
   100% {
