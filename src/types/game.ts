@@ -51,6 +51,12 @@ export interface GameState {
   deadline: number | null
   /** time left on the current question while the countdown is paused */
   pausedRemainingMs: number | null
+  /** when the current question started being timed, moved forward by any time spent paused */
+  questionStartedAt: number
+  /** set while the game is paused (quit dialog open) */
+  pausedAt: number | null
+  /** seconds taken on each answered question, in order */
+  answerSeconds: number[]
 }
 
 /** What happened in one finished game; everything the score is computed from. */
@@ -63,7 +69,13 @@ export interface GameOutcome {
   endReason: GameEndReason
   correctCount: number
   totalAnswered: number
+  /** to the millisecond, so small differences still count in the score */
   elapsedSeconds: number
+  /**
+   * seconds taken on each answered question, not counting feedback or pauses; the speed bonus is
+   * worked out from these. Absent on records saved before answers were timed one by one.
+   */
+  answerSeconds?: number[]
 }
 
 export interface ScoreBreakdown {

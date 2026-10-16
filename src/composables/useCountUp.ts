@@ -26,7 +26,8 @@ export function useCountUp(target: number, options: CountUpOptions = {}): Ref<nu
       const tick = (now: number) => {
         const progress = Math.min((now - startedAt) / duration, 1)
         const eased = 1 - (1 - progress) ** 3
-        value.value = Math.round(target * eased)
+        // the last frame lands on the target itself, which need not be a whole number
+        value.value = progress < 1 ? Math.round(target * eased) : target
         frame = progress < 1 ? requestAnimationFrame(tick) : null
       }
       frame = requestAnimationFrame(tick)

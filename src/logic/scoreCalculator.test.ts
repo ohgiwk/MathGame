@@ -13,13 +13,44 @@ const base: GameOutcome = {
 }
 
 describe('calculateScore', () => {
-  it('gives a fast perfect clear the full speed, clear and perfect bonuses', () => {
-    const s = calculateScore(base)
+  it('gives a perfect clear at par the par speed, clear and perfect bonuses', () => {
+    // 3s of thinking per question (par) plus 0.9s of feedback
+    const s = calculateScore({ ...base, elapsedSeconds: 19.5 })
     expect(s.base).toBe(500)
     expect(s.speedMultiplier).toBeCloseTo(1.5)
     expect(s.mistakeMultiplier).toBe(1)
     expect(s.clearMultiplier).toBeCloseTo(1.3)
     expect(s.score).toBe(975)
+  })
+
+  it('keeps raising the speed bonus past par, up to 1.75 at no thinking time', () => {
+    expect(calculateScore({ ...base, elapsedSeconds: 12 }).speedMultiplier).toBeCloseTo(1.625)
+    expect(calculateScore({ ...base, elapsedSeconds: 4.5 }).speedMultiplier).toBeCloseTo(1.75)
+    expect(calculateScore({ ...base, elapsedSeconds: 0 }).speedMultiplier).toBeCloseTo(1.75)
+  })
+
+  it('gives each answer its own speed bonus and averages them', () => {
+    // par (3s) earns 1.5 and the slow limit (9s) or beyond earns nothing
+    const at = (answerSeconds: number[]) =>
+      calculateScore({ ...base, answerSeconds }).speedMultiplier
+    expect(at([3, 3, 3, 3, 3])).toBeCloseTo(1.5)
+    expect(at([3, 3, 3, 3, 9])).toBeCloseTo(1.4)
+    // one very slow answer costs only its own bonus
+    expect(at([3, 3, 3, 3, 60])).toBeCloseTo(1.4)
+    expect(at([0, 0, 0, 0, 0])).toBeCloseTo(1.75)
+  })
+
+  it('ignores the total time when answer times are known', () => {
+    const answerSeconds = [3, 3, 3, 3, 3]
+    expect(
+      calculateScore({ ...base, elapsedSeconds: 500, answerSeconds }).speedMultiplier,
+    ).toBeCloseTo(1.5)
+  })
+
+  it('lets a fraction of a second change the score', () => {
+    const a = calculateScore({ ...base, elapsedSeconds: 31 }).score
+    const b = calculateScore({ ...base, elapsedSeconds: 31.5 }).score
+    expect(a).toBeGreaterThan(b)
   })
 
   it('drops the speed bonus once thinking time reaches three times par', () => {
@@ -109,10 +140,16 @@ describe('calculateRating', () => {
     ).toBe('excellent')
   })
 
+  it('rates by answer times when they are known', () => {
+    expect(rate({ answerSeconds: Array(10).fill(3) })).toBe('excellent')
+    expect(rate({ answerSeconds: Array(10).fill(9) })).toBe('great')
+  })
+
   it('rates lower as mistakes and time add up', () => {
-    expect(rate({ correctCount: 9, elapsedSeconds: 20 })).toBe('great')
+    // 39s is par speed for ten easy questions: 3s of thinking plus 0.9s of feedback each
+    expect(rate({ correctCount: 9, elapsedSeconds: 39 })).toBe('great')
     expect(rate({ elapsedSeconds: 120 })).toBe('great')
-    expect(rate({ correctCount: 8, elapsedSeconds: 20 })).toBe('good')
+    expect(rate({ correctCount: 8, elapsedSeconds: 39 })).toBe('good')
     expect(rate({ correctCount: 8, elapsedSeconds: 120 })).toBe('nice')
   })
 

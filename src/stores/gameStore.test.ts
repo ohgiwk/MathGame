@@ -233,12 +233,12 @@ describe('gameStore', () => {
       const store = useGameStore()
       store.startGame(limited)
       vi.advanceTimersByTime(4000)
-      store.pauseCountdown()
+      store.pauseQuestion()
       expect(store.gameState!.pausedRemainingMs).toBe(limitMs - 4000)
       vi.advanceTimersByTime(limitMs * 2)
       expect(store.gameState!.feedback).toBeNull()
 
-      store.resumeCountdown()
+      store.resumeQuestion()
       vi.advanceTimersByTime(limitMs - 4000)
       expect(store.gameState!.feedback).toMatchObject({ timedOut: true })
     })
@@ -252,6 +252,43 @@ describe('gameStore', () => {
         vi.advanceTimersByTime(FEEDBACK_DURATION_MS)
       }
       expect(stats.records[0]).not.toHaveProperty('timeLimit')
+    })
+  })
+
+  describe('answer timing', () => {
+    it('times each answer from when its question is shown, not counting feedback', () => {
+      const store = useGameStore()
+      store.startGame(settings)
+      vi.advanceTimersByTime(2000)
+      answer(store, true)
+      vi.advanceTimersByTime(FEEDBACK_DURATION_MS)
+      vi.advanceTimersByTime(3500)
+      answer(store, false)
+      expect(store.gameState!.answerSeconds).toEqual([2, 3.5])
+    })
+
+    it('leaves time spent paused out of the answer', () => {
+      const store = useGameStore()
+      store.startGame(settings)
+      vi.advanceTimersByTime(1000)
+      store.pauseQuestion()
+      vi.advanceTimersByTime(30_000)
+      store.resumeQuestion()
+      vi.advanceTimersByTime(500)
+      answer(store, true)
+      expect(store.gameState!.answerSeconds).toEqual([1.5])
+    })
+
+    it('saves the answer times with the record', () => {
+      const store = useGameStore()
+      const stats = useStatsStore()
+      store.startGame(settings)
+      for (let i = 0; i < 5; i++) {
+        vi.advanceTimersByTime(1000 * (i + 1))
+        answer(store, true)
+        vi.advanceTimersByTime(FEEDBACK_DURATION_MS)
+      }
+      expect(stats.records[0].answerSeconds).toEqual([1, 2, 3, 4, 5])
     })
   })
 })

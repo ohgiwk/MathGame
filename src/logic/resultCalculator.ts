@@ -17,7 +17,8 @@ export function calculateResult(
     endReason,
     correctCount: state.correctCount,
     totalAnswered: state.currentIndex + 1,
-    elapsedSeconds: Math.round((now - state.startedAt) / 1000),
+    elapsedSeconds: (now - state.startedAt) / 1000,
+    answerSeconds: [...state.answerSeconds],
   }
 
   const score = calculateScore(outcome)

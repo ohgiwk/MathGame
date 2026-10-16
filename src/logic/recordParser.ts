@@ -26,6 +26,11 @@ function isMixedOperations(value: unknown): boolean {
   )
 }
 
+/** Absent on records saved before answers were timed one by one */
+function isAnswerSeconds(value: unknown): boolean {
+  return value === undefined || (Array.isArray(value) && value.every(isCount))
+}
+
 function isStoredRecord(value: unknown): value is StoredRecord {
   if (typeof value !== 'object' || value === null) return false
   const r = value as Record<string, unknown>
@@ -39,7 +44,8 @@ function isStoredRecord(value: unknown): value is StoredRecord {
     (END_REASONS as unknown[]).includes(r.endReason) &&
     isCount(r.correctCount) &&
     isCount(r.totalAnswered) &&
-    isCount(r.elapsedSeconds)
+    isCount(r.elapsedSeconds) &&
+    isAnswerSeconds(r.answerSeconds)
   )
 }
 

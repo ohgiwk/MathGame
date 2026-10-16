@@ -55,10 +55,10 @@ const timeWarning = computed(
   () => remainingSeconds.value <= TIME_WARNING_SECONDS && !state.value?.feedback,
 )
 
-// the countdown stops while the player decides whether to quit
+// the question's timing (and countdown) stops while the player decides whether to quit
 watch(showQuitDialog, (open) => {
-  if (open) store.pauseCountdown()
-  else store.resumeCountdown()
+  if (open) store.pauseQuestion()
+  else store.resumeQuestion()
 })
 
 const answerLength = computed(() => String(question.value?.answer ?? '').length)

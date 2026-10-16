@@ -27,6 +27,11 @@ describe('formatElapsedTime', () => {
     expect(formatElapsedTime(5)).toBe('0分05秒')
     expect(formatElapsedTime(83)).toBe('1分23秒')
   })
+
+  it('drops the fraction of a second', () => {
+    expect(formatElapsedTime(59.96)).toBe('0分59秒')
+    expect(formatTotalTime(125.7)).toBe('2分5秒')
+  })
 })
 
 describe('formatTotalTime', () => {

@@ -11,7 +11,7 @@ const valid = {
   correctCount: 5,
   totalAnswered: 5,
   elapsedSeconds: 10,
-  score: 975,
+  score: 1078,
 }
 
 describe('parseRecords', () => {
@@ -22,6 +22,11 @@ describe('parseRecords', () => {
 
   it('keeps valid records as they are', () => {
     expect(parseRecords([valid])).toEqual([valid])
+  })
+
+  it('keeps the answer times of a record', () => {
+    const timed = { ...valid, answerSeconds: [1.2, 0.8, 3, 2.5, 1] }
+    expect(parseRecords([timed])).toEqual([timed])
   })
 
   it('keeps the chosen operations of a mixed record', () => {
@@ -50,6 +55,8 @@ describe('parseRecords', () => {
     ['a missing id', { ...valid, id: undefined }],
     ['a non-numeric count', { ...valid, correctCount: '5' }],
     ['a NaN time', { ...valid, elapsedSeconds: NaN }],
+    ['answer times that are not numbers', { ...valid, answerSeconds: [1, 'x'] }],
+    ['answer times that are not a list', { ...valid, answerSeconds: 3 }],
   ])('drops %s', (_name, entry) => {
     expect(parseRecords([entry, valid])).toEqual([valid])
   })

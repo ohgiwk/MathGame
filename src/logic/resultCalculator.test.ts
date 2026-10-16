@@ -14,6 +14,9 @@ function state(overrides: Partial<GameState> = {}): GameState {
     timeLimitMs: null,
     deadline: null,
     pausedRemainingMs: null,
+    questionStartedAt: 0,
+    pausedAt: null,
+    answerSeconds: [1.1, 1.1, 1.1, 1.1, 1.1],
     ...overrides,
   }
 }
@@ -21,7 +24,7 @@ function state(overrides: Partial<GameState> = {}): GameState {
 describe('calculateResult', () => {
   it('measures elapsed time from the start of the game to the given end time', () => {
     const r = calculateResult(state(), 'clear', 11_400)
-    expect(r.outcome.elapsedSeconds).toBe(10)
+    expect(r.outcome.elapsedSeconds).toBe(10.4)
   })
 
   it('reports a perfect clear', () => {
@@ -34,9 +37,11 @@ describe('calculateResult', () => {
       correctCount: 5,
       totalAnswered: 5,
       elapsedSeconds: 10,
+      answerSeconds: [1.1, 1.1, 1.1, 1.1, 1.1],
     })
     expect(r.accuracy).toBe(100)
-    expect(r.score.score).toBe(975)
+    // 1.1s per answer beats the 3s par, so the speed bonus goes past 1.5
+    expect(r.score.score).toBe(1078)
   })
 
   it('records the chosen operations only for a mixed game', () => {

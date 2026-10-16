@@ -87,6 +87,9 @@ export const useGameStore = defineStore('game', () => {
       timeLimitMs,
       deadline: null,
       pausedRemainingMs: null,
+      questionStartedAt: Date.now(),
+      pausedAt: null,
+      answerSeconds: [],
     }
     startCountdown(gameState.value, timeLimitMs)
 
@@ -110,6 +113,7 @@ export const useGameStore = defineStore('game', () => {
     clearLimitTimer()
     state.deadline = null
     state.pausedRemainingMs = null
+    state.answerSeconds.push((Date.now() - state.questionStartedAt) / 1000)
 
     if (correct) {
       state.correctCount++
@@ -141,22 +145,30 @@ export const useGameStore = defineStore('game', () => {
     ) {
       state.questions.push(...generateQuestions(state.settings, undefined, usedKeys))
     }
+    state.questionStartedAt = Date.now()
     startCountdown(state, state.timeLimitMs)
   }
 
-  /** Stops the countdown, e.g. while the quit dialog is open. */
-  function pauseCountdown() {
+  /**
+   * Stops timing the current question, and its countdown, e.g. while the quit dialog is open.
+   * Nothing is timed while feedback is shown, so a pause then changes nothing.
+   */
+  function pauseQuestion() {
     const state = gameState.value
-    if (!state || state.deadline === null) return
+    if (!state || state.feedback || state.pausedAt !== null) return
+    state.pausedAt = Date.now()
+    if (state.deadline === null) return
     clearLimitTimer()
     state.pausedRemainingMs = Math.max(state.deadline - Date.now(), 0)
     state.deadline = null
   }
 
-  function resumeCountdown() {
+  function resumeQuestion() {
     const state = gameState.value
-    if (!state || state.pausedRemainingMs === null || state.feedback) return
-    startCountdown(state, state.pausedRemainingMs)
+    if (!state || state.pausedAt === null) return
+    state.questionStartedAt += Date.now() - state.pausedAt
+    state.pausedAt = null
+    if (state.pausedRemainingMs !== null) startCountdown(state, state.pausedRemainingMs)
   }
 
   function finishGame(state: GameState, endReason: GameEndReason) {
@@ -196,8 +208,8 @@ export const useGameStore = defineStore('game', () => {
     currentQuestion,
     startGame,
     submitAnswer,
-    pauseCountdown,
-    resumeCountdown,
+    pauseQuestion,
+    resumeQuestion,
     goHome,
     openStats,
     openSettings,

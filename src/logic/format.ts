@@ -9,13 +9,16 @@ export function formatScore(score: number): string {
   return score.toLocaleString('ja-JP')
 }
 
-export function formatElapsedTime(seconds: number): string {
+/** Whole seconds only; the fraction is dropped */
+export function formatElapsedTime(totalSeconds: number): string {
+  const seconds = Math.floor(totalSeconds)
   const m = Math.floor(seconds / 60)
   const s = seconds % 60
   return `${m}分${s.toString().padStart(2, '0')}秒`
 }
 
-export function formatTotalTime(seconds: number): string {
+export function formatTotalTime(totalSeconds: number): string {
+  const seconds = Math.floor(totalSeconds)
   const h = Math.floor(seconds / 3600)
   const m = Math.floor((seconds % 3600) / 60)
   const s = seconds % 60

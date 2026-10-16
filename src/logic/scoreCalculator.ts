@@ -34,13 +34,13 @@ function operationMultiplier(input: GameOutcome): number {
   return average + MIX_BONUS_PER_OPERATION * (ops.length - 1)
 }
 
-/** Thinking time per question (seconds) that earns the full speed bonus */
+/** Thinking time per question (seconds) that earns PAR_SPEED_MULTIPLIER */
 const PAR_SECONDS: Record<Difficulty, number> = {
   easy: 3,
   normal: 6,
   hard: 12,
 }
-const MAX_SPEED_MULTIPLIER = 1.5
+const PAR_SPEED_MULTIPLIER = 1.5
 /** The speed bonus fades to nothing at this many times the par time */
 const SLOW_PAR_FACTOR = 3
 
@@ -54,17 +54,29 @@ const CLEAR_MULTIPLIER: Record<FixedQuestionCount, number> = {
 }
 const PERFECT_BONUS = 0.2
 
+/**
+ * The speed bonus earned by one answer, as a share of the bonus at par: 0 at the slow limit and
+ * beyond, 1 at par, and on past par with no cap (1.5 at zero), so every bit of speed still counts.
+ */
+function speedRatio(thinkingSeconds: number, difficulty: Difficulty): number {
+  const par = PAR_SECONDS[difficulty]
+  const slow = par * SLOW_PAR_FACTOR
+  return Math.max((slow - Math.max(thinkingSeconds, 0)) / (slow - par), 0)
+}
+
+/**
+ * Each answer earns its own speed bonus and the game gets their average, so one slow question
+ * costs only its own bonus. Records saved before answers were timed one by one fall back to the
+ * average time per answer, less the feedback shown after each one.
+ */
 function speedMultiplier(input: GameOutcome): number {
   if (input.totalAnswered === 0) return 1
-  // elapsed time includes the feedback shown after every answer
-  const thinking = Math.max(
+  const times = input.answerSeconds ?? [
     input.elapsedSeconds / input.totalAnswered - FEEDBACK_DURATION_MS / 1000,
-    0,
-  )
-  const par = PAR_SECONDS[input.difficulty]
-  const slow = par * SLOW_PAR_FACTOR
-  const ratio = Math.min(Math.max((slow - thinking) / (slow - par), 0), 1)
-  return 1 + (MAX_SPEED_MULTIPLIER - 1) * ratio
+  ]
+  if (times.length === 0) return 1
+  const ratio = times.reduce((sum, t) => sum + speedRatio(t, input.difficulty), 0) / times.length
+  return 1 + (PAR_SPEED_MULTIPLIER - 1) * ratio
 }
 
 export function calculateScore(input: GameOutcome): ScoreBreakdown {
@@ -101,8 +113,9 @@ const RATING_THRESHOLDS: [Rating, number][] = [
 ]
 
 /**
- * Rates a cleared game by its score relative to the best possible one for the same settings
- * (every answer correct at full speed), so every difficulty and operation is rated alike.
+ * Rates a cleared game by its score relative to a model one for the same settings (every answer
+ * correct at par speed), so every difficulty and operation is rated alike. Beating par scores
+ * above the model, which still rates excellent.
  */
 export function calculateRating(outcome: GameOutcome, score: number): Rating | null {
   if (outcome.endReason !== 'clear' || outcome.questionCount === 'endless') return null
@@ -110,7 +123,7 @@ export function calculateRating(outcome: GameOutcome, score: number): Rating | n
     ...outcome,
     correctCount: outcome.questionCount,
     totalAnswered: outcome.questionCount,
-    elapsedSeconds: 0,
+    answerSeconds: Array<number>(outcome.questionCount).fill(PAR_SECONDS[outcome.difficulty]),
   }).score
   const share = score / best
   return RATING_THRESHOLDS.find(([, min]) => share >= min)?.[0] ?? 'nice'
