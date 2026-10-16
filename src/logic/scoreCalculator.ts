@@ -1,7 +1,7 @@
 import type {
   Difficulty,
   ActualOperation,
-  QuestionCount,
+  FixedQuestionCount,
   GameOutcome,
   Rating,
   ScoreBreakdown,
@@ -47,7 +47,7 @@ const SLOW_PAR_FACTOR = 3
 const MISTAKE_PENALTY = 0.1
 
 /** Longer runs are harder to finish on three lives, so clearing them is worth more */
-const CLEAR_MULTIPLIER: Record<QuestionCount, number> = {
+const CLEAR_MULTIPLIER: Record<FixedQuestionCount, number> = {
   5: 1.1,
   10: 1.2,
   15: 1.3,
@@ -78,9 +78,11 @@ export function calculateScore(input: GameOutcome): ScoreBreakdown {
     operationMultiplier(input)
   const speed = speedMultiplier(input)
   const mistake = Math.max(1 - MISTAKE_PENALTY * mistakes, 0)
-  const clear = cleared
-    ? CLEAR_MULTIPLIER[input.questionCount] + (mistakes === 0 ? PERFECT_BONUS : 0)
-    : 1
+  // an endless game only ends when the lives run out, so it never gets the clear bonus
+  const clear =
+    cleared && input.questionCount !== 'endless'
+      ? CLEAR_MULTIPLIER[input.questionCount] + (mistakes === 0 ? PERFECT_BONUS : 0)
+      : 1
 
   return {
     base: Math.round(base),
@@ -103,7 +105,7 @@ const RATING_THRESHOLDS: [Rating, number][] = [
  * (every answer correct at full speed), so every difficulty and operation is rated alike.
  */
 export function calculateRating(outcome: GameOutcome, score: number): Rating | null {
-  if (outcome.endReason !== 'clear') return null
+  if (outcome.endReason !== 'clear' || outcome.questionCount === 'endless') return null
   const best = calculateScore({
     ...outcome,
     correctCount: outcome.questionCount,

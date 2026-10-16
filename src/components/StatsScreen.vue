@@ -3,7 +3,13 @@ import { ref, computed } from 'vue'
 import { useGameStore } from '../stores/gameStore'
 import { useStatsStore } from '../stores/statsStore'
 import type { Difficulty } from '../types/game'
-import { DIFFICULTIES, DIFFICULTY_LABELS, OPERATION_LABELS, operationLabel } from '../logic/labels'
+import {
+  DIFFICULTIES,
+  DIFFICULTY_LABELS,
+  OPERATION_LABELS,
+  operationLabel,
+  questionCountLabel,
+} from '../logic/labels'
 import { summarize, summarizeByOperation } from '../logic/statsCalculator'
 import { formatScore, formatElapsedTime, formatTotalTime, formatPlayedAt } from '../logic/format'
 import GrowthView from './GrowthView.vue'
@@ -150,7 +156,8 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
               <div class="history-main">
                 <div class="history-mode">
                   {{ DIFFICULTY_LABELS[r.difficulty] }} ·
-                  {{ operationLabel(r.operation, r.mixedOperations) }} · {{ r.questionCount }}問
+                  {{ operationLabel(r.operation, r.mixedOperations) }} ·
+                  {{ questionCountLabel(r.questionCount) }}
                 </div>
                 <div class="history-date">{{ formatPlayedAt(r.playedAt) }}</div>
               </div>
@@ -163,9 +170,17 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
               </div>
               <span
                 class="history-badge pill"
-                :class="r.endReason === 'clear' ? 'pill-success' : 'pill-danger'"
+                :class="
+                  r.questionCount === 'endless'
+                    ? 'pill-endless'
+                    : r.endReason === 'clear'
+                      ? 'pill-success'
+                      : 'pill-danger'
+                "
               >
-                {{ r.endReason === 'clear' ? 'クリア' : '失敗' }}
+                {{
+                  r.questionCount === 'endless' ? '∞' : r.endReason === 'clear' ? 'クリア' : '失敗'
+                }}
               </span>
             </li>
           </ul>
@@ -430,6 +445,11 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
   font-size: 0.7rem;
   color: var(--text-sub);
   margin-top: 1px;
+}
+/* an endless game has no clear or failure; it just ends */
+.pill-endless {
+  --pill-rgb: var(--gold-rgb);
+  color: var(--gold-light);
 }
 .history-badge {
   flex-shrink: 0;

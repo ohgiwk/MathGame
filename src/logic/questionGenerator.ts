@@ -1,5 +1,6 @@
 import type { Difficulty, ActualOperation, Question, GameSettings } from '../types/game'
 import { resolveMixedOperations } from './labels'
+import { ENDLESS_BATCH_SIZE } from './constants'
 
 function randomInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min
@@ -79,17 +80,38 @@ function tryGenerate(
   return { id: key, ...question }
 }
 
-export function generateQuestions(settings: GameSettings): Question[] {
-  const usedKeys = new Set<string>()
-  const questions: Question[] = []
-  const MAX_ATTEMPTS = 200
+const MAX_ATTEMPTS = 200
 
-  for (let i = 0; i < settings.questionCount; i++) {
+function generateOne(difficulty: Difficulty, op: ActualOperation, usedKeys: Set<string>) {
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    const q = tryGenerate(difficulty, op, usedKeys)
+    if (q) return q
+  }
+  return null
+}
+
+/**
+ * Questions that repeat none of `usedKeys`, which collects every key asked so far; pass the same
+ * set again to continue a game (endless mode). Once the pool runs dry it starts over, still never
+ * repeating the question just asked.
+ */
+export function generateQuestions(
+  settings: GameSettings,
+  count: number = settings.questionCount === 'endless'
+    ? ENDLESS_BATCH_SIZE
+    : settings.questionCount,
+  usedKeys: Set<string> = new Set(),
+): Question[] {
+  const questions: Question[] = []
+
+  for (let i = 0; i < count; i++) {
     const op = getActualOperation(settings)
-    let q: Question | null = null
-    for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-      q = tryGenerate(settings.difficulty, op, usedKeys)
-      if (q) break
+    let q = generateOne(settings.difficulty, op, usedKeys)
+    if (!q) {
+      const last = [...usedKeys].at(-1)
+      usedKeys.clear()
+      if (last) usedKeys.add(last)
+      q = generateOne(settings.difficulty, op, usedKeys)
     }
     if (q) questions.push(q)
   }

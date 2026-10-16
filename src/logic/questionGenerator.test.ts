@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import type { ActualOperation, Difficulty, Question } from '../types/game'
 import { DIFFICULTIES, OPERATIONS } from './labels'
 import { generateQuestions } from './questionGenerator'
+import { ENDLESS_BATCH_SIZE } from './constants'
 
 // generation is random, so every property is checked over many runs
 const RUNS = 30
@@ -31,6 +32,32 @@ describe('generateQuestions', () => {
       }
     },
   )
+
+  it('makes a batch for an endless game, continuing from the keys already used', () => {
+    const settings = {
+      questionCount: 'endless',
+      difficulty: 'hard',
+      operation: 'addition',
+    } as const
+    const usedKeys = new Set<string>()
+    const first = generateQuestions(settings, undefined, usedKeys)
+    expect(first).toHaveLength(ENDLESS_BATCH_SIZE)
+    const second = generateQuestions(settings, undefined, usedKeys)
+    const ids = new Set([...first, ...second].map((q) => q.id))
+    expect(ids.size).toBe(ENDLESS_BATCH_SIZE * 2)
+  })
+
+  it('starts the pool over once every question has been asked', () => {
+    const settings = {
+      questionCount: 'endless',
+      difficulty: 'easy',
+      operation: 'addition',
+    } as const
+    // easy addition has 45 distinct questions
+    const questions = generateQuestions(settings, 100, new Set())
+    expect(questions).toHaveLength(100)
+    expect(questions.every((q, i) => i === 0 || q.id !== questions[i - 1].id)).toBe(true)
+  })
 
   it.each(DIFFICULTIES)('%s: every answer matches its operands', (difficulty) => {
     const compute: Record<ActualOperation, (a: number, b: number) => number> = {

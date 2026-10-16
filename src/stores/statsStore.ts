@@ -33,9 +33,15 @@ export const useStatsStore = defineStore('stats', () => {
     }
   }
 
-  /** 0 when the combination has never been played */
-  function bestScore(difficulty: Difficulty, operation: Operation): number {
-    return summarize(recordsFor(records.value, difficulty, operation)).bestScore ?? 0
+  /**
+   * 0 when the combination has never been played. Endless games are only compared with each
+   * other, since a long endless run would otherwise outscore any fixed-length game.
+   */
+  function bestScore(difficulty: Difficulty, operation: Operation, endless = false): number {
+    const same = recordsFor(records.value, difficulty, operation).filter(
+      (r) => (r.questionCount === 'endless') === endless,
+    )
+    return summarize(same).bestScore ?? 0
   }
 
   return { records, addRecord, bestScore }

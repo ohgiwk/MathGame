@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useGameStore } from '../stores/gameStore'
+import { usePreferencesStore } from '../stores/preferencesStore'
 import type { QuestionCount, Difficulty, Operation, ActualOperation } from '../types/game'
 import {
   QUESTION_COUNTS,
@@ -15,6 +16,7 @@ import {
 } from '../logic/labels'
 
 const store = useGameStore()
+const preferences = usePreferencesStore()
 
 const selectedCount = ref<QuestionCount>(store.settings.questionCount)
 const selectedDifficulty = ref<Difficulty>(store.settings.difficulty)
@@ -48,12 +50,20 @@ function handleStart() {
     difficulty: selectedDifficulty.value,
     operation: selectedOperation.value,
     mixedOperations: selectedMixed.value,
+    timeLimit: preferences.timeLimit ? preferences.timeLimitLength : undefined,
   })
 }
 </script>
 
 <template>
   <div class="setup-root">
+    <button class="settings-btn" aria-label="設定" @click="store.openSettings()">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path
+          d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm7.43-2.53c.04-.32.07-.64.07-.97s-.03-.66-.07-.98l2.11-1.65a.5.5 0 0 0 .12-.64l-2-3.46a.5.5 0 0 0-.61-.22l-2.49 1a7.3 7.3 0 0 0-1.69-.98l-.38-2.65A.49.49 0 0 0 14 2h-4a.49.49 0 0 0-.49.42l-.38 2.65c-.61.25-1.17.58-1.69.98l-2.49-1a.5.5 0 0 0-.61.22l-2 3.46a.49.49 0 0 0 .12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65a.5.5 0 0 0-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46a.5.5 0 0 0-.12-.64l-2.11-1.65Z"
+        />
+      </svg>
+    </button>
     <!-- Header -->
     <div class="setup-header enter-item" style="--i: 0">
       <div class="temple-icon">⬡</div>
@@ -64,8 +74,11 @@ function handleStart() {
     <div class="setup-body">
       <!-- 問題数 -->
       <div class="rpg-card setup-section enter-item" style="--i: 1">
-        <h2 class="section-label"><span class="section-gem">◆</span> 問題数</h2>
-        <div class="grid-3">
+        <h2 class="section-label">
+          <span class="section-gem">◆</span> 問題数
+          <span v-if="preferences.timeLimit" class="limit-note">⏱ 制限時間あり</span>
+        </h2>
+        <div class="grid-4">
           <button
             v-for="c in QUESTION_COUNTS"
             :key="c"
@@ -73,7 +86,8 @@ function handleStart() {
             :class="{ active: selectedCount === c }"
             @click="selectedCount = c"
           >
-            <span class="opt-main">{{ c }}問</span>
+            <span v-if="c === 'endless'" class="opt-main">∞</span>
+            <span v-else class="opt-main">{{ c }}問</span>
           </button>
         </div>
       </div>
@@ -144,6 +158,7 @@ function handleStart() {
 
 <style scoped>
 .setup-root {
+  position: relative;
   min-height: 100%;
   display: flex;
   flex-direction: column;
@@ -239,6 +254,40 @@ function handleStart() {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 0.5rem;
+}
+
+.grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+}
+.limit-note {
+  margin-left: auto;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--gem-teal);
+}
+
+.settings-btn {
+  position: absolute;
+  top: max(1rem, env(safe-area-inset-top));
+  right: 1rem;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-sub);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+}
+.settings-btn svg {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
 }
 
 .grid-ops {

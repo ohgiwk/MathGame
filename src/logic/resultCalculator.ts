@@ -7,10 +7,13 @@ export function calculateResult(
   endReason: GameEndReason,
   now: number,
 ): Omit<GameResult, 'isBestScore'> {
-  const { mixedOperations, ...settings } = state.settings
+  // the time limit only changes how the game is played, so it is not part of the record
+  const { difficulty, operation, mixedOperations, questionCount } = state.settings
   const outcome: GameOutcome = {
-    ...settings,
-    ...(settings.operation === 'mixed' && mixedOperations ? { mixedOperations } : {}),
+    difficulty,
+    operation,
+    ...(operation === 'mixed' && mixedOperations ? { mixedOperations } : {}),
+    questionCount,
     endReason,
     correctCount: state.correctCount,
     totalAnswered: state.currentIndex + 1,

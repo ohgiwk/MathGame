@@ -2,13 +2,14 @@
 defineProps<{
   correct: boolean
   correctAnswer: number
+  timedOut?: boolean
 }>()
 </script>
 
 <template>
   <div class="feedback-pill pill pop-in" :class="correct ? 'pill-success' : 'pill-danger'">
     <span class="feedback-icon">{{ correct ? '◎' : '✕' }}</span>
-    <span class="feedback-label">{{ correct ? '正解！' : '不正解' }}</span>
+    <span class="feedback-label">{{ correct ? '正解！' : timedOut ? '時間切れ' : '不正解' }}</span>
     <span v-if="!correct" class="feedback-answer">
       正解は <span class="answer-val">{{ correctAnswer }}</span>
     </span>

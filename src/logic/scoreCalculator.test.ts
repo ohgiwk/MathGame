@@ -116,6 +116,20 @@ describe('calculateRating', () => {
     expect(rate({ correctCount: 8, elapsedSeconds: 120 })).toBe('nice')
   })
 
+  it('gives no rating to an endless game', () => {
+    const outcome = {
+      difficulty: 'easy',
+      operation: 'addition',
+      questionCount: 'endless',
+      endReason: 'clear',
+      correctCount: 20,
+      totalAnswered: 20,
+      elapsedSeconds: 30,
+    } as const
+    expect(calculateRating(outcome, calculateScore(outcome).score)).toBeNull()
+    expect(calculateScore(outcome).clearMultiplier).toBe(1)
+  })
+
   it('gives no rating on a game over', () => {
     expect(rate({ endReason: 'gameover', correctCount: 7 })).toBeNull()
   })

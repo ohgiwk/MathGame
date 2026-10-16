@@ -11,6 +11,9 @@ function state(overrides: Partial<GameState> = {}): GameState {
     correctCount: 5,
     startedAt: 1_000,
     feedback: null,
+    timeLimitMs: null,
+    deadline: null,
+    pausedRemainingMs: null,
     ...overrides,
   }
 }

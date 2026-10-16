@@ -11,7 +11,9 @@ const store = useGameStore()
 const statsStore = useStatsStore()
 const result = computed(() => store.result)
 const outcome = computed(() => store.result?.outcome)
-const isGameOver = computed(() => outcome.value?.endReason === 'gameover')
+const isEndless = computed(() => outcome.value?.questionCount === 'endless')
+// an endless game always ends by running out of lives, which is its finish rather than a failure
+const isGameOver = computed(() => outcome.value?.endReason === 'gameover' && !isEndless.value)
 
 // The result is fixed while this screen is shown, so the numbers count up once on entry.
 // Delays follow the order in which the tiles pop in.
@@ -69,11 +71,14 @@ onBeforeUnmount(cancelAutoSlide)
     <div class="result-inner fade-in-up">
       <!-- Title -->
       <div class="result-header">
-        <div class="result-icon">{{ isGameOver ? '💀' : '🏆' }}</div>
+        <div class="result-icon">{{ isEndless ? '🏅' : isGameOver ? '💀' : '🏆' }}</div>
         <h1 class="result-title" :class="isGameOver ? 'title-over' : 'title-clear'">
-          {{ result.rating ? RATING_LABELS[result.rating] : 'ゲームオーバー' }}
+          {{
+            isEndless ? 'FINISH!' : result.rating ? RATING_LABELS[result.rating] : 'ゲームオーバー'
+          }}
         </h1>
-        <p v-if="isGameOver" class="result-sub">
+        <p v-if="isEndless" class="result-sub">エンドレス · {{ outcome.correctCount }}問正解</p>
+        <p v-else-if="isGameOver" class="result-sub">
           到達 {{ outcome.totalAnswered }} / {{ outcome.questionCount }}問
         </p>
       </div>

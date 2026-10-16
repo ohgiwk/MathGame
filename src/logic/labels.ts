@@ -1,6 +1,13 @@
-import type { Difficulty, Operation, ActualOperation, QuestionCount, Rating } from '../types/game'
+import type {
+  Difficulty,
+  Operation,
+  ActualOperation,
+  QuestionCount,
+  Rating,
+  TimeLimitLength,
+} from '../types/game'
 
-export const QUESTION_COUNTS: QuestionCount[] = [5, 10, 15]
+export const QUESTION_COUNTS: QuestionCount[] = [5, 10, 15, 'endless']
 export const DIFFICULTIES: Difficulty[] = ['easy', 'normal', 'hard']
 export const OPERATIONS: Operation[] = [
   'addition',
@@ -31,6 +38,18 @@ export const OPERATION_LABELS: Record<Operation, string> = {
   multiplication: '掛け算',
   division: '割り算',
   mixed: 'ミックス',
+}
+
+export function questionCountLabel(count: QuestionCount): string {
+  return count === 'endless' ? 'エンドレス' : `${count}問`
+}
+
+export const TIME_LIMIT_LENGTHS: TimeLimitLength[] = ['short', 'normal', 'long']
+
+export const TIME_LIMIT_LABELS: Record<TimeLimitLength, string> = {
+  short: '短め',
+  normal: '普通',
+  long: '長め',
 }
 
 export const RATING_LABELS: Record<Rating, string> = {
