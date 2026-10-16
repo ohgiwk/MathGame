@@ -6,12 +6,14 @@ import type { Difficulty } from '../types/game'
 import { DIFFICULTIES, DIFFICULTY_LABELS, OPERATION_LABELS, operationLabel } from '../logic/labels'
 import { summarize, summarizeByOperation } from '../logic/statsCalculator'
 import { formatScore, formatElapsedTime, formatTotalTime, formatPlayedAt } from '../logic/format'
+import GrowthView from './GrowthView.vue'
 
 const HISTORY_LIMIT = 30
 
 const store = useGameStore()
 const statsStore = useStatsStore()
 
+const view = ref<'records' | 'growth'>('records')
 const selectedDifficulty = ref<Difficulty>(store.settings.difficulty)
 
 const total = computed(() => summarize(statsStore.records))
@@ -30,118 +32,145 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
         <h1 class="stats-title">My Records</h1>
       </div>
 
-      <!-- 累計 -->
-      <div class="rpg-card stats-section">
-        <h2 class="section-label">
-          <span class="section-gem">◆</span> 累計
-          <span class="section-note">
-            正解 {{ total.correctCount }} / {{ total.totalAnswered }}問 ·
-            {{ formatTotalTime(total.elapsedSeconds) }}
-          </span>
-        </h2>
-        <div class="total-row">
-          <div class="tile total-item">
-            <div class="total-label">プレイ</div>
-            <div class="total-value">{{ total.playCount }}<span class="total-unit">回</span></div>
-          </div>
-          <div class="tile total-item">
-            <div class="total-label">クリア</div>
-            <div class="total-value">{{ total.clearCount }}<span class="total-unit">回</span></div>
-          </div>
-          <div class="tile total-item">
-            <div class="total-label">正答率</div>
-            <div class="total-value accent">
-              {{ total.accuracy ?? '–'
-              }}<span v-if="total.accuracy !== null" class="total-unit">%</span>
+      <div class="view-tabs" role="tablist">
+        <button
+          role="tab"
+          class="view-tab"
+          :class="{ active: view === 'records' }"
+          :aria-selected="view === 'records'"
+          @click="view = 'records'"
+        >
+          記録
+        </button>
+        <button
+          role="tab"
+          class="view-tab"
+          :class="{ active: view === 'growth' }"
+          :aria-selected="view === 'growth'"
+          @click="view = 'growth'"
+        >
+          成長
+        </button>
+      </div>
+
+      <GrowthView v-if="view === 'growth'" :records="statsStore.records" />
+
+      <template v-else>
+        <!-- 累計 -->
+        <div class="rpg-card stats-section">
+          <h2 class="section-label">
+            <span class="section-gem">◆</span> 累計
+            <span class="section-note">
+              正解 {{ total.correctCount }} / {{ total.totalAnswered }}問 ·
+              {{ formatTotalTime(total.elapsedSeconds) }}
+            </span>
+          </h2>
+          <div class="total-row">
+            <div class="tile total-item">
+              <div class="total-label">プレイ</div>
+              <div class="total-value">{{ total.playCount }}<span class="total-unit">回</span></div>
             </div>
-          </div>
-          <div class="tile total-item">
-            <div class="total-label">累計スコア</div>
-            <div class="total-value">{{ formatScore(total.totalScore) }}</div>
+            <div class="tile total-item">
+              <div class="total-label">クリア</div>
+              <div class="total-value">
+                {{ total.clearCount }}<span class="total-unit">回</span>
+              </div>
+            </div>
+            <div class="tile total-item">
+              <div class="total-label">正答率</div>
+              <div class="total-value accent">
+                {{ total.accuracy ?? '–'
+                }}<span v-if="total.accuracy !== null" class="total-unit">%</span>
+              </div>
+            </div>
+            <div class="tile total-item">
+              <div class="total-label">累計スコア</div>
+              <div class="total-value">{{ formatScore(total.totalScore) }}</div>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- 難易度・種類ごと -->
-      <div class="rpg-card stats-section">
-        <h2 class="section-label">
-          <span class="section-gem">◆</span> 種類ごと
-          <span class="diff-tabs">
-            <button
-              v-for="d in DIFFICULTIES"
-              :key="d"
-              class="diff-tab"
-              :class="{ active: selectedDifficulty === d }"
-              @click="selectedDifficulty = d"
-            >
-              {{ DIFFICULTY_LABELS[d] }}
-            </button>
-          </span>
-        </h2>
-        <table class="op-table">
-          <thead>
-            <tr>
-              <th class="col-name">種類</th>
-              <th>プレイ</th>
-              <th>クリア</th>
-              <th>正答率</th>
-              <th>ベスト</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="row in byOperation"
-              :key="row.operation"
-              :class="{ unplayed: row.summary.playCount === 0 }"
-            >
-              <td class="col-name">{{ OPERATION_LABELS[row.operation] }}</td>
-              <td>{{ row.summary.playCount }}</td>
-              <td>{{ row.summary.clearCount }}</td>
-              <td class="col-accuracy">
-                {{ row.summary.accuracy !== null ? `${row.summary.accuracy}%` : '–' }}
-              </td>
-              <td class="col-best">
-                {{ row.summary.bestScore !== null ? formatScore(row.summary.bestScore) : '–' }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- 履歴 -->
-      <div class="rpg-card stats-section history-section">
-        <h2 class="section-label">
-          <span class="section-gem">◆</span> 履歴
-          <span v-if="statsStore.records.length > HISTORY_LIMIT" class="section-note"
-            >最新{{ HISTORY_LIMIT }}件</span
-          >
-        </h2>
-        <p v-if="history.length === 0" class="empty-note">まだ記録がありません</p>
-        <ul v-else class="history-list">
-          <li v-for="r in history" :key="r.id" class="history-row">
-            <div class="history-main">
-              <div class="history-mode">
-                {{ DIFFICULTY_LABELS[r.difficulty] }} ·
-                {{ operationLabel(r.operation, r.mixedOperations) }} · {{ r.questionCount }}問
-              </div>
-              <div class="history-date">{{ formatPlayedAt(r.playedAt) }}</div>
-            </div>
-            <div class="history-result">
-              <div class="history-score">{{ formatScore(r.score) }}</div>
-              <div class="history-time">
-                {{ r.correctCount }} / {{ r.totalAnswered }} ·
-                {{ formatElapsedTime(r.elapsedSeconds) }}
-              </div>
-            </div>
-            <span
-              class="history-badge pill"
-              :class="r.endReason === 'clear' ? 'pill-success' : 'pill-danger'"
-            >
-              {{ r.endReason === 'clear' ? 'クリア' : '失敗' }}
+        <!-- 難易度・種類ごと -->
+        <div class="rpg-card stats-section">
+          <h2 class="section-label">
+            <span class="section-gem">◆</span> 種類ごと
+            <span class="diff-tabs">
+              <button
+                v-for="d in DIFFICULTIES"
+                :key="d"
+                class="diff-tab"
+                :class="{ active: selectedDifficulty === d }"
+                @click="selectedDifficulty = d"
+              >
+                {{ DIFFICULTY_LABELS[d] }}
+              </button>
             </span>
-          </li>
-        </ul>
-      </div>
+          </h2>
+          <table class="op-table">
+            <thead>
+              <tr>
+                <th class="col-name">種類</th>
+                <th>プレイ</th>
+                <th>クリア</th>
+                <th>正答率</th>
+                <th>ベスト</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="row in byOperation"
+                :key="row.operation"
+                :class="{ unplayed: row.summary.playCount === 0 }"
+              >
+                <td class="col-name">{{ OPERATION_LABELS[row.operation] }}</td>
+                <td>{{ row.summary.playCount }}</td>
+                <td>{{ row.summary.clearCount }}</td>
+                <td class="col-accuracy">
+                  {{ row.summary.accuracy !== null ? `${row.summary.accuracy}%` : '–' }}
+                </td>
+                <td class="col-best">
+                  {{ row.summary.bestScore !== null ? formatScore(row.summary.bestScore) : '–' }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 履歴 -->
+        <div class="rpg-card stats-section history-section">
+          <h2 class="section-label">
+            <span class="section-gem">◆</span> 履歴
+            <span v-if="statsStore.records.length > HISTORY_LIMIT" class="section-note"
+              >最新{{ HISTORY_LIMIT }}件</span
+            >
+          </h2>
+          <p v-if="history.length === 0" class="empty-note">まだ記録がありません</p>
+          <ul v-else class="history-list">
+            <li v-for="r in history" :key="r.id" class="history-row">
+              <div class="history-main">
+                <div class="history-mode">
+                  {{ DIFFICULTY_LABELS[r.difficulty] }} ·
+                  {{ operationLabel(r.operation, r.mixedOperations) }} · {{ r.questionCount }}問
+                </div>
+                <div class="history-date">{{ formatPlayedAt(r.playedAt) }}</div>
+              </div>
+              <div class="history-result">
+                <div class="history-score">{{ formatScore(r.score) }}</div>
+                <div class="history-time">
+                  {{ r.correctCount }} / {{ r.totalAnswered }} ·
+                  {{ formatElapsedTime(r.elapsedSeconds) }}
+                </div>
+              </div>
+              <span
+                class="history-badge pill"
+                :class="r.endReason === 'clear' ? 'pill-success' : 'pill-danger'"
+              >
+                {{ r.endReason === 'clear' ? 'クリア' : '失敗' }}
+              </span>
+            </li>
+          </ul>
+        </div>
+      </template>
     </div>
   </div>
 </template>
@@ -207,6 +236,36 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
   font-weight: 500;
   letter-spacing: 0.04em;
   opacity: 0.8;
+}
+
+/* 記録 / 成長 */
+.view-tabs {
+  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.2);
+}
+.view-tab {
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-sub);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 7px 0;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.view-tab.active {
+  border-color: var(--gold);
+  color: var(--gold-light);
+  background: linear-gradient(135deg, #1c2b50, #162040);
+  box-shadow: 0 0 10px rgba(var(--gold-rgb), 0.2);
 }
 
 /* 累計 */
