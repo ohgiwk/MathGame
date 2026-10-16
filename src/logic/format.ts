@@ -30,3 +30,8 @@ export function formatPlayedAt(timestamp: number): string {
   const mm = d.getMinutes().toString().padStart(2, '0')
   return `${d.getMonth() + 1}/${d.getDate()} ${hh}:${mm}`
 }
+
+export function formatPlayedDate(timestamp: number): string {
+  const d = new Date(timestamp)
+  return `${d.getMonth() + 1}/${d.getDate()}`
+}

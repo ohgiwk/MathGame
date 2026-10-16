@@ -1,5 +1,5 @@
-import type { Difficulty, Operation, GameRecord } from '../types/game'
-import { OPERATIONS } from './labels'
+import type { Difficulty, Operation, GameRecord, GameOutcome } from '../types/game'
+import { OPERATIONS, resolveMixedOperations } from './labels'
 
 export interface StatsSummary {
   playCount: number
@@ -62,4 +62,19 @@ export function summarizeByOperation(
     operation,
     summary: summarize(recordsFor(records, difficulty, operation)),
   }))
+}
+
+/**
+ * Records played with the same settings as `outcome`: difficulty, operation, question count and,
+ * for a mix, the same set of operations. Keeps the order of `records`.
+ */
+export function recordsLike(records: GameRecord[], outcome: GameOutcome): GameRecord[] {
+  const mix = (ops?: GameOutcome['mixedOperations']) => resolveMixedOperations(ops).join()
+  return records.filter(
+    (r) =>
+      r.difficulty === outcome.difficulty &&
+      r.operation === outcome.operation &&
+      r.questionCount === outcome.questionCount &&
+      (outcome.operation !== 'mixed' || mix(r.mixedOperations) === mix(outcome.mixedOperations)),
+  )
 }

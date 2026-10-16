@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import type { GameRecord } from '../types/game'
-import { summarize, summarizeByOperation } from './statsCalculator'
+import { summarize, summarizeByOperation, recordsLike } from './statsCalculator'
 
 function record(overrides: Partial<GameRecord> = {}): GameRecord {
   return {
@@ -77,5 +77,32 @@ describe('summarizeByOperation', () => {
     ])
     expect(rows.map((r) => r.summary.playCount)).toEqual([1, 0, 0, 1, 0])
     expect(rows[0].summary.bestScore).toBe(900)
+  })
+})
+
+describe('recordsLike', () => {
+  it('keeps only records with the same difficulty, operation and question count, in order', () => {
+    const records = [
+      record({ id: 'a' }),
+      record({ id: 'b', difficulty: 'normal' }),
+      record({ id: 'c', operation: 'subtraction' }),
+      record({ id: 'd', questionCount: 10 }),
+      record({ id: 'e' }),
+    ]
+    expect(recordsLike(records, record()).map((r) => r.id)).toEqual(['a', 'e'])
+  })
+
+  it('tells mixes apart by their operations, treating a missing list as all four', () => {
+    const mixed = (id: string, mixedOperations?: GameRecord['mixedOperations']) =>
+      record({ id, operation: 'mixed', mixedOperations })
+    const records = [
+      mixed('all'),
+      mixed('all4', ['addition', 'subtraction', 'multiplication', 'division']),
+      mixed('pm', ['addition', 'subtraction']),
+    ]
+    expect(recordsLike(records, mixed('x')).map((r) => r.id)).toEqual(['all', 'all4'])
+    expect(recordsLike(records, mixed('y', ['addition', 'subtraction'])).map((r) => r.id)).toEqual([
+      'pm',
+    ])
   })
 })

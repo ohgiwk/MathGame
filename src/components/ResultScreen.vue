@@ -2,9 +2,14 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useGameStore } from '../stores/gameStore'
 import { useStatsStore } from '../stores/statsStore'
-import { summarize } from '../logic/statsCalculator'
-import { formatScore, formatElapsedTime, formatTotalTime } from '../logic/format'
-import { RATING_LABELS } from '../logic/labels'
+import { summarize, recordsLike } from '../logic/statsCalculator'
+import { formatScore, formatElapsedTime, formatTotalTime, formatPlayedDate } from '../logic/format'
+import {
+  RATING_LABELS,
+  DIFFICULTY_LABELS,
+  operationLabel,
+  questionCountLabel,
+} from '../logic/labels'
 import { useCountUp } from '../composables/useCountUp'
 
 const store = useGameStore()
@@ -25,10 +30,18 @@ const shownAccuracy = useCountUp(r?.accuracy ?? 0, { duration: 600, delay: 490 }
 const shownMistakes = useCountUp(mistakes, { duration: 600, delay: 610 })
 const shownSeconds = useCountUp(r?.outcome.elapsedSeconds ?? 0, { duration: 600, delay: 730 })
 
-// The panel has two slides side by side: this game's result, and the totals over every game
-// played so far (this one included). It is swiped like a carousel; the dots also switch slides.
-const SLIDE_LABELS = ['今回の結果', '累計']
+// The panel has three slides side by side: this game's result, the earlier games with the same
+// settings (this one included, as the newest), and the totals over every game played so far.
+// It is swiped like a carousel; the dots also switch slides.
+const SLIDE_LABELS = ['今回の結果', '同じ種別の履歴', '累計']
 const total = computed(() => summarize(statsStore.records))
+
+const HISTORY_LIMIT = 30
+const sameKind = computed(() =>
+  outcome.value ? recordsLike(statsStore.records, outcome.value) : [],
+)
+const sameKindBest = computed(() => summarize(sameKind.value).bestScore)
+const sameKindHistory = computed(() => sameKind.value.slice(0, HISTORY_LIMIT))
 const slidesRef = ref<HTMLElement | null>(null)
 const activeSlide = ref(0)
 
@@ -43,7 +56,7 @@ function showSlide(index: number) {
 }
 
 // Once the numbers have finished counting up and had a moment to be read, the panel moves on to
-// the totals by itself. Touching the panel first means the player is steering, so it stays put.
+// the history by itself. Touching the panel first means the player is steering, so it stays put.
 const COUNT_UP_END_MS = 1330
 const RESULT_HOLD_MS = 2500
 let autoSlideTimer: ReturnType<typeof setTimeout> | null = null
@@ -90,7 +103,7 @@ onBeforeUnmount(cancelAutoSlide)
         <span>◆</span>
       </div>
 
-      <!-- Result panel: this game / totals -->
+      <!-- Result panel: this game / history / totals -->
       <div class="result-panel rpg-card">
         <div
           ref="slidesRef"
@@ -128,6 +141,40 @@ onBeforeUnmount(cancelAutoSlide)
             <div class="tile stat-tile" style="--i: 4">
               <div class="stat-label">タイム</div>
               <div class="stat-time">{{ formatElapsedTime(shownSeconds) }}</div>
+            </div>
+          </div>
+          <div class="history-slide">
+            <div class="history-inner">
+              <div class="history-head">
+                <span class="history-kind">
+                  {{ DIFFICULTY_LABELS[outcome.difficulty] }} ·
+                  {{ operationLabel(outcome.operation, outcome.mixedOperations) }} ·
+                  {{ questionCountLabel(outcome.questionCount) }}
+                </span>
+                <span class="history-count">{{ sameKind.length }}回</span>
+              </div>
+              <ol class="history-list">
+                <li
+                  v-for="(rec, i) in sameKindHistory"
+                  :key="rec.id"
+                  class="history-row"
+                  :class="{ current: i === 0 }"
+                >
+                  <div class="history-when">
+                    <span v-if="i === 0" class="now-tag">今回</span>
+                    <span v-else>{{ formatPlayedDate(rec.playedAt) }}</span>
+                  </div>
+                  <div class="history-detail">
+                    {{ rec.correctCount }} / {{ rec.totalAnswered }} ·
+                    {{ formatElapsedTime(rec.elapsedSeconds) }}
+                  </div>
+                  <div class="history-score">
+                    <span v-if="rec.score === sameKindBest && rec.score > 0" class="best-mark"
+                      >★</span
+                    >{{ formatScore(rec.score) }}
+                  </div>
+                </li>
+              </ol>
             </div>
           </div>
           <div class="stats-grid">
@@ -259,6 +306,90 @@ onBeforeUnmount(cancelAutoSlide)
   gap: 0.6rem;
   padding: 1rem 1rem 0.7rem;
 }
+/* The history list scrolls inside the height the other slides set, rather than stretching the panel */
+.history-slide {
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  position: relative;
+}
+.history-inner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 1rem 0.7rem;
+}
+.history-head {
+  flex-shrink: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+.history-kind {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.history-count {
+  font-size: 0.7rem;
+  color: var(--text-sub);
+}
+.history-list {
+  list-style: none;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.history-row {
+  display: grid;
+  grid-template-columns: 3.4rem 1fr auto;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.4rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-variant-numeric: tabular-nums;
+}
+.history-row.current {
+  background: rgba(var(--gold-rgb), 0.08);
+  border-radius: 8px;
+}
+.history-when {
+  font-size: 0.72rem;
+  color: var(--text-sub);
+}
+.now-tag {
+  font-weight: 800;
+  color: var(--gold-light);
+  letter-spacing: 0.08em;
+}
+.history-detail {
+  font-size: 0.72rem;
+  color: var(--text-sub);
+  white-space: nowrap;
+}
+.history-score {
+  font-size: 0.95rem;
+  font-weight: 900;
+  color: var(--gold-light);
+  text-align: right;
+}
+.best-mark {
+  font-size: 0.7rem;
+  margin-right: 3px;
+  color: var(--gold);
+  filter: drop-shadow(0 0 4px rgba(var(--gold-rgb), 0.6));
+}
+
 .slide-dots {
   display: flex;
   justify-content: center;

@@ -5,6 +5,7 @@ import {
   formatElapsedTime,
   formatTotalTime,
   formatPlayedAt,
+  formatPlayedDate,
 } from './format'
 
 describe('formatQuestion', () => {
@@ -39,5 +40,11 @@ describe('formatTotalTime', () => {
 describe('formatPlayedAt', () => {
   it('shows month/day and a zero-padded local time', () => {
     expect(formatPlayedAt(new Date(2026, 2, 5, 9, 7).getTime())).toBe('3/5 09:07')
+  })
+})
+
+describe('formatPlayedDate', () => {
+  it('shows the month and day only', () => {
+    expect(formatPlayedDate(new Date(2026, 9, 15, 21, 35).getTime())).toBe('10/15')
   })
 })
