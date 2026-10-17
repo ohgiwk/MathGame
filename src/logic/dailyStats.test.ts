@@ -4,7 +4,7 @@ import {
   dayKey,
   toDayKey,
   summarizeByDay,
-  summarizeDayByKind,
+  summarizeDayByOperation,
   monthGrid,
   currentStreak,
 } from './dailyStats'
@@ -52,23 +52,33 @@ describe('summarizeByDay', () => {
   })
 })
 
-describe('summarizeDayByKind', () => {
-  it('splits the day by kind, latest kind first, comparing with each kind’s previous day', () => {
+describe('summarizeDayByOperation', () => {
+  it('splits the day by operation alone, latest first, comparing with its previous day', () => {
     const records = [
       record({ id: 'a1', playedAt: at(2026, 9, 16, 20), score: 1000 }),
-      record({ id: 'n1', playedAt: at(2026, 9, 16, 18), difficulty: 'normal', score: 700 }),
-      record({ id: 'a2', playedAt: at(2026, 9, 16, 8), score: 600 }),
+      record({ id: 's1', playedAt: at(2026, 9, 16, 18), operation: 'subtraction', score: 700 }),
+      // another difficulty and length, but the same operation
+      record({
+        id: 'a2',
+        playedAt: at(2026, 9, 16, 8),
+        difficulty: 'hard',
+        questionCount: 20,
+        score: 600,
+      }),
       record({ id: 'other-day', playedAt: at(2026, 9, 3), score: 300 }),
     ]
-    const kinds = summarizeDayByKind(records, '2026-10-16')
-    expect(kinds.map((k) => k.records.map((r) => r.id))).toEqual([['a1', 'a2'], ['n1']])
-    expect(kinds[0].summary).toMatchObject({ playCount: 2, averageScore: 800, bestScore: 1000 })
-    expect(kinds[0].previousAverage).toBe(300)
-    expect(kinds[1].previousAverage).toBeNull()
+    const ops = summarizeDayByOperation(records, '2026-10-16')
+    expect(ops.map((o) => o.operation)).toEqual(['addition', 'subtraction'])
+    expect(ops[0].records.map((r) => r.id)).toEqual(['a1', 'a2'])
+    expect(ops[0].summary).toMatchObject({ playCount: 2, averageScore: 800, bestScore: 1000 })
+    expect(ops[0].previousAverage).toBe(300)
+    expect(ops[1].previousAverage).toBeNull()
   })
 
   it('returns nothing for a day without games', () => {
-    expect(summarizeDayByKind([record({ playedAt: at(2026, 9, 3) })], '2026-10-16')).toEqual([])
+    expect(summarizeDayByOperation([record({ playedAt: at(2026, 9, 3) })], '2026-10-16')).toEqual(
+      [],
+    )
   })
 })
 

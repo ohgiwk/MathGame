@@ -1,18 +1,17 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import type { Difficulty, GameRecord } from '../types/game'
-import { DIFFICULTIES, DIFFICULTY_LABELS, kindLabel } from '../logic/labels'
+import type { Difficulty, GameRecord, Operation } from '../types/game'
+import { DIFFICULTIES, DIFFICULTY_LABELS, OPERATIONS, OPERATION_LABELS } from '../logic/labels'
 import {
   type DayKey,
   type DaySummary,
   dayKey,
   toDayKey,
   summarizeByDay,
-  summarizeDayByKind,
+  summarizeDayByOperation,
   monthGrid,
   currentStreak,
 } from '../logic/dailyStats'
-import { kindKey } from '../logic/statsCalculator'
 import { formatScore, formatElapsedTime } from '../logic/format'
 
 const props = defineProps<{ records: GameRecord[] }>()
@@ -38,9 +37,9 @@ const selectedDay = ref<DayKey | null>(null)
 const selected = computed<DaySummary | null>(
   () => (selectedDay.value && dayMap.value.get(selectedDay.value)) || null,
 )
-// Scores only compare within a kind of game, so the day is shown kind by kind
-const dayKinds = computed(() =>
-  selectedDay.value ? summarizeDayByKind(filtered.value, selectedDay.value) : [],
+// The day is shown operation by operation, each with its own average
+const dayOperations = computed(() =>
+  selectedDay.value ? summarizeDayByOperation(filtered.value, selectedDay.value) : [],
 )
 
 // keep a played day selected; fall back to the latest one when the filter drops it
@@ -121,22 +120,20 @@ function formatShortDay(key: DayKey) {
   return `${month + 1}/${date}`
 }
 
-// ---- trend chart: one kind of game at a time ----
-/** Each kind played under the filter, labelled from its newest game, most recently played first */
-const kinds = computed(() => {
-  const seen = new Map<string, string>()
-  for (const r of filtered.value) {
-    const kind = kindKey(r)
-    if (!seen.has(kind)) seen.set(kind, kindLabel(r))
-  }
-  return [...seen].map(([kind, label]) => ({ kind, label }))
+// ---- trend chart: one operation at a time ----
+/** Each operation played under the filter, in the usual order so the buttons keep their places */
+const chartOperations = computed(() => {
+  const played = new Set(filtered.value.map((r) => r.operation))
+  return OPERATIONS.filter((op) => played.has(op))
 })
-const chartKind = ref<string | null>(null)
-// fall back to the most recently played kind when the filter drops the charted one
+const chartOperation = ref<Operation | null>(null)
+// fall back to the most recently played operation when the filter drops the charted one
 watch(
-  kinds,
+  chartOperations,
   (list) => {
-    if (!list.some((k) => k.kind === chartKind.value)) chartKind.value = list[0]?.kind ?? null
+    if (!chartOperation.value || !list.includes(chartOperation.value)) {
+      chartOperation.value = filtered.value[0]?.operation ?? null
+    }
   },
   { immediate: true },
 )
@@ -148,7 +145,9 @@ const plotW = W - PAD.left - PAD.right
 const plotH = H - PAD.top - PAD.bottom
 
 const chartDays = computed(() =>
-  summarizeByDay(filtered.value.filter((r) => kindKey(r) === chartKind.value)).slice(-CHART_DAYS),
+  summarizeByDay(filtered.value.filter((r) => r.operation === chartOperation.value)).slice(
+    -CHART_DAYS,
+  ),
 )
 
 /** A round ceiling for the y axis, e.g. 1,234 -> 1,500 */
@@ -298,14 +297,14 @@ function formatAxis(value: number) {
           <span class="section-gem">◆</span> {{ formatDayHeading(selected.day) }}
           <span class="section-note">{{ selected.playCount }}回</span>
         </h2>
-        <div v-for="k in dayKinds" :key="k.kind" class="kind-group">
-          <!-- tapping a kind charts it below -->
+        <div v-for="k in dayOperations" :key="k.operation" class="kind-group">
+          <!-- tapping an operation charts it below -->
           <button
             class="kind-head"
-            :class="{ charted: k.kind === chartKind }"
-            @click="chartKind = k.kind"
+            :class="{ charted: k.operation === chartOperation }"
+            @click="chartOperation = k.operation"
           >
-            <span class="kind-name">{{ kindLabel(k.records[0]) }}</span>
+            <span class="kind-name">{{ OPERATION_LABELS[k.operation] }}</span>
             <span
               v-if="k.previousAverage !== null"
               class="delta pill"
@@ -349,9 +348,19 @@ function formatAxis(value: number) {
           </template>
         </span>
       </h2>
-      <select v-model="chartKind" class="kind-select" aria-label="グラフにする種別">
-        <option v-for="k in kinds" :key="k.kind" :value="k.kind">{{ k.label }}</option>
-      </select>
+      <div class="op-tabs" role="tablist" aria-label="グラフにする計算の種類">
+        <button
+          v-for="op in chartOperations"
+          :key="op"
+          role="tab"
+          class="diff-tab op-tab"
+          :class="{ active: chartOperation === op }"
+          :aria-selected="chartOperation === op"
+          @click="chartOperation = op"
+        >
+          {{ OPERATION_LABELS[op] }}
+        </button>
+      </div>
       <svg class="chart" :viewBox="`0 0 ${W} ${H}`" role="img" aria-label="日ごとの平均スコア">
         <defs>
           <linearGradient id="growth-area" x1="0" y1="0" x2="0" y2="1">
@@ -664,7 +673,7 @@ function formatAxis(value: number) {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-/* a small mark beside the kind shown in the chart below */
+/* a small mark beside the operation shown in the chart below */
 .kind-head.charted .kind-name::before {
   content: '';
   display: inline-block;
@@ -711,17 +720,18 @@ function formatAxis(value: number) {
   color: var(--gold-light);
 }
 
-.kind-select {
-  width: 100%;
+/* one row however many operations there are: the buttons share the width */
+.op-tabs {
+  display: flex;
+  gap: 4px;
   margin-bottom: 0.4rem;
-  padding: 6px 10px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--bg-inset);
-  color: var(--text-main);
-  font-family: inherit;
-  font-size: 0.8rem;
-  font-weight: 700;
+}
+.op-tab {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 4px 0;
+  font-size: 0.68rem;
+  white-space: nowrap;
 }
 
 /* 推移グラフ */

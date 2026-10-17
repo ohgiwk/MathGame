@@ -1,5 +1,5 @@
-import type { GameRecord } from '../types/game'
-import { summarize, kindKey, type StatsSummary } from './statsCalculator'
+import type { GameRecord, Operation } from '../types/game'
+import { summarize, type StatsSummary } from './statsCalculator'
 
 /** A local calendar day as 'YYYY-MM-DD' */
 export type DayKey = string
@@ -43,34 +43,33 @@ export function summarizeByDay(records: GameRecord[]): DaySummary[] {
     })
 }
 
-/** One kind of game (see kindKey) as played on one day */
-export interface KindDay {
-  kind: string
-  /** the day's games of this kind, in the order given (newest first, as stored) */
+/** One operation's games on one day */
+export interface OperationDay {
+  operation: Operation
+  /** the day's games of this operation, in the order given (newest first, as stored) */
   records: GameRecord[]
   summary: DaySummary
-  /** this kind's average on the last earlier day it was played; null on its first day */
+  /** this operation's average on the last earlier day it was played; null on its first day */
   previousAverage: number | null
 }
 
-/** The given day's games split by kind, the most recently played kind first. */
-export function summarizeDayByKind(records: GameRecord[], day: DayKey): KindDay[] {
-  const byKind = new Map<string, GameRecord[]>()
+/** The given day's games split by operation, the most recently played operation first. */
+export function summarizeDayByOperation(records: GameRecord[], day: DayKey): OperationDay[] {
+  const byOperation = new Map<Operation, GameRecord[]>()
   for (const r of records) {
-    const kind = kindKey(r)
-    const list = byKind.get(kind)
+    const list = byOperation.get(r.operation)
     if (list) list.push(r)
-    else byKind.set(kind, [r])
+    else byOperation.set(r.operation, [r])
   }
-  const result: { kind: KindDay; latest: number }[] = []
-  for (const [kind, list] of byKind) {
+  const result: { entry: OperationDay; latest: number }[] = []
+  for (const [operation, list] of byOperation) {
     const days = summarizeByDay(list)
     const i = days.findIndex((d) => d.day === day)
     if (i < 0) continue
     const dayRecords = list.filter((r) => dayKey(r.playedAt) === day)
     result.push({
-      kind: {
-        kind,
+      entry: {
+        operation,
         records: dayRecords,
         summary: days[i],
         previousAverage: i > 0 ? days[i - 1].averageScore : null,
@@ -78,7 +77,7 @@ export function summarizeDayByKind(records: GameRecord[], day: DayKey): KindDay[
       latest: Math.max(...dayRecords.map((r) => r.playedAt)),
     })
   }
-  return result.sort((a, b) => b.latest - a.latest).map((r) => r.kind)
+  return result.sort((a, b) => b.latest - a.latest).map((r) => r.entry)
 }
 
 /** The weeks of a month for a Sunday-first calendar; days outside the month are null. */

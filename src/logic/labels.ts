@@ -84,20 +84,6 @@ export const OPERATOR_SYMBOLS: Record<ActualOperation, string> = {
   division: '÷',
 }
 
-/** A game's kind for display, e.g. "普通 · 足し算 · 10問" */
-export function kindLabel(game: {
-  difficulty: Difficulty
-  operation: Operation
-  mixedOperations?: ActualOperation[]
-  questionCount: RecordedQuestionCount
-}): string {
-  return [
-    DIFFICULTY_LABELS[game.difficulty],
-    operationLabel(game.operation, game.mixedOperations),
-    questionCountLabel(game.questionCount),
-  ].join(' · ')
-}
-
 /** The operations a mixed game draws from, in display order; all four unless a valid choice is given. */
 export function resolveMixedOperations(selected?: readonly ActualOperation[]): ActualOperation[] {
   const ops = ACTUAL_OPERATIONS.filter((op) => selected?.includes(op))
