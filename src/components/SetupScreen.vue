@@ -405,7 +405,7 @@ function handleStart() {
     transparent 0%,
     transparent 55%,
     var(--gold) 75%,
-    var(--gold-shine) 92%,
+    var(--gold-spark) 92%,
     transparent 100%
   );
   -webkit-mask:
@@ -421,13 +421,13 @@ function handleStart() {
   pointer-events: none;
   animation: opt-spin 2.4s linear infinite;
 }
-/* light theme: just the gold border, without the circling light or the glow */
+/* light theme: the same circling light, over a fainter border so it shows on paper */
 :root[data-theme='light'] .opt-btn.active {
-  border-color: var(--gold);
-  animation: opt-select 0.35s ease;
+  border-color: rgba(var(--gold-rgb), 0.3);
 }
 :root[data-theme='light'] .opt-btn.active::before {
-  display: none;
+  filter: drop-shadow(0 0 2px rgba(var(--gold-spark-rgb), 0.6));
+  opacity: 0.75;
 }
 @keyframes opt-select {
   0% {

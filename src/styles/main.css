@@ -40,8 +40,10 @@
   --gold-deep: #a07820;
   /* a near-white gold, and the color of text on a solid gold fill */
   --gold-pale: #fff4d0;
-  --gold-shine: #fff3c4;
   --gold-ink: #1a1406;
+  /* the bright tip of the light that circles a selected option */
+  --gold-spark: #fff3c4;
+  --gold-spark-rgb: 255, 243, 196;
   --text-main: #d6e0f5;
   --text-sub: #7a95bf;
   --text-muted: #8090b0;
@@ -138,7 +140,9 @@
   --gold-light: #865a00;
   --gold-deep: #5c3e00;
   --gold-pale: #fffdf8;
-  --gold-shine: #fff7dc;
+  /* a near-white tip would vanish on paper, so it is a warm amber here */
+  --gold-spark: #f5b82e;
+  --gold-spark-rgb: 245, 184, 46;
   --gold-ink: #3a2800;
   --text-main: #1f2738;
   --text-sub: #575f70;
