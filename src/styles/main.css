@@ -646,6 +646,48 @@ body::before {
   filter: drop-shadow(0 0 4px var(--gem-blue));
 }
 
+/* Short note at the right end of a section heading */
+.section-note {
+  margin-left: auto;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  opacity: 0.8;
+}
+/* Shown in place of a section's content while there is nothing to list */
+.empty-note {
+  text-align: center;
+  color: var(--text-sub);
+  font-size: 0.85rem;
+  padding: 1rem 0;
+}
+
+/* A card on the records screen, with a compact heading */
+.stats-section {
+  padding: 0.8rem 1rem;
+  flex-shrink: 0;
+}
+.stats-section .section-label {
+  margin-bottom: 0.6rem;
+  min-height: 26px;
+}
+
+/* Small rounded toggle, e.g. a difficulty filter; size it where it is used */
+.chip {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  color: var(--text-sub);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.chip.active {
+  border-color: var(--gold);
+  color: var(--gold-light);
+  background: linear-gradient(135deg, var(--bg-selected), var(--bg-selected2));
+}
+
 /* ---- Light theme: plain paper with thin lines ----
    The page is off-white with a faint dot grid; the gems become small rings, and glows give way
    to thin borders and soft, low shadows. */

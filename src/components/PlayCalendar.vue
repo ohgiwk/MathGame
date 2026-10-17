@@ -5,15 +5,15 @@ import {
   type DayKey,
   dayKey,
   toDayKey,
+  parseDayKey,
   summarizeByDay,
   monthGrid,
   currentStreak,
 } from '../logic/dailyStats'
+import { WEEKDAY_LABELS } from '../logic/labels'
 
 const props = defineProps<{ records: GameRecord[] }>()
 const emit = defineEmits<{ select: [day: DayKey] }>()
-
-const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土']
 
 const days = computed(() => summarizeByDay(props.records))
 const dayMap = computed(() => new Map(days.value.map((d) => [d.day, d])))
@@ -24,10 +24,6 @@ const now = new Date()
 const viewYear = ref(now.getFullYear())
 const viewMonth = ref(now.getMonth())
 
-function parseDay(key: DayKey) {
-  const [y, m] = key.split('-').map(Number)
-  return { year: y, month: m - 1 }
-}
 function monthIndex(year: number, month: number) {
   return year * 12 + month
 }
@@ -36,7 +32,7 @@ const canGoNext = computed(() => viewIndex.value < monthIndex(now.getFullYear(),
 const canGoPrev = computed(() => {
   const first = days.value[0]
   if (!first) return false
-  const { year, month } = parseDay(first.day)
+  const { year, month } = parseDayKey(first.day)
   return viewIndex.value > monthIndex(year, month)
 })
 function shiftMonth(delta: number) {
@@ -85,7 +81,7 @@ const weeks = computed(() =>
 
     <div class="cal-grid cal-head">
       <div
-        v-for="(w, i) in WEEKDAYS"
+        v-for="(w, i) in WEEKDAY_LABELS"
         :key="w"
         class="cal-weekday"
         :class="{ sun: i === 0, sat: i === 6 }"
@@ -96,7 +92,7 @@ const weeks = computed(() =>
     <div v-for="(week, wi) in weeks" :key="wi" class="cal-grid">
       <template v-for="(cell, ci) in week" :key="ci">
         <div v-if="cell === null" class="cal-cell empty" />
-        <!-- tapping a played day opens it in the growth tab -->
+        <!-- tapping a played day opens it in the history tab -->
         <button
           v-else
           class="cal-cell"
@@ -120,21 +116,6 @@ const weeks = computed(() =>
 </template>
 
 <style scoped>
-.stats-section {
-  padding: 0.8rem 1rem;
-  flex-shrink: 0;
-}
-.section-label {
-  margin-bottom: 0.6rem;
-  min-height: 26px;
-}
-.section-note {
-  margin-left: auto;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  opacity: 0.8;
-}
-
 .month-nav {
   display: flex;
   align-items: center;

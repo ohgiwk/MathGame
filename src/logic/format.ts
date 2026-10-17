@@ -1,5 +1,6 @@
 import type { Question } from '../types/game'
-import { OPERATOR_SYMBOLS } from './labels'
+import { OPERATOR_SYMBOLS, WEEKDAY_LABELS } from './labels'
+import { type DayKey, parseDayKey } from './dailyStats'
 
 export function formatQuestion(q: Question): string {
   return `${q.operandA} ${OPERATOR_SYMBOLS[q.operation]} ${q.operandB}`
@@ -35,14 +36,20 @@ export function formatTotalTime(totalSeconds: number): string {
   return `${s}秒`
 }
 
-export function formatPlayedAt(timestamp: number): string {
-  const d = new Date(timestamp)
-  const hh = d.getHours().toString().padStart(2, '0')
-  const mm = d.getMinutes().toString().padStart(2, '0')
-  return `${d.getMonth() + 1}/${d.getDate()} ${hh}:${mm}`
-}
-
 export function formatPlayedDate(timestamp: number): string {
   const d = new Date(timestamp)
   return `${d.getMonth() + 1}/${d.getDate()}`
+}
+
+/** e.g. '3月5日（木）' */
+export function formatDayHeading(key: DayKey): string {
+  const { year, month, date } = parseDayKey(key)
+  const weekday = WEEKDAY_LABELS[new Date(year, month, date).getDay()]
+  return `${month + 1}月${date}日（${weekday}）`
+}
+
+/** e.g. '3/5' */
+export function formatShortDay(key: DayKey): string {
+  const { month, date } = parseDayKey(key)
+  return `${month + 1}/${date}`
 }

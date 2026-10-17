@@ -16,6 +16,11 @@ export interface StatsSummary {
   bestScore: number | null
 }
 
+/** 0-100, null when nothing has been answered */
+export function accuracyPercent(correctCount: number, totalAnswered: number): number | null {
+  return totalAnswered > 0 ? Math.round((correctCount / totalAnswered) * 100) : null
+}
+
 export function summarize(records: GameRecord[]): StatsSummary {
   let clearCount = 0
   let totalAnswered = 0
@@ -38,7 +43,7 @@ export function summarize(records: GameRecord[]): StatsSummary {
     clearCount,
     totalAnswered,
     correctCount,
-    accuracy: totalAnswered > 0 ? Math.round((correctCount / totalAnswered) * 100) : null,
+    accuracy: accuracyPercent(correctCount, totalAnswered),
     elapsedSeconds,
     secondsPerQuestion: totalAnswered > 0 ? elapsedSeconds / totalAnswered : null,
     totalScore,

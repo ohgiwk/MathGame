@@ -5,8 +5,9 @@ import {
   formatElapsedTime,
   formatTotalTime,
   formatAverageTime,
-  formatPlayedAt,
   formatPlayedDate,
+  formatDayHeading,
+  formatShortDay,
 } from './format'
 
 describe('formatQuestion', () => {
@@ -59,14 +60,20 @@ describe('formatTotalTime', () => {
   })
 })
 
-describe('formatPlayedAt', () => {
-  it('shows month/day and a zero-padded local time', () => {
-    expect(formatPlayedAt(new Date(2026, 2, 5, 9, 7).getTime())).toBe('3/5 09:07')
-  })
-})
-
 describe('formatPlayedDate', () => {
   it('shows the month and day only', () => {
     expect(formatPlayedDate(new Date(2026, 9, 15, 21, 35).getTime())).toBe('10/15')
+  })
+})
+
+describe('formatDayHeading', () => {
+  it('shows the month, day and weekday', () => {
+    expect(formatDayHeading('2026-03-05')).toBe('3月5日（木）')
+  })
+})
+
+describe('formatShortDay', () => {
+  it('shows month/day without zero padding', () => {
+    expect(formatShortDay('2026-03-05')).toBe('3/5')
   })
 })

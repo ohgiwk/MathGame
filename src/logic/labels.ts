@@ -71,6 +71,9 @@ export const RATING_LABELS: Record<Rating, string> = {
   nice: 'NICE!',
 }
 
+/** Sunday first, as Date.getDay() counts */
+export const WEEKDAY_LABELS = ['日', '月', '火', '水', '木', '金', '土']
+
 export const DIFFICULTY_DESCRIPTIONS: Record<Difficulty, string> = {
   easy: '1桁',
   normal: '2桁',

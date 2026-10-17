@@ -3,21 +3,13 @@ import { defineStore } from 'pinia'
 import type { Difficulty, Operation, GameRecord } from '../types/game'
 import { parseRecords } from '../logic/recordParser'
 import { summarize, recordsFor } from '../logic/statsCalculator'
+import { readJson, writeJson, removeKey } from '../logic/storage'
 
 const STORAGE_KEY = 'math-kingdom:records'
 
-function loadRecords(): GameRecord[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? parseRecords(JSON.parse(raw)) : []
-  } catch {
-    return []
-  }
-}
-
 export const useStatsStore = defineStore('stats', () => {
   // newest first
-  const records = ref<GameRecord[]>(loadRecords())
+  const records = ref<GameRecord[]>(parseRecords(readJson(STORAGE_KEY)))
 
   function addRecord(record: Omit<GameRecord, 'id' | 'playedAt'>) {
     const playedAt = Date.now()
@@ -26,21 +18,13 @@ export const useStatsStore = defineStore('stats', () => {
       id: `${playedAt}-${Math.random().toString(36).slice(2, 8)}`,
       playedAt,
     })
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(records.value))
-    } catch {
-      // storage unavailable or full: keep the records in memory for this session
-    }
+    writeJson(STORAGE_KEY, records.value)
   }
 
   /** Deletes every record, for good */
   function clearRecords() {
     records.value = []
-    try {
-      localStorage.removeItem(STORAGE_KEY)
-    } catch {
-      // storage unavailable: nothing was saved there to remove
-    }
+    removeKey(STORAGE_KEY)
   }
 
   /**

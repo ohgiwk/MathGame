@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useGameStore } from '../stores/gameStore'
 import { useStatsStore } from '../stores/statsStore'
 import { usePreferencesStore } from '../stores/preferencesStore'
 import {
@@ -13,8 +12,8 @@ import {
 } from '../logic/labels'
 import { TIME_LIMIT_SECONDS } from '../logic/constants'
 import ConfirmDialog from './ConfirmDialog.vue'
+import SubScreen from './SubScreen.vue'
 
-const store = useGameStore()
 const preferences = usePreferencesStore()
 const statsStore = useStatsStore()
 
@@ -29,167 +28,115 @@ function confirmReset() {
 </script>
 
 <template>
-  <div class="settings-root">
-    <div class="settings-inner fade-in-up">
-      <!-- Header -->
-      <div class="settings-header">
-        <button class="back-btn" aria-label="ホームに戻る" @click="store.goHome()">‹</button>
-        <h1 class="settings-title">Settings</h1>
+  <SubScreen title="Settings">
+    <!-- 表示 -->
+    <div class="rpg-card settings-section">
+      <h2 class="section-label"><span class="section-gem">◆</span> 表示</h2>
+      <div class="setting-text">
+        <div id="theme-label" class="setting-name">テーマ</div>
+        <div class="setting-desc">自動では端末のライト／ダークの設定に合わせます</div>
       </div>
-
-      <!-- 表示 -->
-      <div class="rpg-card settings-section">
-        <h2 class="section-label"><span class="section-gem">◆</span> 表示</h2>
-        <div class="setting-text">
-          <div id="theme-label" class="setting-name">テーマ</div>
-          <div class="setting-desc">自動では端末のライト／ダークの設定に合わせます</div>
-        </div>
-        <div class="theme-options" role="radiogroup" aria-labelledby="theme-label">
-          <button
-            v-for="t in THEME_PREFERENCES"
-            :key="t"
-            class="opt-btn theme-btn"
-            role="radio"
-            :class="{ active: preferences.theme === t }"
-            :aria-checked="preferences.theme === t"
-            @click="preferences.theme = t"
-          >
-            <span class="theme-swatch" :class="`swatch-${t}`" aria-hidden="true" />
-            {{ THEME_LABELS[t] }}
-          </button>
-        </div>
-      </div>
-
-      <!-- ゲーム -->
-      <div class="rpg-card settings-section">
-        <h2 class="section-label"><span class="section-gem">◆</span> ゲーム</h2>
-
-        <div class="setting-row">
-          <div class="setting-text">
-            <div id="time-limit-label" class="setting-name">制限時間</div>
-            <div class="setting-desc">1問ごとに制限時間がつきます。時間切れはミスになります</div>
-          </div>
-          <button
-            class="switch"
-            role="switch"
-            aria-labelledby="time-limit-label"
-            :aria-checked="preferences.timeLimit"
-            :class="{ on: preferences.timeLimit }"
-            @click="preferences.timeLimit = !preferences.timeLimit"
-          >
-            <span class="switch-knob" />
-          </button>
-        </div>
-
-        <div class="limit-options" :class="{ off: !preferences.timeLimit }">
-          <div class="limit-lengths" role="radiogroup" aria-label="制限時間の長さ">
-            <button
-              v-for="len in TIME_LIMIT_LENGTHS"
-              :key="len"
-              class="opt-btn length-btn"
-              role="radio"
-              :class="{ active: preferences.timeLimitLength === len }"
-              :aria-checked="preferences.timeLimitLength === len"
-              :disabled="!preferences.timeLimit"
-              @click="preferences.timeLimitLength = len"
-            >
-              {{ TIME_LIMIT_LABELS[len] }}
-            </button>
-          </div>
-          <div class="limit-table">
-            <div v-for="d in DIFFICULTIES" :key="d" class="tile limit-item">
-              <div class="limit-label">{{ DIFFICULTY_LABELS[d] }}</div>
-              <div class="limit-value">
-                {{ TIME_LIMIT_SECONDS[preferences.timeLimitLength][d]
-                }}<span class="limit-unit">秒</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 記録 -->
-      <div class="rpg-card settings-section">
-        <h2 class="section-label"><span class="section-gem">◆</span> 記録</h2>
-        <div class="setting-row">
-          <div class="setting-text">
-            <div class="setting-name">記録をリセット</div>
-            <div class="setting-desc">
-              これまでのプレイ記録（{{ statsStore.records.length }}件）をすべて削除します
-            </div>
-          </div>
-          <button
-            class="reset-btn"
-            :disabled="statsStore.records.length === 0"
-            @click="showResetDialog = true"
-          >
-            リセット
-          </button>
-        </div>
-        <p v-if="resetDone" class="reset-done" role="status">記録をリセットしました</p>
+      <div class="theme-options" role="radiogroup" aria-labelledby="theme-label">
+        <button
+          v-for="t in THEME_PREFERENCES"
+          :key="t"
+          class="opt-btn theme-btn"
+          role="radio"
+          :class="{ active: preferences.theme === t }"
+          :aria-checked="preferences.theme === t"
+          @click="preferences.theme = t"
+        >
+          <span class="theme-swatch" :class="`swatch-${t}`" aria-hidden="true" />
+          {{ THEME_LABELS[t] }}
+        </button>
       </div>
     </div>
 
-    <ConfirmDialog
-      :open="showResetDialog"
-      icon="⚠"
-      title="記録をリセットしますか？"
-      message="すべてのプレイ記録が削除され、元に戻せません"
-      cancel-label="やめる"
-      confirm-label="リセットする"
-      @cancel="showResetDialog = false"
-      @confirm="confirmReset"
-    />
-  </div>
+    <!-- ゲーム -->
+    <div class="rpg-card settings-section">
+      <h2 class="section-label"><span class="section-gem">◆</span> ゲーム</h2>
+
+      <div class="setting-row">
+        <div class="setting-text">
+          <div id="time-limit-label" class="setting-name">制限時間</div>
+          <div class="setting-desc">1問ごとに制限時間がつきます。時間切れはミスになります</div>
+        </div>
+        <button
+          class="switch"
+          role="switch"
+          aria-labelledby="time-limit-label"
+          :aria-checked="preferences.timeLimit"
+          :class="{ on: preferences.timeLimit }"
+          @click="preferences.timeLimit = !preferences.timeLimit"
+        >
+          <span class="switch-knob" />
+        </button>
+      </div>
+
+      <div class="limit-options" :class="{ off: !preferences.timeLimit }">
+        <div class="limit-lengths" role="radiogroup" aria-label="制限時間の長さ">
+          <button
+            v-for="len in TIME_LIMIT_LENGTHS"
+            :key="len"
+            class="opt-btn length-btn"
+            role="radio"
+            :class="{ active: preferences.timeLimitLength === len }"
+            :aria-checked="preferences.timeLimitLength === len"
+            :disabled="!preferences.timeLimit"
+            @click="preferences.timeLimitLength = len"
+          >
+            {{ TIME_LIMIT_LABELS[len] }}
+          </button>
+        </div>
+        <div class="limit-table">
+          <div v-for="d in DIFFICULTIES" :key="d" class="tile limit-item">
+            <div class="limit-label">{{ DIFFICULTY_LABELS[d] }}</div>
+            <div class="limit-value">
+              {{ TIME_LIMIT_SECONDS[preferences.timeLimitLength][d]
+              }}<span class="limit-unit">秒</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 記録 -->
+    <div class="rpg-card settings-section">
+      <h2 class="section-label"><span class="section-gem">◆</span> 記録</h2>
+      <div class="setting-row">
+        <div class="setting-text">
+          <div class="setting-name">記録をリセット</div>
+          <div class="setting-desc">
+            これまでのプレイ記録（{{ statsStore.records.length }}件）をすべて削除します
+          </div>
+        </div>
+        <button
+          class="reset-btn"
+          :disabled="statsStore.records.length === 0"
+          @click="showResetDialog = true"
+        >
+          リセット
+        </button>
+      </div>
+      <p v-if="resetDone" class="reset-done" role="status">記録をリセットしました</p>
+    </div>
+
+    <template #overlay>
+      <ConfirmDialog
+        :open="showResetDialog"
+        icon="⚠"
+        title="記録をリセットしますか？"
+        message="すべてのプレイ記録が削除され、元に戻せません"
+        cancel-label="やめる"
+        confirm-label="リセットする"
+        @cancel="showResetDialog = false"
+        @confirm="confirmReset"
+      />
+    </template>
+  </SubScreen>
 </template>
 
 <style scoped>
-.settings-root {
-  min-height: 100%;
-  display: flex;
-  justify-content: center;
-  padding: max(1.5rem, env(safe-area-inset-top)) 1rem max(2rem, env(safe-area-inset-bottom));
-}
-.settings-inner {
-  width: 100%;
-  max-width: 380px;
-  display: flex;
-  flex-direction: column;
-  gap: 0.7rem;
-}
-
-.settings-header {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 40px;
-  padding: 0.6rem 0 0.9rem;
-}
-.back-btn {
-  position: absolute;
-  left: 0;
-  width: 40px;
-  height: 40px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: transparent;
-  color: var(--text-sub);
-  font-size: 1.6rem;
-  line-height: 1;
-  padding-bottom: 4px;
-  cursor: pointer;
-}
-.back-btn:active {
-  background: rgba(var(--wash-rgb), 0.05);
-}
-.settings-title {
-  font-size: 1.4rem;
-  font-weight: 900;
-  letter-spacing: 0.12em;
-  color: var(--gold-light);
-}
-
 .settings-section {
   padding: 0.8rem 1rem 1rem;
 }

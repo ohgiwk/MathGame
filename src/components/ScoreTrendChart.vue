@@ -3,7 +3,7 @@ import { ref, computed, watch } from 'vue'
 import type { Difficulty, GameRecord, Operation } from '../types/game'
 import { DIFFICULTIES, DIFFICULTY_LABELS, OPERATIONS, OPERATION_LABELS } from '../logic/labels'
 import { type DayKey, type DaySummary, summarizeByDay } from '../logic/dailyStats'
-import { formatScore } from '../logic/format'
+import { formatScore, formatShortDay } from '../logic/format'
 
 const props = defineProps<{ records: GameRecord[] }>()
 
@@ -59,11 +59,6 @@ watch(
   { immediate: true },
 )
 
-function formatShortDay(key: DayKey) {
-  const [, m, d] = key.split('-').map(Number)
-  return `${m}/${d}`
-}
-
 /** A round ceiling for the y axis, e.g. 1,234 -> 1,500 */
 function niceCeil(value: number): number {
   if (value <= 0) return 100
@@ -73,6 +68,10 @@ function niceCeil(value: number): number {
 }
 const yMax = computed(() => niceCeil(Math.max(...chartDays.value.map((d) => d.averageScore), 0)))
 const yTicks = computed(() => [0, yMax.value / 2, yMax.value])
+/** Where a score sits vertically in the plot */
+function yFor(value: number) {
+  return PAD.top + plotH * (1 - value / yMax.value)
+}
 
 const points = computed(() => {
   const list = chartDays.value
@@ -81,7 +80,7 @@ const points = computed(() => {
     day: d.day,
     value: d.averageScore,
     x: PAD.left + (list.length > 1 ? i * step : plotW / 2),
-    y: PAD.top + plotH * (1 - d.averageScore / yMax.value),
+    y: yFor(d.averageScore),
     // hit area spans halfway to each neighbour
     hitX: PAD.left + (list.length > 1 ? i * step - step / 2 : 0),
     hitW: list.length > 1 ? step : plotW,
@@ -103,6 +102,8 @@ const bubbleX = computed(() => {
   if (!p) return 0
   return Math.min(Math.max(p.x, PAD.left + 34), W - PAD.right - 34)
 })
+/** the bubble's top, above the dot but never off the top of the chart */
+const bubbleY = computed(() => Math.max((selectedPoint.value?.y ?? 0) - 26, 2))
 
 /** Average of the newest half of the chart against the older half */
 const trend = computed(() => {
@@ -134,13 +135,17 @@ function formatAxis(value: number) {
       </span>
     </h2>
     <div class="filter-row">
-      <button class="diff-tab" :class="{ active: filter === 'all' }" @click="filter = 'all'">
+      <button
+        class="chip filter-chip"
+        :class="{ active: filter === 'all' }"
+        @click="filter = 'all'"
+      >
         すべて
       </button>
       <button
         v-for="d in DIFFICULTIES"
         :key="d"
-        class="diff-tab"
+        class="chip filter-chip"
         :class="{ active: filter === d }"
         @click="filter = d"
       >
@@ -152,7 +157,7 @@ function formatAxis(value: number) {
         v-for="op in chartOperations"
         :key="op"
         role="tab"
-        class="diff-tab op-tab"
+        class="chip op-tab"
         :class="{ active: chartOperation === op }"
         :aria-selected="chartOperation === op"
         @click="chartOperation = op"
@@ -171,19 +176,8 @@ function formatAxis(value: number) {
 
       <!-- grid & y axis -->
       <g v-for="t in yTicks" :key="t">
-        <line
-          class="grid"
-          :x1="PAD.left"
-          :x2="W - PAD.right"
-          :y1="PAD.top + plotH * (1 - t / yMax)"
-          :y2="PAD.top + plotH * (1 - t / yMax)"
-        />
-        <text
-          class="axis"
-          :x="PAD.left - 6"
-          :y="PAD.top + plotH * (1 - t / yMax) + 3"
-          text-anchor="end"
-        >
+        <line class="grid" :x1="PAD.left" :x2="W - PAD.right" :y1="yFor(t)" :y2="yFor(t)" />
+        <text class="axis" :x="PAD.left - 6" :y="yFor(t) + 3" text-anchor="end">
           {{ formatAxis(t) }}
         </text>
       </g>
@@ -231,20 +225,8 @@ function formatAxis(value: number) {
 
       <!-- value of the selected day -->
       <g v-if="selectedPoint">
-        <rect
-          class="bubble"
-          :x="bubbleX - 34"
-          :y="Math.max(selectedPoint.y - 26, 2)"
-          width="68"
-          height="17"
-          rx="8.5"
-        />
-        <text
-          class="bubble-text"
-          :x="bubbleX"
-          :y="Math.max(selectedPoint.y - 26, 2) + 12"
-          text-anchor="middle"
-        >
+        <rect class="bubble" :x="bubbleX - 34" :y="bubbleY" width="68" height="17" rx="8.5" />
+        <text class="bubble-text" :x="bubbleX" :y="bubbleY + 12" text-anchor="middle">
           {{ formatShortDay(selectedPoint.day) }} {{ formatScore(selectedPoint.value) }}
         </text>
       </g>
@@ -265,28 +247,9 @@ function formatAxis(value: number) {
 </template>
 
 <style scoped>
-.stats-section {
-  padding: 0.8rem 1rem;
-}
-.section-label {
-  margin-bottom: 0.6rem;
-  min-height: 26px;
-}
-.section-note {
-  margin-left: auto;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  opacity: 0.8;
-}
 .section-note .up {
   color: var(--success-text);
   font-weight: 700;
-}
-.empty-note {
-  text-align: center;
-  color: var(--text-sub);
-  font-size: 0.85rem;
-  padding: 1rem 0;
 }
 
 /* フィルタ */
@@ -295,22 +258,9 @@ function formatAxis(value: number) {
   gap: 6px;
   margin-bottom: 0.5rem;
 }
-.diff-tab {
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 99px;
-  color: var(--text-sub);
+.filter-chip {
   font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
   padding: 5px 12px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-.diff-tab.active {
-  border-color: var(--gold);
-  color: var(--gold-light);
-  background: linear-gradient(135deg, var(--bg-selected), var(--bg-selected2));
 }
 
 /* one row however many operations there are: the buttons share the width */

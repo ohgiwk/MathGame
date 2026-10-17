@@ -7,6 +7,7 @@ import {
   RECORDED_QUESTION_COUNTS,
 } from './labels'
 import { estimateScore } from './scoreCalculator'
+import { isOneOf } from './guards'
 
 const END_REASONS: GameEndReason[] = ['clear', 'gameover']
 
@@ -22,7 +23,7 @@ function isMixedOperations(value: unknown): boolean {
   return (
     Array.isArray(value) &&
     value.length >= MIN_MIXED_OPERATIONS &&
-    value.every((op) => (ACTUAL_OPERATIONS as unknown[]).includes(op))
+    value.every((op) => isOneOf(ACTUAL_OPERATIONS, op))
   )
 }
 
@@ -32,11 +33,11 @@ function isStoredRecord(value: unknown): value is StoredRecord {
   return (
     typeof r.id === 'string' &&
     isCount(r.playedAt) &&
-    (DIFFICULTIES as unknown[]).includes(r.difficulty) &&
-    (OPERATIONS as unknown[]).includes(r.operation) &&
+    isOneOf(DIFFICULTIES, r.difficulty) &&
+    isOneOf(OPERATIONS, r.operation) &&
     isMixedOperations(r.mixedOperations) &&
-    (RECORDED_QUESTION_COUNTS as unknown[]).includes(r.questionCount) &&
-    (END_REASONS as unknown[]).includes(r.endReason) &&
+    isOneOf(RECORDED_QUESTION_COUNTS, r.questionCount) &&
+    isOneOf(END_REASONS, r.endReason) &&
     isCount(r.correctCount) &&
     isCount(r.totalAnswered) &&
     isCount(r.elapsedSeconds)

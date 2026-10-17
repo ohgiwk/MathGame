@@ -2,6 +2,8 @@ import { ref, watch } from 'vue'
 import { defineStore } from 'pinia'
 import type { ThemePreference, TimeLimitLength } from '../types/game'
 import { THEME_PREFERENCES, TIME_LIMIT_LENGTHS } from '../logic/labels'
+import { isOneOf } from '../logic/guards'
+import { readJson, writeJson } from '../logic/storage'
 
 // index.html reads the theme from this key before the app loads; keep the two in step
 const STORAGE_KEY = 'math-kingdom:preferences'
@@ -16,20 +18,15 @@ interface Preferences {
 const DEFAULTS: Preferences = { timeLimit: false, timeLimitLength: 'normal', theme: 'auto' }
 
 function loadPreferences(): Preferences {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    const stored = raw ? (JSON.parse(raw) as Partial<Record<keyof Preferences, unknown>>) : {}
-    return {
-      timeLimit: typeof stored.timeLimit === 'boolean' ? stored.timeLimit : DEFAULTS.timeLimit,
-      timeLimitLength: (TIME_LIMIT_LENGTHS as unknown[]).includes(stored.timeLimitLength)
-        ? (stored.timeLimitLength as TimeLimitLength)
-        : DEFAULTS.timeLimitLength,
-      theme: (THEME_PREFERENCES as unknown[]).includes(stored.theme)
-        ? (stored.theme as ThemePreference)
-        : DEFAULTS.theme,
-    }
-  } catch {
-    return { ...DEFAULTS }
+  const raw = readJson(STORAGE_KEY)
+  const stored: Partial<Record<keyof Preferences, unknown>> =
+    typeof raw === 'object' && raw !== null ? raw : {}
+  return {
+    timeLimit: typeof stored.timeLimit === 'boolean' ? stored.timeLimit : DEFAULTS.timeLimit,
+    timeLimitLength: isOneOf(TIME_LIMIT_LENGTHS, stored.timeLimitLength)
+      ? stored.timeLimitLength
+      : DEFAULTS.timeLimitLength,
+    theme: isOneOf(THEME_PREFERENCES, stored.theme) ? stored.theme : DEFAULTS.theme,
   }
 }
 
@@ -46,11 +43,7 @@ export const usePreferencesStore = defineStore('preferences', () => {
       timeLimitLength: timeLimitLength.value,
       theme: theme.value,
     }
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs))
-    } catch {
-      // storage unavailable: the choice lasts for this session only
-    }
+    writeJson(STORAGE_KEY, prefs)
   })
 
   return { timeLimit, timeLimitLength, theme }

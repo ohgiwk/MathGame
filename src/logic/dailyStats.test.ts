@@ -4,7 +4,7 @@ import {
   dayKey,
   toDayKey,
   summarizeByDay,
-  summarizeDayByOperation,
+  parseDayKey,
   monthGrid,
   currentStreak,
 } from './dailyStats'
@@ -52,33 +52,9 @@ describe('summarizeByDay', () => {
   })
 })
 
-describe('summarizeDayByOperation', () => {
-  it('splits the day by operation alone, latest first, comparing with its previous day', () => {
-    const records = [
-      record({ id: 'a1', playedAt: at(2026, 9, 16, 20), score: 1000 }),
-      record({ id: 's1', playedAt: at(2026, 9, 16, 18), operation: 'subtraction', score: 700 }),
-      // another difficulty and length, but the same operation
-      record({
-        id: 'a2',
-        playedAt: at(2026, 9, 16, 8),
-        difficulty: 'hard',
-        questionCount: 20,
-        score: 600,
-      }),
-      record({ id: 'other-day', playedAt: at(2026, 9, 3), score: 300 }),
-    ]
-    const ops = summarizeDayByOperation(records, '2026-10-16')
-    expect(ops.map((o) => o.operation)).toEqual(['addition', 'subtraction'])
-    expect(ops[0].records.map((r) => r.id)).toEqual(['a1', 'a2'])
-    expect(ops[0].summary).toMatchObject({ playCount: 2, averageScore: 800, bestScore: 1000 })
-    expect(ops[0].previousAverage).toBe(300)
-    expect(ops[1].previousAverage).toBeNull()
-  })
-
-  it('returns nothing for a day without games', () => {
-    expect(summarizeDayByOperation([record({ playedAt: at(2026, 9, 3) })], '2026-10-16')).toEqual(
-      [],
-    )
+describe('parseDayKey', () => {
+  it('reverses toDayKey, with a 0-based month', () => {
+    expect(parseDayKey(toDayKey(2026, 0, 9))).toEqual({ year: 2026, month: 0, date: 9 })
   })
 })
 

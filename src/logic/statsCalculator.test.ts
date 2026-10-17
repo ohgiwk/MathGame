@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import type { GameRecord } from '../types/game'
-import { summarize, bestByOperation, recordsLike } from './statsCalculator'
+import { summarize, bestByOperation, recordsLike, accuracyPercent } from './statsCalculator'
 
 function record(overrides: Partial<GameRecord> = {}): GameRecord {
   return {
@@ -17,6 +17,15 @@ function record(overrides: Partial<GameRecord> = {}): GameRecord {
     ...overrides,
   }
 }
+
+describe('accuracyPercent', () => {
+  it('rounds to a whole percent', () => {
+    expect(accuracyPercent(2, 3)).toBe(67)
+  })
+  it('is null when nothing was answered', () => {
+    expect(accuracyPercent(0, 0)).toBeNull()
+  })
+})
 
 describe('summarize', () => {
   it('returns nulls for the values that need at least one record', () => {

@@ -1,4 +1,4 @@
-import type { GameRecord, Operation } from '../types/game'
+import type { GameRecord } from '../types/game'
 import { summarize, type StatsSummary } from './statsCalculator'
 
 /** A local calendar day as 'YYYY-MM-DD' */
@@ -22,6 +22,12 @@ export function toDayKey(year: number, month: number, date: number): DayKey {
   return `${year}-${mm}-${dd}`
 }
 
+/** month is 0-based, as in Date */
+export function parseDayKey(key: DayKey): { year: number; month: number; date: number } {
+  const [year, month, date] = key.split('-').map(Number)
+  return { year, month: month - 1, date }
+}
+
 /** One summary per day that has at least one game, oldest first. */
 export function summarizeByDay(records: GameRecord[]): DaySummary[] {
   const byDay = new Map<DayKey, GameRecord[]>()
@@ -41,43 +47,6 @@ export function summarizeByDay(records: GameRecord[]): DaySummary[] {
         averageScore: Math.round(summary.totalScore / summary.playCount),
       }
     })
-}
-
-/** One operation's games on one day */
-export interface OperationDay {
-  operation: Operation
-  /** the day's games of this operation, in the order given (newest first, as stored) */
-  records: GameRecord[]
-  summary: DaySummary
-  /** this operation's average on the last earlier day it was played; null on its first day */
-  previousAverage: number | null
-}
-
-/** The given day's games split by operation, the most recently played operation first. */
-export function summarizeDayByOperation(records: GameRecord[], day: DayKey): OperationDay[] {
-  const byOperation = new Map<Operation, GameRecord[]>()
-  for (const r of records) {
-    const list = byOperation.get(r.operation)
-    if (list) list.push(r)
-    else byOperation.set(r.operation, [r])
-  }
-  const result: { entry: OperationDay; latest: number }[] = []
-  for (const [operation, list] of byOperation) {
-    const days = summarizeByDay(list)
-    const i = days.findIndex((d) => d.day === day)
-    if (i < 0) continue
-    const dayRecords = list.filter((r) => dayKey(r.playedAt) === day)
-    result.push({
-      entry: {
-        operation,
-        records: dayRecords,
-        summary: days[i],
-        previousAverage: i > 0 ? days[i - 1].averageScore : null,
-      },
-      latest: Math.max(...dayRecords.map((r) => r.playedAt)),
-    })
-  }
-  return result.sort((a, b) => b.latest - a.latest).map((r) => r.entry)
 }
 
 /** The weeks of a month for a Sunday-first calendar; days outside the month are null. */

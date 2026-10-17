@@ -3,7 +3,7 @@ import { ref, computed, watch } from 'vue'
 import type { GameRecord } from '../types/game'
 import { DIFFICULTY_LABELS, operationLabel, questionCountLabel } from '../logic/labels'
 import { type DayKey, dayKey, summarizeByDay } from '../logic/dailyStats'
-import { formatScore, formatElapsedTime, formatTotalTime } from '../logic/format'
+import { formatScore, formatElapsedTime, formatTotalTime, formatDayHeading } from '../logic/format'
 import { summarize } from '../logic/statsCalculator'
 
 const props = defineProps<{
@@ -15,7 +15,6 @@ const props = defineProps<{
 
 /** A day with more games than this shows only the newest ones until it is opened */
 const DAY_PREVIEW = 5
-const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土']
 
 const total = computed(() => summarize(props.records))
 
@@ -48,12 +47,6 @@ const dayGroups = computed(() => {
 const openDays = ref(new Set<DayKey>())
 function toggleDay(day: DayKey) {
   if (!openDays.value.delete(day)) openDays.value.add(day)
-}
-
-function formatDayHeading(key: DayKey) {
-  const [year, month, date] = key.split('-').map(Number)
-  const weekday = WEEKDAYS[new Date(year, month - 1, date).getDay()]
-  return `${month}月${date}日（${weekday}）`
 }
 </script>
 
@@ -163,26 +156,6 @@ function formatDayHeading(key: DayKey) {
   flex-direction: column;
   gap: 0.7rem;
 }
-.stats-section {
-  padding: 0.8rem 1rem;
-}
-.section-label {
-  margin-bottom: 0.6rem;
-  min-height: 26px;
-}
-.section-note {
-  margin-left: auto;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  opacity: 0.8;
-}
-.empty-note {
-  text-align: center;
-  color: var(--text-sub);
-  font-size: 0.85rem;
-  padding: 1rem 0;
-}
-
 /* 累計 */
 .total-row {
   display: grid;
