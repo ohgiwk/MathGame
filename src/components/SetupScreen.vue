@@ -2,6 +2,8 @@
 import { ref } from 'vue'
 import { useGameStore } from '../stores/gameStore'
 import { usePreferencesStore } from '../stores/preferencesStore'
+import { useCourseStore } from '../stores/courseStore'
+import CourseDialog from './CourseDialog.vue'
 import type { QuestionCount, Difficulty, Operation, ActualOperation } from '../types/game'
 import {
   QUESTION_COUNTS,
@@ -9,6 +11,9 @@ import {
   OPERATIONS,
   ACTUAL_OPERATIONS,
   MIN_MIXED_OPERATIONS,
+  OPERATION_BUTTON_SYMBOLS as operationSymbols,
+  isMixLocked as isLocked,
+  toggleMixedOperation,
   resolveMixedOperations,
   DIFFICULTY_LABELS,
   DIFFICULTY_DESCRIPTIONS,
@@ -17,31 +22,20 @@ import {
 
 const store = useGameStore()
 const preferences = usePreferencesStore()
+const courseStore = useCourseStore()
+courseStore.refreshDay()
 
 const selectedCount = ref<QuestionCount>(store.settings.questionCount)
 const selectedDifficulty = ref<Difficulty>(store.settings.difficulty)
 const selectedOperation = ref<Operation>(store.settings.operation)
 const selectedMixed = ref<ActualOperation[]>(resolveMixedOperations(store.settings.mixedOperations))
 
-// full-width symbols for the option buttons
-const operationSymbols: Record<Operation, string> = {
-  addition: '＋',
-  subtraction: '－',
-  multiplication: '×',
-  division: '÷',
-  mixed: '✦',
-}
-
 function isMixLocked(op: ActualOperation): boolean {
-  return selectedMixed.value.includes(op) && selectedMixed.value.length <= MIN_MIXED_OPERATIONS
+  return isLocked(selectedMixed.value, op)
 }
 
 function toggleMixed(op: ActualOperation) {
-  if (isMixLocked(op)) return
-  const current = selectedMixed.value
-  selectedMixed.value = current.includes(op)
-    ? current.filter((o) => o !== op)
-    : ACTUAL_OPERATIONS.filter((o) => o === op || current.includes(o))
+  selectedMixed.value = toggleMixedOperation(selectedMixed.value, op)
 }
 
 function handleStart() {
@@ -160,18 +154,36 @@ function handleStart() {
         <span class="btn-gold-label">START</span>
         <span class="btn-gold-gem">◆</span>
       </button>
-      <button
-        class="btn-ghost records-btn enter-item"
-        style="--i: 5"
-        aria-label="記録を見る"
-        @click="store.openStats()"
-      >
-        <!-- a bar chart, as on the result screen -->
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M4 20h16M7.5 16.5v-4M12 16.5v-9M16.5 16.5v-6" />
-        </svg>
-      </button>
+      <div class="sub-actions enter-item" style="--i: 5">
+        <button
+          class="btn-ghost icon-action"
+          aria-label="毎日コース"
+          @click="store.courseDialogOpen = true"
+        >
+          <!-- a calendar page with a check -->
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 6.5h14v13H5zM5 10.5h14M9 4v4M15 4v4M9.5 15l2 2 3.5-3.5" />
+          </svg>
+          <span
+            v-if="courseStore.courses.length > 0"
+            class="course-progress"
+            :class="{ done: courseStore.allClearedToday }"
+            >{{
+              courseStore.allClearedToday
+                ? '✓'
+                : `${courseStore.clearedCount}/${courseStore.courses.length}`
+            }}</span
+          >
+        </button>
+        <button class="btn-ghost icon-action" aria-label="記録を見る" @click="store.openStats()">
+          <!-- a bar chart, as on the result screen -->
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 20h16M7.5 16.5v-4M12 16.5v-9M16.5 16.5v-6" />
+          </svg>
+        </button>
+      </div>
     </div>
+    <CourseDialog />
   </div>
 </template>
 
@@ -502,13 +514,19 @@ function handleStart() {
 .start-btn {
   margin-top: 0.25rem;
 }
-.records-btn {
+.sub-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+.icon-action {
   padding: 11px 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 0.4rem;
 }
-.records-btn svg {
+.icon-action svg {
   width: 24px;
   height: 24px;
   fill: none;
@@ -516,6 +534,16 @@ function handleStart() {
   stroke-width: 1.6;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+.course-progress {
+  font-size: 0.8rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+.course-progress.done {
+  color: var(--success-text);
 }
 
 /* Compact layout so short screens fit without scrolling */
@@ -547,7 +575,7 @@ function handleStart() {
     padding: 14px 20px;
     margin-top: 0;
   }
-  .records-btn {
+  .icon-action {
     padding: 8px 0;
   }
 }

@@ -1,0 +1,358 @@
+<script setup lang="ts">
+import { watch } from 'vue'
+import type { Course } from '../types/game'
+import { useGameStore } from '../stores/gameStore'
+import { useCourseStore } from '../stores/courseStore'
+import { usePreferencesStore } from '../stores/preferencesStore'
+import { courseMeta } from '../logic/dailyCourses'
+import { operationLabel } from '../logic/labels'
+import CloseIcon from './CloseIcon.vue'
+
+/** Today's daily courses: tap one to play it; cleared ones are checked until the date changes */
+const store = useGameStore()
+const courseStore = useCourseStore()
+const preferences = usePreferencesStore()
+
+// the checks belong to the day the list is opened on
+watch(
+  () => store.courseDialogOpen,
+  (open) => {
+    if (open) courseStore.refreshDay()
+  },
+  { immediate: true },
+)
+
+function close() {
+  store.courseDialogOpen = false
+}
+
+function play(course: Course) {
+  store.startGame(
+    {
+      questionCount: course.questionCount,
+      difficulty: course.difficulty,
+      operation: course.operation,
+      mixedOperations: course.mixedOperations,
+      timeLimit: preferences.timeLimit ? preferences.timeLimitLength : undefined,
+    },
+    course.id,
+  )
+}
+</script>
+
+<template>
+  <Transition name="dialog">
+    <div v-if="store.courseDialogOpen" class="dialog-overlay" @click.self="close">
+      <div class="dialog-box" role="dialog" aria-labelledby="course-dialog-title">
+        <button class="close-btn" aria-label="閉じる" @click="close"><CloseIcon /></button>
+        <h2 id="course-dialog-title" class="dialog-title">毎日コース</h2>
+
+        <div class="streaks">
+          <div class="tile streak-tile">
+            <div class="streak-label">連続クリア</div>
+            <div class="streak-value">
+              {{ courseStore.streak }}<span class="streak-unit">日</span>
+            </div>
+          </div>
+          <div class="tile streak-tile">
+            <div class="streak-label">最高記録</div>
+            <div class="streak-value best">
+              {{ courseStore.bestStreak }}<span class="streak-unit">日</span>
+            </div>
+          </div>
+        </div>
+
+        <template v-if="courseStore.courses.length > 0">
+          <div class="today">
+            <span>今日のコース</span>
+            <span v-if="courseStore.allClearedToday" class="pill pill-success all-done"
+              >全クリア！</span
+            >
+            <span v-else class="today-count"
+              >{{ courseStore.clearedCount }} / {{ courseStore.courses.length }}</span
+            >
+          </div>
+          <ul class="course-list">
+            <li v-for="course in courseStore.courses" :key="course.id">
+              <button
+                class="course-item"
+                :class="{ done: courseStore.isCleared(course.id) }"
+                @click="play(course)"
+              >
+                <span class="check" aria-hidden="true">
+                  <svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7" /></svg>
+                </span>
+                <span class="course-text">
+                  <span class="course-name">{{
+                    operationLabel(course.operation, course.mixedOperations)
+                  }}</span>
+                  <span class="course-meta">{{ courseMeta(course) }}</span>
+                </span>
+                <span class="sr-only">{{
+                  courseStore.isCleared(course.id) ? '（クリア済み）' : ''
+                }}</span>
+                <span class="play" aria-hidden="true">▶</span>
+              </button>
+            </li>
+          </ul>
+          <button class="btn-ghost edit-btn" @click="store.openCourses()">コースを編集</button>
+        </template>
+        <template v-else>
+          <p class="empty">
+            難易度・問題数・計算の種類を組み合わせて、<br />毎日クリアするコースを作りましょう
+          </p>
+          <button class="btn-gem btn-gold create-btn" @click="store.openCourses()">
+            <span class="btn-gold-gem">◆</span>
+            <span class="btn-gold-label">コースを作る</span>
+            <span class="btn-gold-gem">◆</span>
+          </button>
+        </template>
+      </div>
+    </div>
+  </Transition>
+</template>
+
+<style scoped>
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: var(--overlay);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 1rem;
+}
+.dialog-box {
+  position: relative;
+  background: linear-gradient(145deg, var(--bg-raised), var(--bg-raised2));
+  border: 1px solid var(--border-gem);
+  border-radius: 20px;
+  padding: 1.3rem 1.1rem 1.1rem;
+  width: 100%;
+  max-width: 360px;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  box-shadow:
+    var(--shadow-raised),
+    0 0 24px rgba(var(--blue-rgb), 0.2);
+}
+:root[data-theme='light'] .dialog-box {
+  border-radius: 16px;
+  box-shadow: var(--shadow-raised);
+}
+.close-btn {
+  position: absolute;
+  top: 0.8rem;
+  right: 0.8rem;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-sub);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.dialog-title {
+  font-size: 1.1rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  color: var(--gold-light);
+  text-align: center;
+  margin: 0.2rem 0 1rem;
+}
+
+.streaks {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.streak-tile {
+  padding: 0.6rem 0.4rem;
+}
+.streak-label {
+  font-size: 0.65rem;
+  color: var(--text-sub);
+  letter-spacing: 0.08em;
+}
+.streak-value {
+  font-size: 1.7rem;
+  font-weight: 900;
+  line-height: 1.2;
+  color: var(--gold-light);
+  font-variant-numeric: tabular-nums;
+}
+.streak-value.best {
+  color: var(--text-main);
+}
+.streak-unit {
+  font-size: 0.8rem;
+  margin-left: 2px;
+}
+
+.today {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-sub);
+  letter-spacing: 0.08em;
+  margin-bottom: 0.5rem;
+}
+.today-count {
+  color: var(--text-main);
+  font-variant-numeric: tabular-nums;
+}
+.all-done {
+  padding: 2px 10px;
+  font-size: 0.7rem;
+}
+
+.course-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  overflow-y: auto;
+  min-height: 0;
+}
+.course-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid var(--border-gem);
+  border-radius: 12px;
+  background: var(--bg-card);
+  color: var(--text-main);
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.course-item:active {
+  transform: scale(0.97);
+}
+@media (hover: hover) {
+  .course-item:hover {
+    border-color: var(--gold);
+  }
+}
+.check {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--border-gem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.check svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  /* the card color, so the check reads on the green in both themes */
+  stroke: var(--bg-card);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  visibility: hidden;
+}
+.course-item.done .check {
+  border-color: var(--success-text);
+  background: var(--success-text);
+}
+.course-item.done .check svg {
+  visibility: visible;
+  animation: check-pop 0.35s ease;
+}
+.course-item.done .course-name {
+  color: var(--text-sub);
+}
+.course-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.course-meta {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-sub);
+}
+.play {
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  color: var(--gold);
+}
+@keyframes check-pop {
+  0% {
+    transform: scale(0.4);
+  }
+  70% {
+    transform: scale(1.2);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .course-item.done .check svg {
+    animation: none;
+  }
+}
+
+.edit-btn {
+  margin-top: 0.9rem;
+  padding: 11px;
+  font-size: 0.9rem;
+}
+.empty {
+  font-size: 0.8rem;
+  line-height: 1.7;
+  color: var(--text-sub);
+  text-align: center;
+  margin-bottom: 1rem;
+}
+.create-btn {
+  font-size: 1rem;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.dialog-enter-active {
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+.dialog-leave-active {
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
+}
+.dialog-enter-from {
+  opacity: 0;
+  transform: scale(0.92);
+}
+.dialog-leave-to {
+  opacity: 0;
+  transform: scale(0.95);
+}
+</style>

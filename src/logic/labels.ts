@@ -87,6 +87,31 @@ export const OPERATOR_SYMBOLS: Record<ActualOperation, string> = {
   division: '÷',
 }
 
+/** Full-width symbols for the operation option buttons */
+export const OPERATION_BUTTON_SYMBOLS: Record<Operation, string> = {
+  addition: '＋',
+  subtraction: '－',
+  multiplication: '×',
+  division: '÷',
+  mixed: '✦',
+}
+
+/** Whether `op` is one of the last operations a mix needs, which cannot be turned off */
+export function isMixLocked(selected: readonly ActualOperation[], op: ActualOperation): boolean {
+  return selected.includes(op) && selected.length <= MIN_MIXED_OPERATIONS
+}
+
+/** The mix with `op` turned on or off, in display order; unchanged when `op` is locked */
+export function toggleMixedOperation(
+  selected: readonly ActualOperation[],
+  op: ActualOperation,
+): ActualOperation[] {
+  if (isMixLocked(selected, op)) return [...selected]
+  return selected.includes(op)
+    ? selected.filter((o) => o !== op)
+    : ACTUAL_OPERATIONS.filter((o) => o === op || selected.includes(o))
+}
+
 /** The operations a mixed game draws from, in display order; all four unless a valid choice is given. */
 export function resolveMixedOperations(selected?: readonly ActualOperation[]): ActualOperation[] {
   const ops = ACTUAL_OPERATIONS.filter((op) => selected?.includes(op))

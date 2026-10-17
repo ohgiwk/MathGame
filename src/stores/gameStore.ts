@@ -8,9 +8,11 @@ import { checkAnswer } from '../logic/answerChecker'
 import { calculateResult } from '../logic/resultCalculator'
 import { questionPoints } from '../logic/scoreCalculator'
 import { useStatsStore } from './statsStore'
+import { useCourseStore } from './courseStore'
 
 export const useGameStore = defineStore('game', () => {
   const statsStore = useStatsStore()
+  const courseStore = useCourseStore()
 
   const screen = ref<Screen>('setup')
 
@@ -23,6 +25,13 @@ export const useGameStore = defineStore('game', () => {
 
   const gameState = ref<GameState | null>(null)
   const result = ref<GameResult | null>(null)
+  /** the daily course being played, kept for a retry; null for a game set up on the home screen */
+  const courseId = ref<string | null>(null)
+  /**
+   * whether home shows the daily course list; it stays open while a course is played or the
+   * courses are edited, so the player comes back to it
+   */
+  const courseDialogOpen = ref(false)
 
   let feedbackTimer: ReturnType<typeof setTimeout> | null = null
   let limitTimer: ReturnType<typeof setTimeout> | null = null
@@ -66,9 +75,16 @@ export const useGameStore = defineStore('game', () => {
     }, ms)
   }
 
-  /** Starts a game with the given settings, or with the previous ones when omitted (retry). */
-  function startGame(newSettings?: GameSettings) {
-    if (newSettings) settings.value = newSettings
+  /**
+   * Starts a game with the given settings, or with the previous ones (and course) when omitted
+   * (retry). `course` is the daily course the settings come from, if any.
+   */
+  function startGame(newSettings?: GameSettings, course: string | null = null) {
+    if (newSettings) {
+      settings.value = newSettings
+      courseId.value = course
+      courseDialogOpen.value = course !== null
+    }
 
     clearTimers()
 
@@ -184,6 +200,7 @@ export const useGameStore = defineStore('game', () => {
     )
     result.value = { ...r, isBestScore: r.score.score > previousBest }
     statsStore.addRecord({ ...r.outcome, score: r.score.score })
+    if (endReason === 'clear' && courseId.value !== null) courseStore.markCleared(courseId.value)
     gameState.value = null
     screen.value = 'result'
   }
@@ -193,6 +210,7 @@ export const useGameStore = defineStore('game', () => {
     clearTimers()
     gameState.value = null
     result.value = null
+    courseId.value = null
     screen.value = 'setup'
   }
 
@@ -204,11 +222,17 @@ export const useGameStore = defineStore('game', () => {
     screen.value = 'settings'
   }
 
+  function openCourses() {
+    screen.value = 'courses'
+  }
+
   return {
     screen,
     settings,
     gameState,
     result,
+    courseId,
+    courseDialogOpen,
     currentQuestion,
     startGame,
     submitAnswer,
@@ -217,5 +241,6 @@ export const useGameStore = defineStore('game', () => {
     goHome,
     openStats,
     openSettings,
+    openCourses,
   }
 })

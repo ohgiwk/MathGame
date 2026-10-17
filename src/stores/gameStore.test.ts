@@ -3,6 +3,7 @@ import { setActivePinia, createPinia } from 'pinia'
 import { FEEDBACK_DURATION_MS, MAX_LIVES, TIME_LIMIT_SECONDS } from '../logic/constants'
 import { useGameStore } from './gameStore'
 import { useStatsStore } from './statsStore'
+import { useCourseStore } from './courseStore'
 
 const settings = { questionCount: 10, difficulty: 'easy', operation: 'addition' } as const
 
@@ -117,6 +118,43 @@ describe('gameStore', () => {
     store.startGame(settings)
     vi.advanceTimersByTime(FEEDBACK_DURATION_MS)
     expect(store.gameState).toMatchObject({ currentIndex: 0, feedback: null })
+  })
+
+  describe('daily courses', () => {
+    function playCourse(store: ReturnType<typeof useGameStore>, correct: boolean) {
+      for (let i = 0; i < 10 && store.gameState; i++) {
+        answer(store, correct)
+        vi.advanceTimersByTime(FEEDBACK_DURATION_MS)
+      }
+    }
+
+    it('checks the course off when its game is cleared, also on a retry', () => {
+      const store = useGameStore()
+      const courses = useCourseStore()
+      courses.addCourse(settings)
+      const id = courses.courses[0].id
+
+      store.startGame(settings, id)
+      playCourse(store, false)
+      expect(courses.isCleared(id)).toBe(false)
+
+      store.startGame()
+      playCourse(store, true)
+      expect(courses.isCleared(id)).toBe(true)
+    })
+
+    it('does not check a course off for a game set up on the home screen', () => {
+      const store = useGameStore()
+      const courses = useCourseStore()
+      courses.addCourse(settings)
+      const id = courses.courses[0].id
+
+      store.startGame(settings, id)
+      store.goHome()
+      store.startGame(settings)
+      playCourse(store, true)
+      expect(courses.isCleared(id)).toBe(false)
+    })
   })
 
   describe('endless', () => {

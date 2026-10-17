@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useGameStore } from '../stores/gameStore'
 import { useStatsStore } from '../stores/statsStore'
+import { useCourseStore } from '../stores/courseStore'
 import { summarize, recordsLike } from '../logic/statsCalculator'
 import {
   formatScore,
@@ -20,11 +21,16 @@ import { useCountUp } from '../composables/useCountUp'
 
 const store = useGameStore()
 const statsStore = useStatsStore()
+const courseStore = useCourseStore()
 const result = computed(() => store.result)
 const outcome = computed(() => store.result?.outcome)
 const isEndless = computed(() => outcome.value?.questionCount === 'endless')
 // an endless game always ends by running out of lives, which is its finish rather than a failure
 const isGameOver = computed(() => outcome.value?.endReason === 'gameover' && !isEndless.value)
+/** a daily course was played and cleared; it is checked off in the course list */
+const courseCleared = computed(
+  () => store.courseId !== null && outcome.value?.endReason === 'clear',
+)
 
 // The result is fixed while this screen is shown, so the numbers count up once on entry.
 // Delays follow the order in which the tiles pop in.
@@ -101,6 +107,14 @@ onBeforeUnmount(cancelAutoSlide)
         <p v-if="isEndless" class="result-sub">エンドレス · {{ outcome.correctCount }}問正解</p>
         <p v-else-if="isGameOver" class="result-sub">
           到達 {{ outcome.totalAnswered }} / {{ outcome.questionCount }}問
+        </p>
+        <p v-if="courseCleared" class="course-clear pill pill-success">
+          <template v-if="courseStore.allClearedToday">
+            今日のコース全クリア！ 連続 {{ courseStore.streak }}日
+          </template>
+          <template v-else>
+            毎日コース クリア ✓ {{ courseStore.clearedCount }} / {{ courseStore.courses.length }}
+          </template>
         </p>
       </div>
 
@@ -294,6 +308,13 @@ onBeforeUnmount(cancelAutoSlide)
   font-size: 0.82rem;
   margin-top: 0.3rem;
   letter-spacing: 0.08em;
+}
+.course-clear {
+  display: inline-block;
+  margin-top: 0.5rem;
+  padding: 3px 12px;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
 }
 
 .result-divider {
