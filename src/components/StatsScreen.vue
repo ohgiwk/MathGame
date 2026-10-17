@@ -3,30 +3,36 @@ import { ref, computed } from 'vue'
 import { useGameStore } from '../stores/gameStore'
 import { useStatsStore } from '../stores/statsStore'
 import type { Difficulty } from '../types/game'
-import {
-  DIFFICULTIES,
-  DIFFICULTY_LABELS,
-  OPERATION_LABELS,
-  operationLabel,
-  questionCountLabel,
-} from '../logic/labels'
+import type { DayKey } from '../logic/dailyStats'
+import { DIFFICULTIES, DIFFICULTY_LABELS, OPERATION_LABELS } from '../logic/labels'
 import { summarize, summarizeByOperation } from '../logic/statsCalculator'
-import { formatScore, formatElapsedTime, formatTotalTime, formatPlayedAt } from '../logic/format'
-import GrowthView from './GrowthView.vue'
-
-const HISTORY_LIMIT = 30
+import { formatScore, formatTotalTime } from '../logic/format'
+import HistoryView from './HistoryView.vue'
+import PlayCalendar from './PlayCalendar.vue'
+import ScoreTrendChart from './ScoreTrendChart.vue'
 
 const store = useGameStore()
 const statsStore = useStatsStore()
 
-const view = ref<'records' | 'growth'>('records')
+const view = ref<'records' | 'history'>('records')
+/** The day the history tab is narrowed to; only set when it is opened from the calendar */
+const historyDay = ref<DayKey | null>(null)
+
+function openTab(tab: 'records' | 'history') {
+  historyDay.value = null
+  view.value = tab
+}
+function openDay(day: DayKey) {
+  historyDay.value = day
+  view.value = 'history'
+}
+
 const selectedDifficulty = ref<Difficulty>(store.settings.difficulty)
 
 const total = computed(() => summarize(statsStore.records))
 const byOperation = computed(() =>
   summarizeByOperation(statsStore.records, selectedDifficulty.value),
 )
-const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
 </script>
 
 <template>
@@ -44,24 +50,31 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
           class="view-tab"
           :class="{ active: view === 'records' }"
           :aria-selected="view === 'records'"
-          @click="view = 'records'"
+          @click="openTab('records')"
         >
           記録
         </button>
         <button
           role="tab"
           class="view-tab"
-          :class="{ active: view === 'growth' }"
-          :aria-selected="view === 'growth'"
-          @click="view = 'growth'"
+          :class="{ active: view === 'history' }"
+          :aria-selected="view === 'history'"
+          @click="openTab('history')"
         >
-          成長
+          履歴
         </button>
       </div>
 
-      <GrowthView v-if="view === 'growth'" :records="statsStore.records" />
+      <HistoryView
+        v-if="view === 'history'"
+        :records="statsStore.records"
+        :initial-day="historyDay"
+      />
 
       <template v-else>
+        <PlayCalendar :records="statsStore.records" @select="openDay" />
+        <ScoreTrendChart :records="statsStore.records" />
+
         <!-- 累計 -->
         <div class="rpg-card stats-section">
           <h2 class="section-label">
@@ -128,50 +141,6 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
             </tbody>
           </table>
         </div>
-
-        <!-- 履歴 -->
-        <div class="rpg-card stats-section history-section">
-          <h2 class="section-label">
-            <span class="section-gem">◆</span> 履歴
-            <span v-if="statsStore.records.length > HISTORY_LIMIT" class="section-note"
-              >最新{{ HISTORY_LIMIT }}件</span
-            >
-          </h2>
-          <p v-if="history.length === 0" class="empty-note">まだ記録がありません</p>
-          <ul v-else class="history-list">
-            <li v-for="r in history" :key="r.id" class="history-row">
-              <div class="history-main">
-                <div class="history-mode">
-                  {{ DIFFICULTY_LABELS[r.difficulty] }} ·
-                  {{ operationLabel(r.operation, r.mixedOperations) }} ·
-                  {{ questionCountLabel(r.questionCount) }}
-                </div>
-                <div class="history-date">{{ formatPlayedAt(r.playedAt) }}</div>
-              </div>
-              <div class="history-result">
-                <div class="history-score">{{ formatScore(r.score) }}</div>
-                <div class="history-time">
-                  {{ r.correctCount }} / {{ r.totalAnswered }} ·
-                  {{ formatElapsedTime(r.elapsedSeconds) }}
-                </div>
-              </div>
-              <span
-                class="history-badge pill"
-                :class="
-                  r.questionCount === 'endless'
-                    ? 'pill-endless'
-                    : r.endReason === 'clear'
-                      ? 'pill-success'
-                      : 'pill-danger'
-                "
-              >
-                {{
-                  r.questionCount === 'endless' ? '∞' : r.endReason === 'clear' ? 'クリア' : '失敗'
-                }}
-              </span>
-            </li>
-          </ul>
-        </div>
       </template>
     </div>
   </div>
@@ -179,7 +148,7 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
 
 <style scoped>
 .stats-root {
-  height: 100%;
+  min-height: 100%;
   display: flex;
   justify-content: center;
   padding: max(1.5rem, env(safe-area-inset-top)) 1rem max(2rem, env(safe-area-inset-bottom));
@@ -187,7 +156,6 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
 .stats-inner {
   width: 100%;
   max-width: 380px;
-  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 0.7rem;
@@ -241,7 +209,7 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
   opacity: 0.8;
 }
 
-/* 記録 / 成長 */
+/* 記録 / 履歴 */
 .view-tabs {
   flex-shrink: 0;
   display: grid;
@@ -362,85 +330,5 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
 .unplayed td {
   color: var(--text-faint);
   font-weight: 500;
-}
-
-/* 履歴 */
-.empty-note {
-  text-align: center;
-  color: var(--text-sub);
-  font-size: 0.85rem;
-  padding: 1rem 0;
-}
-/* The page itself never scrolls; only the history list does, inside its card */
-.history-section {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-.history-list {
-  list-style: none;
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-}
-.history-row {
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-  padding: 0.5rem 0;
-  border-top: 1px solid rgba(var(--wash-rgb), 0.06);
-}
-.history-row:first-child {
-  border-top: none;
-  padding-top: 0;
-}
-.history-row:last-child {
-  padding-bottom: 0;
-}
-.history-main {
-  flex: 1;
-  min-width: 0;
-}
-.history-mode {
-  font-size: 0.82rem;
-  font-weight: 700;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.history-date {
-  font-size: 0.7rem;
-  color: var(--text-sub);
-  margin-top: 2px;
-  font-variant-numeric: tabular-nums;
-}
-.history-result {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-.history-score {
-  font-size: 1rem;
-  font-weight: 900;
-  color: var(--gold-light);
-}
-.history-time {
-  font-size: 0.7rem;
-  color: var(--text-sub);
-  margin-top: 1px;
-}
-/* an endless game has no clear or failure; it just ends */
-.pill-endless {
-  --pill-rgb: var(--gold-rgb);
-  color: var(--gold-light);
-}
-.history-badge {
-  flex-shrink: 0;
-  width: 3.4rem;
-  text-align: center;
-  font-size: 0.68rem;
-  padding: 3px 0;
 }
 </style>
