@@ -9,8 +9,10 @@ export type TimeLimitLength = 'short' | 'normal' | 'long'
 export type Theme = 'light' | 'dark'
 /** The theme chosen on the settings screen; 'auto' follows the device setting */
 export type ThemePreference = 'auto' | Theme
-/** 'endless' keeps asking until the lives run out */
-export type QuestionCount = 5 | 10 | 15 | 'endless'
+/** The lengths a game can be started with; 'endless' keeps asking until the lives run out */
+export type QuestionCount = 10 | 20 | 30 | 50 | 'endless'
+/** Any length a saved game can have: games used to be 5, 10 or 15 questions long */
+export type RecordedQuestionCount = QuestionCount | 5 | 15
 export type FixedQuestionCount = Exclude<QuestionCount, 'endless'>
 /** How good a cleared game's score is, best first */
 export type Rating = 'excellent' | 'great' | 'good' | 'nice'
@@ -69,7 +71,7 @@ export interface GameOutcome {
   operation: Operation
   /** only set for 'mixed' games; all four when omitted */
   mixedOperations?: ActualOperation[]
-  questionCount: QuestionCount
+  questionCount: RecordedQuestionCount
   endReason: GameEndReason
   correctCount: number
   totalAnswered: number

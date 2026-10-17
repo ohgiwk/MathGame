@@ -4,7 +4,7 @@ import { calculateResult } from './resultCalculator'
 
 function state(overrides: Partial<GameState> = {}): GameState {
   return {
-    settings: { questionCount: 5, difficulty: 'easy', operation: 'addition' },
+    settings: { questionCount: 10, difficulty: 'easy', operation: 'addition' },
     questions: [],
     currentIndex: 4,
     lives: 3,
@@ -30,7 +30,7 @@ describe('calculateResult', () => {
   it('reports a perfect clear', () => {
     const r = calculateResult(state(), 'clear', 11_000)
     expect(r.outcome).toEqual({
-      questionCount: 5,
+      questionCount: 10,
       difficulty: 'easy',
       operation: 'addition',
       endReason: 'clear',
@@ -46,10 +46,10 @@ describe('calculateResult', () => {
   it('records the chosen operations only for a mixed game', () => {
     const mixedOperations: GameState['settings']['mixedOperations'] = ['addition', 'subtraction']
     const single = state({
-      settings: { questionCount: 5, difficulty: 'easy', operation: 'addition', mixedOperations },
+      settings: { questionCount: 10, difficulty: 'easy', operation: 'addition', mixedOperations },
     })
     const mixed = state({
-      settings: { questionCount: 5, difficulty: 'easy', operation: 'mixed', mixedOperations },
+      settings: { questionCount: 10, difficulty: 'easy', operation: 'mixed', mixedOperations },
     })
     expect(calculateResult(single, 'clear', 11_000).outcome).not.toHaveProperty('mixedOperations')
     expect(calculateResult(mixed, 'clear', 11_000).outcome.mixedOperations).toEqual(mixedOperations)
@@ -61,7 +61,7 @@ describe('calculateResult', () => {
       'gameover',
       21_000,
     )
-    expect(r.outcome).toMatchObject({ totalAnswered: 4, questionCount: 5 })
+    expect(r.outcome).toMatchObject({ totalAnswered: 4, questionCount: 10 })
     expect(r.accuracy).toBe(25)
   })
 })

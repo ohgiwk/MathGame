@@ -9,7 +9,7 @@ const RUNS = 30
 
 function generate(difficulty: Difficulty, operation: (typeof OPERATIONS)[number]): Question[] {
   return Array.from({ length: RUNS }, () =>
-    generateQuestions({ questionCount: 15, difficulty, operation }),
+    generateQuestions({ questionCount: 20, difficulty, operation }),
   ).flat()
 }
 
@@ -23,9 +23,9 @@ describe('generateQuestions', () => {
     '%s %s: returns the requested number of distinct questions',
     (difficulty, operation) => {
       for (let run = 0; run < RUNS; run++) {
-        const questions = generateQuestions({ questionCount: 15, difficulty, operation })
-        expect(questions).toHaveLength(15)
-        expect(new Set(questions.map((q) => q.id)).size).toBe(15)
+        const questions = generateQuestions({ questionCount: 20, difficulty, operation })
+        expect(questions).toHaveLength(20)
+        expect(new Set(questions.map((q) => q.id)).size).toBe(20)
         if (operation !== 'mixed') {
           expect(questions.every((q) => q.operation === operation)).toBe(true)
         }
@@ -76,7 +76,7 @@ describe('generateQuestions', () => {
   it('a mix only draws from the chosen operations, and uses each of them', () => {
     const questions = Array.from({ length: RUNS }, () =>
       generateQuestions({
-        questionCount: 15,
+        questionCount: 20,
         difficulty: 'normal',
         operation: 'mixed',
         mixedOperations: ['addition', 'multiplication'],
@@ -90,7 +90,7 @@ describe('generateQuestions', () => {
   it('a mix with fewer than two chosen operations falls back to all four', () => {
     const questions = Array.from({ length: RUNS }, () =>
       generateQuestions({
-        questionCount: 15,
+        questionCount: 20,
         difficulty: 'normal',
         operation: 'mixed',
         mixedOperations: ['division'],

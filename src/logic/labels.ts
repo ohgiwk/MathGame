@@ -3,12 +3,15 @@ import type {
   Operation,
   ActualOperation,
   QuestionCount,
+  RecordedQuestionCount,
   Rating,
   TimeLimitLength,
   ThemePreference,
 } from '../types/game'
 
-export const QUESTION_COUNTS: QuestionCount[] = [5, 10, 15, 'endless']
+export const QUESTION_COUNTS: QuestionCount[] = [10, 20, 30, 50, 'endless']
+/** Every length found in saved records, including ones that can no longer be chosen */
+export const RECORDED_QUESTION_COUNTS: RecordedQuestionCount[] = [5, 15, ...QUESTION_COUNTS]
 export const DIFFICULTIES: Difficulty[] = ['easy', 'normal', 'hard']
 export const OPERATIONS: Operation[] = [
   'addition',
@@ -41,7 +44,7 @@ export const OPERATION_LABELS: Record<Operation, string> = {
   mixed: 'ミックス',
 }
 
-export function questionCountLabel(count: QuestionCount): string {
+export function questionCountLabel(count: RecordedQuestionCount): string {
   return count === 'endless' ? 'エンドレス' : `${count}問`
 }
 

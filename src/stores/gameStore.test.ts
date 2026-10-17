@@ -4,7 +4,7 @@ import { FEEDBACK_DURATION_MS, MAX_LIVES, TIME_LIMIT_SECONDS } from '../logic/co
 import { useGameStore } from './gameStore'
 import { useStatsStore } from './statsStore'
 
-const settings = { questionCount: 5, difficulty: 'easy', operation: 'addition' } as const
+const settings = { questionCount: 10, difficulty: 'easy', operation: 'addition' } as const
 
 function answer(store: ReturnType<typeof useGameStore>, correct: boolean) {
   const q = store.currentQuestion!
@@ -25,7 +25,7 @@ describe('gameStore', () => {
     store.startGame(settings)
     expect(store.screen).toBe('game')
     expect(store.gameState).toMatchObject({ currentIndex: 0, lives: MAX_LIVES, feedback: null })
-    expect(store.gameState!.questions).toHaveLength(5)
+    expect(store.gameState!.questions).toHaveLength(10)
   })
 
   it('shows feedback, ignores input meanwhile, then moves to the next question', () => {
@@ -48,7 +48,7 @@ describe('gameStore', () => {
     const stats = useStatsStore()
     const before = stats.records.length
     store.startGame(settings)
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 10; i++) {
       answer(store, true)
       vi.advanceTimersByTime(FEEDBACK_DURATION_MS)
     }
@@ -56,11 +56,11 @@ describe('gameStore', () => {
     expect(store.gameState).toBeNull()
     expect(store.result!.outcome).toMatchObject({
       endReason: 'clear',
-      correctCount: 5,
-      totalAnswered: 5,
+      correctCount: 10,
+      totalAnswered: 10,
     })
     expect(stats.records).toHaveLength(before + 1)
-    expect(stats.records[0]).toMatchObject({ ...settings, endReason: 'clear', correctCount: 5 })
+    expect(stats.records[0]).toMatchObject({ ...settings, endReason: 'clear', correctCount: 10 })
   })
 
   it('ends with a game over when the lives run out', () => {
@@ -82,24 +82,24 @@ describe('gameStore', () => {
     const store = useGameStore()
     const play = (correctAnswers: number) => {
       store.startGame(settings)
-      for (let i = 0; i < 5 && store.gameState; i++) {
+      for (let i = 0; i < 10 && store.gameState; i++) {
         answer(store, i < correctAnswers)
         vi.advanceTimersByTime(FEEDBACK_DURATION_MS)
       }
       return store.result!
     }
-    expect(play(4).isBestScore).toBe(true)
-    expect(play(3).isBestScore).toBe(false)
-    expect(play(5).isBestScore).toBe(true)
+    expect(play(9).isBestScore).toBe(true)
+    expect(play(8).isBestScore).toBe(false)
+    expect(play(10).isBestScore).toBe(true)
   })
 
   it('retries with the previous settings when startGame gets none', () => {
     const store = useGameStore()
-    store.startGame({ questionCount: 15, difficulty: 'hard', operation: 'division' })
+    store.startGame({ questionCount: 30, difficulty: 'hard', operation: 'division' })
     store.goHome()
     store.startGame()
     expect(store.gameState!.settings).toEqual({
-      questionCount: 15,
+      questionCount: 30,
       difficulty: 'hard',
       operation: 'division',
     })
@@ -247,7 +247,7 @@ describe('gameStore', () => {
       const store = useGameStore()
       const stats = useStatsStore()
       store.startGame(limited)
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 10; i++) {
         answer(store, true)
         vi.advanceTimersByTime(FEEDBACK_DURATION_MS)
       }
@@ -293,14 +293,14 @@ describe('gameStore', () => {
       const store = useGameStore()
       const stats = useStatsStore()
       store.startGame(settings)
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 10; i++) {
         vi.advanceTimersByTime(9000)
         answer(store, true)
         vi.advanceTimersByTime(FEEDBACK_DURATION_MS)
       }
-      // 5 × 100, then the clear and no-miss bonuses (× 1.1 × 1.1)
-      expect(store.result!.score).toMatchObject({ points: 500, score: 605 })
-      expect(stats.records[0].score).toBe(605)
+      // 10 × 100, then the clear and no-miss bonuses (× 1.1 × 1.1)
+      expect(store.result!.score).toMatchObject({ points: 1000, score: 1210 })
+      expect(stats.records[0].score).toBe(1210)
       expect(Object.keys(stats.records[0]).sort()).toEqual(
         [
           'correctCount',

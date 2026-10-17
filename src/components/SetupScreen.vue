@@ -89,7 +89,7 @@ function handleStart() {
           <span class="section-gem">◆</span> 問題数
           <span v-if="preferences.timeLimit" class="limit-note">⏱ 制限時間あり</span>
         </h2>
-        <div class="grid-4">
+        <div class="grid-counts">
           <button
             v-for="c in QUESTION_COUNTS"
             :key="c"
@@ -301,10 +301,13 @@ function handleStart() {
   gap: 0.5rem;
 }
 
-.grid-4 {
+.grid-counts {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0.5rem;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.4rem;
+}
+.grid-counts .opt-btn {
+  padding: 10px 0;
 }
 .limit-note {
   margin-left: auto;

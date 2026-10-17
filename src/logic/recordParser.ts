@@ -4,7 +4,7 @@ import {
   DIFFICULTIES,
   MIN_MIXED_OPERATIONS,
   OPERATIONS,
-  QUESTION_COUNTS,
+  RECORDED_QUESTION_COUNTS,
 } from './labels'
 import { estimateScore } from './scoreCalculator'
 
@@ -35,7 +35,7 @@ function isStoredRecord(value: unknown): value is StoredRecord {
     (DIFFICULTIES as unknown[]).includes(r.difficulty) &&
     (OPERATIONS as unknown[]).includes(r.operation) &&
     isMixedOperations(r.mixedOperations) &&
-    (QUESTION_COUNTS as unknown[]).includes(r.questionCount) &&
+    (RECORDED_QUESTION_COUNTS as unknown[]).includes(r.questionCount) &&
     (END_REASONS as unknown[]).includes(r.endReason) &&
     isCount(r.correctCount) &&
     isCount(r.totalAnswered) &&
