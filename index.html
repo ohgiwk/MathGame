@@ -6,7 +6,9 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
     />
-    <meta name="theme-color" content="#0e1a35" />
+    <!-- one per device setting, so the browser picks the right one even before the script runs -->
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0e1a35" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f5f0e6" />
     <!-- Pick the theme before the first paint, so the page never flashes in the other one.
          Mirrors resolveTheme / THEME_COLORS in src/logic/theme.ts and the key in preferencesStore. -->
     <script>
@@ -23,9 +25,10 @@
               : 'light'
             : choice
         document.documentElement.dataset.theme = theme
-        document
-          .querySelector('meta[name="theme-color"]')
-          .setAttribute('content', theme === 'dark' ? '#0e1a35' : '#f5f0e6')
+        // a theme chosen in Settings wins over the device setting, so both tags get its color
+        document.querySelectorAll('meta[name="theme-color"]').forEach(function (meta) {
+          meta.setAttribute('content', theme === 'dark' ? '#0e1a35' : '#f5f0e6')
+        })
       })()
     </script>
     <meta name="apple-mobile-web-app-capable" content="yes" />

@@ -111,9 +111,8 @@
 /* Light theme: off-white paper with ink lines; the gold becomes ochre and the gems flat inks */
 :root[data-theme='light'] {
   color-scheme: light;
-  /* stays dark so the white status bar text of an iOS home-screen app can be read */
-  --bg-status: #262c3b;
-  --bg-status-rgb: 38, 44, 59;
+  --bg-status: #f5f0e6;
+  --bg-status-rgb: 245, 240, 230;
   --bg-glow: #f8f4ec;
   --bg-page: #f5f0e6;
   --bg-page-edge: #efe9dc;
@@ -654,7 +653,7 @@ body::before {
       var(--bg-floor) env(safe-area-inset-bottom, 0px),
       rgba(var(--bg-floor-rgb), 0) calc(env(safe-area-inset-bottom, 0px) + 140px)
     ),
-    /* a hard-edged ink band under the status bar (zero tall outside an installed app) */
+    /* flat paper under the status bar, so it matches theme-color */
     linear-gradient(
         to bottom,
         var(--bg-status) 0,
