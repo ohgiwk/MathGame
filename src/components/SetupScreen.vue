@@ -160,8 +160,16 @@ function handleStart() {
         <span class="btn-gold-label">START</span>
         <span class="btn-gold-gem">◆</span>
       </button>
-      <button class="btn-ghost enter-item" style="--i: 5" @click="store.openStats()">
-        My Records
+      <button
+        class="btn-ghost records-btn enter-item"
+        style="--i: 5"
+        aria-label="記録を見る"
+        @click="store.openStats()"
+      >
+        <!-- a bar chart, as on the result screen -->
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 20h16M7.5 16.5v-4M12 16.5v-9M16.5 16.5v-6" />
+        </svg>
       </button>
     </div>
   </div>
@@ -494,6 +502,21 @@ function handleStart() {
 .start-btn {
   margin-top: 0.25rem;
 }
+.records-btn {
+  padding: 11px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.records-btn svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
 
 /* Compact layout so short screens fit without scrolling */
 @media (max-height: 780px) {
@@ -524,8 +547,8 @@ function handleStart() {
     padding: 14px 20px;
     margin-top: 0;
   }
-  .setup-body .btn-ghost {
-    padding: 10px;
+  .records-btn {
+    padding: 8px 0;
   }
 }
 </style>

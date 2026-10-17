@@ -233,8 +233,17 @@ onBeforeUnmount(cancelAutoSlide)
           <span class="btn-gold-gem">◆</span>
         </button>
         <div class="result-links">
-          <button class="btn-ghost" @click="store.goHome()">Go to Home</button>
-          <button class="btn-ghost" @click="store.openStats()">My Records</button>
+          <button class="btn-ghost icon-btn" aria-label="ホームに戻る" @click="store.goHome()">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3.5 11.5 12 4.5l8.5 7M6 9.5V19.5h4.5v-5h3v5H18V9.5" />
+            </svg>
+          </button>
+          <button class="btn-ghost icon-btn" aria-label="記録を見る" @click="store.openStats()">
+            <!-- a bar chart -->
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 20h16M7.5 16.5v-4M12 16.5v-9M16.5 16.5v-6" />
+            </svg>
+          </button>
         </div>
       </div>
     </div>
@@ -544,13 +553,25 @@ onBeforeUnmount(cancelAutoSlide)
   flex-direction: column;
   gap: 0.75rem;
 }
+/* home and records as icon buttons, side by side under TRY AGAIN */
 .result-links {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.6rem;
 }
-.result-links .btn-ghost {
-  padding: 13px 4px;
-  font-size: 0.95rem;
+.icon-btn {
+  padding: 11px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.icon-btn svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 </style>
