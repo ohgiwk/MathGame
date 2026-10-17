@@ -3,7 +3,13 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useGameStore } from '../stores/gameStore'
 import { useStatsStore } from '../stores/statsStore'
 import { summarize, recordsLike } from '../logic/statsCalculator'
-import { formatScore, formatElapsedTime, formatTotalTime, formatPlayedDate } from '../logic/format'
+import {
+  formatScore,
+  formatElapsedTime,
+  formatAverageTime,
+  formatTotalTime,
+  formatPlayedDate,
+} from '../logic/format'
 import {
   RATING_LABELS,
   DIFFICULTY_LABELS,
@@ -29,6 +35,8 @@ const shownCorrect = useCountUp(r?.outcome.correctCount ?? 0, { duration: 600, d
 const shownAccuracy = useCountUp(r?.accuracy ?? 0, { duration: 600, delay: 490 })
 const shownMistakes = useCountUp(mistakes, { duration: 600, delay: 610 })
 const shownSeconds = useCountUp(r?.outcome.elapsedSeconds ?? 0, { duration: 600, delay: 730 })
+// time per question, over everything answered (feedback pauses included, as in the total)
+const averageTime = r ? formatAverageTime(r.outcome.elapsedSeconds, r.outcome.totalAnswered) : null
 
 // The panel has three slides side by side: this game's result, the earlier games with the same
 // settings (this one included, as the newest), and the totals over every game played so far.
@@ -141,6 +149,7 @@ onBeforeUnmount(cancelAutoSlide)
             <div class="tile stat-tile" style="--i: 4">
               <div class="stat-label">タイム</div>
               <div class="stat-time">{{ formatElapsedTime(shownSeconds) }}</div>
+              <div v-if="averageTime" class="stat-average">1問平均 {{ averageTime }}</div>
             </div>
           </div>
           <div class="history-slide">
@@ -521,6 +530,13 @@ onBeforeUnmount(cancelAutoSlide)
   font-size: 1.3rem;
   font-weight: 800;
   color: var(--text-main);
+}
+.stat-average {
+  margin-top: 2px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-sub);
+  font-variant-numeric: tabular-nums;
 }
 
 .result-actions {

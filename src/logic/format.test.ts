@@ -4,6 +4,7 @@ import {
   formatScore,
   formatElapsedTime,
   formatTotalTime,
+  formatAverageTime,
   formatPlayedAt,
   formatPlayedDate,
 } from './format'
@@ -31,6 +32,22 @@ describe('formatElapsedTime', () => {
   it('drops the fraction of a second', () => {
     expect(formatElapsedTime(59.96)).toBe('0分59秒')
     expect(formatTotalTime(125.7)).toBe('2分5秒')
+  })
+})
+
+describe('formatAverageTime', () => {
+  it('divides the time by the questions answered, to a tenth of a second', () => {
+    expect(formatAverageTime(32, 10)).toBe('3.2秒')
+    expect(formatAverageTime(20, 3)).toBe('6.7秒')
+    expect(formatAverageTime(30, 10)).toBe('3.0秒')
+  })
+
+  it('switches to minutes from a minute up', () => {
+    expect(formatAverageTime(130, 2)).toBe('1分05秒')
+  })
+
+  it('has nothing to show when no question was answered', () => {
+    expect(formatAverageTime(4, 0)).toBeNull()
   })
 })
 

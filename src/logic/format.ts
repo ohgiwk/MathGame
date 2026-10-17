@@ -17,6 +17,14 @@ export function formatElapsedTime(totalSeconds: number): string {
   return `${m}分${s.toString().padStart(2, '0')}秒`
 }
 
+/** Average time per question, to a tenth of a second; null when nothing was answered */
+export function formatAverageTime(totalSeconds: number, answered: number): string | null {
+  if (answered <= 0) return null
+  const average = Math.round((totalSeconds / answered) * 10) / 10
+  if (average >= 60) return formatElapsedTime(average)
+  return `${average.toFixed(1)}秒`
+}
+
 export function formatTotalTime(totalSeconds: number): string {
   const seconds = Math.floor(totalSeconds)
   const h = Math.floor(seconds / 3600)
