@@ -73,20 +73,9 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
           </h2>
           <div class="total-row">
             <div class="tile total-item">
-              <div class="total-label">プレイ</div>
-              <div class="total-value">{{ total.playCount }}<span class="total-unit">回</span></div>
-            </div>
-            <div class="tile total-item">
               <div class="total-label">クリア</div>
               <div class="total-value">
                 {{ total.clearCount }}<span class="total-unit">回</span>
-              </div>
-            </div>
-            <div class="tile total-item">
-              <div class="total-label">正答率</div>
-              <div class="total-value accent">
-                {{ total.accuracy ?? '–'
-                }}<span v-if="total.accuracy !== null" class="total-unit">%</span>
               </div>
             </div>
             <div class="tile total-item">
@@ -116,7 +105,6 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
             <thead>
               <tr>
                 <th class="col-name">種類</th>
-                <th>プレイ</th>
                 <th>クリア</th>
                 <th>正答率</th>
                 <th>ベスト</th>
@@ -129,7 +117,6 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
                 :class="{ unplayed: row.summary.playCount === 0 }"
               >
                 <td class="col-name">{{ OPERATION_LABELS[row.operation] }}</td>
-                <td>{{ row.summary.playCount }}</td>
                 <td>{{ row.summary.clearCount }}</td>
                 <td class="col-accuracy">
                   {{ row.summary.accuracy !== null ? `${row.summary.accuracy}%` : '–' }}
@@ -286,7 +273,7 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
 /* 累計 */
 .total-row {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1.6fr;
+  grid-template-columns: 1fr 1.6fr;
   gap: 0.4rem;
 }
 .total-item {
@@ -305,9 +292,6 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
   color: var(--gold-light);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
-}
-.total-value.accent {
-  color: var(--gem-teal);
 }
 .total-unit {
   font-size: 0.65rem;
