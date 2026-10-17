@@ -65,16 +65,16 @@ export function summarizeByOperation(
 }
 
 /**
- * Records played with the same settings as `outcome`: difficulty, operation, question count and,
- * for a mix, the same set of operations. Keeps the order of `records`.
+ * Identifies a game's kind: difficulty, operation, question count and, for a mix, its set of
+ * operations. Games of one kind are scored alike, so their scores can be compared and averaged.
  */
+export function kindKey(outcome: GameOutcome): string {
+  const mix = outcome.operation === 'mixed' ? resolveMixedOperations(outcome.mixedOperations) : []
+  return [outcome.difficulty, outcome.operation, outcome.questionCount, mix.join('+')].join('|')
+}
+
+/** Records of the same kind as `outcome` (see kindKey). Keeps the order of `records`. */
 export function recordsLike(records: GameRecord[], outcome: GameOutcome): GameRecord[] {
-  const mix = (ops?: GameOutcome['mixedOperations']) => resolveMixedOperations(ops).join()
-  return records.filter(
-    (r) =>
-      r.difficulty === outcome.difficulty &&
-      r.operation === outcome.operation &&
-      r.questionCount === outcome.questionCount &&
-      (outcome.operation !== 'mixed' || mix(r.mixedOperations) === mix(outcome.mixedOperations)),
-  )
+  const kind = kindKey(outcome)
+  return records.filter((r) => kindKey(r) === kind)
 }

@@ -1,6 +1,13 @@
 import { describe, it, expect } from 'vitest'
 import type { GameRecord } from '../types/game'
-import { dayKey, toDayKey, summarizeByDay, monthGrid, currentStreak } from './dailyStats'
+import {
+  dayKey,
+  toDayKey,
+  summarizeByDay,
+  summarizeDayByKind,
+  monthGrid,
+  currentStreak,
+} from './dailyStats'
 
 function record(overrides: Partial<GameRecord> = {}): GameRecord {
   return {
@@ -42,6 +49,26 @@ describe('summarizeByDay', () => {
     expect(days.map((d) => d.day)).toEqual(['2026-10-03', '2026-10-16'])
     expect(days[1]).toMatchObject({ playCount: 2, averageScore: 751, bestScore: 1000 })
     expect(days[0]).toMatchObject({ playCount: 1, averageScore: 300 })
+  })
+})
+
+describe('summarizeDayByKind', () => {
+  it('splits the day by kind, latest kind first, comparing with each kind’s previous day', () => {
+    const records = [
+      record({ id: 'a1', playedAt: at(2026, 9, 16, 20), score: 1000 }),
+      record({ id: 'n1', playedAt: at(2026, 9, 16, 18), difficulty: 'normal', score: 700 }),
+      record({ id: 'a2', playedAt: at(2026, 9, 16, 8), score: 600 }),
+      record({ id: 'other-day', playedAt: at(2026, 9, 3), score: 300 }),
+    ]
+    const kinds = summarizeDayByKind(records, '2026-10-16')
+    expect(kinds.map((k) => k.records.map((r) => r.id))).toEqual([['a1', 'a2'], ['n1']])
+    expect(kinds[0].summary).toMatchObject({ playCount: 2, averageScore: 800, bestScore: 1000 })
+    expect(kinds[0].previousAverage).toBe(300)
+    expect(kinds[1].previousAverage).toBeNull()
+  })
+
+  it('returns nothing for a day without games', () => {
+    expect(summarizeDayByKind([record({ playedAt: at(2026, 9, 3) })], '2026-10-16')).toEqual([])
   })
 })
 

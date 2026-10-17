@@ -1,17 +1,19 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import type { Difficulty, GameRecord } from '../types/game'
-import { DIFFICULTIES, DIFFICULTY_LABELS } from '../logic/labels'
+import { DIFFICULTIES, DIFFICULTY_LABELS, kindLabel } from '../logic/labels'
 import {
   type DayKey,
   type DaySummary,
   dayKey,
   toDayKey,
   summarizeByDay,
+  summarizeDayByKind,
   monthGrid,
   currentStreak,
 } from '../logic/dailyStats'
-import { formatScore } from '../logic/format'
+import { kindKey } from '../logic/statsCalculator'
+import { formatScore, formatElapsedTime } from '../logic/format'
 
 const props = defineProps<{ records: GameRecord[] }>()
 
@@ -36,15 +38,9 @@ const selectedDay = ref<DayKey | null>(null)
 const selected = computed<DaySummary | null>(
   () => (selectedDay.value && dayMap.value.get(selectedDay.value)) || null,
 )
-/** The play day before the selected one, to compare against */
-const previous = computed<DaySummary | null>(() => {
-  const i = days.value.findIndex((d) => d.day === selectedDay.value)
-  return i > 0 ? days.value[i - 1] : null
-})
-const scoreDelta = computed(() =>
-  selected.value && previous.value
-    ? selected.value.averageScore - previous.value.averageScore
-    : null,
+// Scores only compare within a kind of game, so the day is shown kind by kind
+const dayKinds = computed(() =>
+  selectedDay.value ? summarizeDayByKind(filtered.value, selectedDay.value) : [],
 )
 
 // keep a played day selected; fall back to the latest one when the filter drops it
@@ -125,14 +121,35 @@ function formatShortDay(key: DayKey) {
   return `${month + 1}/${date}`
 }
 
-// ---- trend chart ----
+// ---- trend chart: one kind of game at a time ----
+/** Each kind played under the filter, labelled from its newest game, most recently played first */
+const kinds = computed(() => {
+  const seen = new Map<string, string>()
+  for (const r of filtered.value) {
+    const kind = kindKey(r)
+    if (!seen.has(kind)) seen.set(kind, kindLabel(r))
+  }
+  return [...seen].map(([kind, label]) => ({ kind, label }))
+})
+const chartKind = ref<string | null>(null)
+// fall back to the most recently played kind when the filter drops the charted one
+watch(
+  kinds,
+  (list) => {
+    if (!list.some((k) => k.kind === chartKind.value)) chartKind.value = list[0]?.kind ?? null
+  },
+  { immediate: true },
+)
+
 const W = 340
 const H = 150
 const PAD = { top: 26, right: 12, bottom: 20, left: 40 }
 const plotW = W - PAD.left - PAD.right
 const plotH = H - PAD.top - PAD.bottom
 
-const chartDays = computed(() => days.value.slice(-CHART_DAYS))
+const chartDays = computed(() =>
+  summarizeByDay(filtered.value.filter((r) => kindKey(r) === chartKind.value)).slice(-CHART_DAYS),
+)
 
 /** A round ceiling for the y axis, e.g. 1,234 -> 1,500 */
 function niceCeil(value: number): number {
@@ -279,34 +296,43 @@ function formatAxis(value: number) {
       <template v-else>
         <h2 class="section-label">
           <span class="section-gem">◆</span> {{ formatDayHeading(selected.day) }}
-          <span
-            v-if="scoreDelta !== null"
-            class="delta pill"
-            :class="scoreDelta > 0 ? 'pill-success' : 'delta-flat'"
-          >
-            前回より {{ scoreDelta > 0 ? '+' : '' }}{{ formatScore(scoreDelta) }}
-          </span>
+          <span class="section-note">{{ selected.playCount }}回</span>
         </h2>
-        <div class="day-row">
-          <div class="tile day-item">
-            <div class="day-label">プレイ</div>
-            <div class="day-value">{{ selected.playCount }}<span class="day-unit">回</span></div>
+        <div v-for="k in dayKinds" :key="k.kind" class="kind-group">
+          <!-- tapping a kind charts it below -->
+          <button
+            class="kind-head"
+            :class="{ charted: k.kind === chartKind }"
+            @click="chartKind = k.kind"
+          >
+            <span class="kind-name">{{ kindLabel(k.records[0]) }}</span>
+            <span
+              v-if="k.previousAverage !== null"
+              class="delta pill"
+              :class="k.summary.averageScore > k.previousAverage ? 'pill-success' : 'delta-flat'"
+            >
+              前回より {{ k.summary.averageScore > k.previousAverage ? '+' : ''
+              }}{{ formatScore(k.summary.averageScore - k.previousAverage) }}
+            </span>
+          </button>
+          <div class="kind-stats">
+            <span>{{ k.summary.playCount }}回</span>
+            <span
+              >平均 <b>{{ formatScore(k.summary.averageScore) }}</b></span
+            >
+            <span
+              >ベスト <b>{{ formatScore(k.summary.bestScore ?? 0) }}</b></span
+            >
           </div>
-          <div class="tile day-item">
-            <div class="day-label">平均スコア</div>
-            <div class="day-value">{{ formatScore(selected.averageScore) }}</div>
-          </div>
-          <div class="tile day-item">
-            <div class="day-label">ベスト</div>
-            <div class="day-value">{{ formatScore(selected.bestScore ?? 0) }}</div>
-          </div>
-          <div class="tile day-item">
-            <div class="day-label">正答率</div>
-            <div class="day-value accent">
-              {{ selected.accuracy ?? '–'
-              }}<span v-if="selected.accuracy !== null" class="day-unit">%</span>
-            </div>
-          </div>
+          <ol class="kind-records">
+            <li v-for="r in k.records" :key="r.id" class="kind-record">
+              <span class="rec-detail">
+                {{ r.correctCount }} / {{ r.totalAnswered }} ·
+                {{ formatElapsedTime(r.elapsedSeconds) }}
+              </span>
+              <span class="rec-score">{{ formatScore(r.score) }}</span>
+            </li>
+          </ol>
         </div>
       </template>
     </div>
@@ -323,6 +349,9 @@ function formatAxis(value: number) {
           </template>
         </span>
       </h2>
+      <select v-model="chartKind" class="kind-select" aria-label="グラフにする種別">
+        <option v-for="k in kinds" :key="k.kind" :value="k.kind">{{ k.label }}</option>
+      </select>
       <svg class="chart" :viewBox="`0 0 ${W} ${H}`" role="img" aria-label="日ごとの平均スコア">
         <defs>
           <linearGradient id="growth-area" x1="0" y1="0" x2="0" y2="1">
@@ -599,6 +628,7 @@ function formatAxis(value: number) {
 
 /* 選択した日 */
 .delta {
+  flex-shrink: 0;
   margin-left: auto;
   font-size: 0.66rem;
   padding: 2px 8px;
@@ -607,36 +637,91 @@ function formatAxis(value: number) {
   border: 1px solid var(--border);
   color: var(--text-sub);
 }
-.day-row {
-  display: grid;
-  grid-template-columns: 1fr 1.4fr 1.4fr 1fr;
-  gap: 0.4rem;
+.kind-group {
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--border);
 }
-.day-item {
-  border-radius: 10px;
-  padding: 6px 2px 7px;
+.kind-group + .kind-group {
+  margin-top: 0.6rem;
+}
+.kind-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-main);
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+}
+.kind-name {
   min-width: 0;
-}
-.day-label {
-  font-size: 0.62rem;
-  color: var(--text-sub);
-  letter-spacing: 0.06em;
-}
-.day-value {
-  font-size: 1.05rem;
-  font-weight: 900;
-  color: var(--gold-light);
-  font-variant-numeric: tabular-nums;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
-.day-value.accent {
-  color: var(--gem-teal);
+/* a small mark beside the kind shown in the chart below */
+.kind-head.charted .kind-name::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 6px;
+  vertical-align: middle;
+  border-radius: 50%;
+  background: var(--gold-light);
 }
-.day-unit {
-  font-size: 0.65rem;
-  font-weight: 600;
+.kind-stats {
+  display: flex;
+  gap: 0.8rem;
+  margin-top: 0.3rem;
+  font-size: 0.72rem;
   color: var(--text-sub);
-  margin-left: 1px;
+  font-variant-numeric: tabular-nums;
+}
+.kind-stats b {
+  font-size: 0.95rem;
+  font-weight: 900;
+  color: var(--gold-light);
+}
+.kind-records {
+  list-style: none;
+  margin-top: 0.3rem;
+}
+.kind-record {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0;
+  border-top: 1px solid rgba(var(--wash-rgb), 0.06);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+}
+.rec-detail {
+  color: var(--text-sub);
+}
+.rec-score {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--gold-light);
+}
+
+.kind-select {
+  width: 100%;
+  margin-bottom: 0.4rem;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-inset);
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
 }
 
 /* 推移グラフ */
