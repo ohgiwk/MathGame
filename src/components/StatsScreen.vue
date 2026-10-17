@@ -229,7 +229,7 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
   cursor: pointer;
 }
 .back-btn:active {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(var(--wash-rgb), 0.05);
 }
 .stats-title {
   font-size: 1.4rem;
@@ -262,7 +262,7 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
   padding: 4px;
   border: 1px solid var(--border);
   border-radius: 12px;
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--bg-inset);
 }
 .view-tab {
   border: 1px solid transparent;
@@ -279,7 +279,7 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
 .view-tab.active {
   border-color: var(--gold);
   color: var(--gold-light);
-  background: linear-gradient(135deg, #1c2b50, #162040);
+  background: linear-gradient(135deg, var(--bg-selected), var(--bg-selected2));
   box-shadow: 0 0 10px rgba(var(--gold-rgb), 0.2);
 }
 
@@ -337,7 +337,7 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
 .diff-tab.active {
   border-color: var(--gold);
   color: var(--gold-light);
-  background: linear-gradient(135deg, #1c2b50, #162040);
+  background: linear-gradient(135deg, var(--bg-selected), var(--bg-selected2));
 }
 
 .op-table {
@@ -358,7 +358,7 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
   font-weight: 700;
   text-align: right;
   padding: 6px 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid rgba(var(--wash-rgb), 0.06);
 }
 .op-table .col-name {
   text-align: left;
@@ -375,7 +375,7 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
   color: var(--gem-teal);
 }
 .unplayed td {
-  color: #4a5e85;
+  color: var(--text-faint);
   font-weight: 500;
 }
 
@@ -406,7 +406,7 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
   align-items: center;
   gap: 0.7rem;
   padding: 0.5rem 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid rgba(var(--wash-rgb), 0.06);
 }
 .history-row:first-child {
   border-top: none;

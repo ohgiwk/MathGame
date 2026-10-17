@@ -229,7 +229,7 @@ function confirmQuit() {
 .game-header {
   flex-shrink: 0;
   padding: calc(0.8rem + max(1rem, env(safe-area-inset-top))) 1.2rem 0.6rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(var(--wash-rgb), 0.05);
 }
 .header-top {
   display: flex;
@@ -317,7 +317,7 @@ function confirmQuit() {
   stroke-width: 3;
 }
 .timer-track {
-  stroke: rgba(255, 255, 255, 0.08);
+  stroke: rgba(var(--wash-rgb), 0.08);
 }
 .timer-fill {
   stroke: currentColor;
@@ -413,6 +413,13 @@ function confirmQuit() {
   position: relative;
   animation: gem-pulse 3s ease infinite;
 }
+:root[data-theme='light'] .question-card {
+  animation: none;
+}
+:root[data-theme='light'] .question-eq,
+:root[data-theme='light'] .timer-fill {
+  filter: none;
+}
 .diff-badge {
   display: inline-block;
   font-size: 0.68rem;
@@ -490,6 +497,10 @@ function confirmQuit() {
   opacity: 0.5;
   filter: drop-shadow(0 0 4px var(--gem-blue));
 }
+/* light theme: no corner ornaments */
+:root[data-theme='light'] .gem-corner {
+  display: none;
+}
 .tl {
   top: 10px;
   left: 12px;
@@ -536,7 +547,7 @@ function confirmQuit() {
   box-shadow: 0 0 0 3px rgba(var(--ruby-rgb), 0.2);
 }
 .answer-display.empty {
-  color: #3a4e70;
+  color: var(--text-placeholder);
   font-size: 20px;
   line-height: 1.92;
 }

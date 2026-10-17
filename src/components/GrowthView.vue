@@ -478,7 +478,7 @@ function formatAxis(value: number) {
 .diff-tab.active {
   border-color: var(--gold);
   color: var(--gold-light);
-  background: linear-gradient(135deg, #1c2b50, #162040);
+  background: linear-gradient(135deg, var(--bg-selected), var(--bg-selected2));
 }
 
 /* カレンダー */
@@ -532,14 +532,14 @@ function formatAxis(value: number) {
   color: var(--danger-text);
 }
 .cal-weekday.sat {
-  color: #8fb0ff;
+  color: var(--text-sat);
 }
 .cal-cell {
   aspect-ratio: 1;
   border: 1px solid transparent;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.03);
-  color: #4a5e85;
+  background: rgba(var(--wash-rgb), 0.03);
+  color: var(--text-faint);
   font-size: 0.78rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -561,11 +561,14 @@ function formatAxis(value: number) {
 }
 .level-2 {
   background: rgba(var(--gold-rgb), 0.38);
-  color: #fff4d0;
+  color: var(--gold-pale);
+}
+:root[data-theme='light'] .level-2 {
+  color: var(--text-main);
 }
 .level-3 {
   background: rgba(var(--gold-rgb), 0.62);
-  color: #1a1406;
+  color: var(--gold-ink);
   font-weight: 800;
 }
 .cal-cell.today {
@@ -574,6 +577,10 @@ function formatAxis(value: number) {
 .cal-cell.selected {
   border-color: var(--gold-light);
   box-shadow: 0 0 10px rgba(var(--gold-rgb), 0.5);
+}
+:root[data-theme='light'] .cal-cell.selected {
+  border-color: var(--text-main);
+  box-shadow: none;
 }
 .cal-legend {
   display: flex;
@@ -640,7 +647,7 @@ function formatAxis(value: number) {
   overflow: visible;
 }
 .grid {
-  stroke: rgba(255, 255, 255, 0.07);
+  stroke: rgba(var(--wash-rgb), 0.07);
   stroke-width: 1;
 }
 .axis {
@@ -666,11 +673,11 @@ function formatAxis(value: number) {
   stroke-width: 2;
 }
 .dot.selected {
-  fill: #fff4d0;
+  fill: var(--gold-pale);
   stroke: var(--gold);
 }
 .bubble {
-  fill: #1c2b50;
+  fill: var(--bg-selected);
   stroke: var(--gold);
   stroke-width: 1;
 }

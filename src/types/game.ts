@@ -5,6 +5,10 @@ export type Screen = 'setup' | 'game' | 'result' | 'stats' | 'settings'
 export type GameEndReason = 'clear' | 'gameover'
 /** How long each question may take when the time limit is on */
 export type TimeLimitLength = 'short' | 'normal' | 'long'
+/** The color theme the UI is drawn in */
+export type Theme = 'light' | 'dark'
+/** The theme chosen on the settings screen; 'auto' follows the device setting */
+export type ThemePreference = 'auto' | Theme
 /** 'endless' keeps asking until the lives run out */
 export type QuestionCount = 5 | 10 | 15 | 'endless'
 export type FixedQuestionCount = Exclude<QuestionCount, 'endless'>

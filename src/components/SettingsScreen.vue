@@ -8,6 +8,8 @@ import {
   DIFFICULTY_LABELS,
   TIME_LIMIT_LENGTHS,
   TIME_LIMIT_LABELS,
+  THEME_PREFERENCES,
+  THEME_LABELS,
 } from '../logic/labels'
 import { TIME_LIMIT_SECONDS } from '../logic/constants'
 import ConfirmDialog from './ConfirmDialog.vue'
@@ -33,6 +35,29 @@ function confirmReset() {
       <div class="settings-header">
         <button class="back-btn" aria-label="ホームに戻る" @click="store.goHome()">‹</button>
         <h1 class="settings-title">Settings</h1>
+      </div>
+
+      <!-- 表示 -->
+      <div class="rpg-card settings-section">
+        <h2 class="section-label"><span class="section-gem">◆</span> 表示</h2>
+        <div class="setting-text">
+          <div id="theme-label" class="setting-name">テーマ</div>
+          <div class="setting-desc">自動では端末のライト／ダークの設定に合わせます</div>
+        </div>
+        <div class="theme-options" role="radiogroup" aria-labelledby="theme-label">
+          <button
+            v-for="t in THEME_PREFERENCES"
+            :key="t"
+            class="opt-btn theme-btn"
+            role="radio"
+            :class="{ active: preferences.theme === t }"
+            :aria-checked="preferences.theme === t"
+            @click="preferences.theme = t"
+          >
+            <span class="theme-swatch" :class="`swatch-${t}`" aria-hidden="true" />
+            {{ THEME_LABELS[t] }}
+          </button>
+        </div>
       </div>
 
       <!-- ゲーム -->
@@ -155,7 +180,7 @@ function confirmReset() {
   cursor: pointer;
 }
 .back-btn:active {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(var(--wash-rgb), 0.05);
 }
 .settings-title {
   font-size: 1.4rem;
@@ -196,7 +221,7 @@ function confirmReset() {
   height: 30px;
   border: 1px solid var(--border);
   border-radius: 99px;
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--bg-inset-strong);
   cursor: pointer;
   padding: 0;
   transition:
@@ -217,12 +242,12 @@ function confirmReset() {
 }
 .switch.on {
   border-color: var(--gold);
-  background: linear-gradient(135deg, #3a3416, #2a2510);
+  background: linear-gradient(135deg, var(--switch-on), var(--switch-on2));
   box-shadow: 0 0 10px rgba(var(--gold-rgb), 0.3);
 }
 .switch.on .switch-knob {
   transform: translateX(22px);
-  background: var(--gold-light);
+  background: var(--switch-knob-on);
 }
 
 .reset-btn {
@@ -244,6 +269,36 @@ function confirmReset() {
   margin-top: 0.6rem;
   font-size: 0.75rem;
   color: var(--success-text);
+}
+
+/* テーマ */
+.theme-options {
+  margin-top: 0.7rem;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.4rem;
+}
+.theme-btn {
+  padding: 8px 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+/* a ring for light, a filled disc for dark, half of each for auto */
+.theme-swatch {
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+}
+.swatch-dark {
+  background: currentColor;
+}
+.swatch-auto {
+  background: linear-gradient(90deg, currentColor 50%, transparent 50%);
 }
 
 .limit-options {

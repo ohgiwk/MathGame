@@ -46,13 +46,13 @@ function dismiss() {
   z-index: 100;
   width: calc(100% - 2rem);
   max-width: 420px;
-  background: linear-gradient(135deg, #162040 0%, #1a2744 100%);
-  border: 1px solid #3b5cf0;
+  background: linear-gradient(135deg, var(--bg-raised) 0%, var(--bg-raised2) 100%);
+  border: 1px solid var(--primary);
   border-radius: 16px;
   padding: 1rem 1rem 1rem 1.1rem;
   box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.6),
-    0 0 16px rgba(59, 92, 240, 0.3);
+    0 8px 32px rgba(var(--shade-rgb), 0.6),
+    0 0 16px rgba(var(--blue-rgb), 0.3);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -74,6 +74,21 @@ function dismiss() {
   flex-shrink: 0;
 }
 
+/* light theme: a plain raised card, and a ring for the gem */
+:root[data-theme='light'] .pwa-toast {
+  box-shadow: var(--shadow-raised);
+}
+:root[data-theme='light'] .pwa-gem {
+  width: 18px;
+  height: 18px;
+  font-size: 0;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+  filter: none;
+}
+:root[data-theme='light'] .pwa-update-btn {
+  box-shadow: none;
+}
 .pwa-text {
   min-width: 0;
 }
@@ -100,8 +115,8 @@ function dismiss() {
 }
 
 .pwa-update-btn {
-  background: linear-gradient(135deg, #3b5cf0, #5b3cf0);
-  color: #fff;
+  background: linear-gradient(135deg, var(--primary), var(--primary2));
+  color: var(--text-on-accent);
   font-size: 0.82rem;
   font-weight: 700;
   border: none;
@@ -109,7 +124,7 @@ function dismiss() {
   padding: 8px 14px;
   cursor: pointer;
   white-space: nowrap;
-  box-shadow: 0 2px 10px rgba(76, 124, 255, 0.4);
+  box-shadow: 0 2px 10px rgba(var(--blue-rgb), 0.4);
   transition: transform 0.1s;
 }
 .pwa-update-btn:active {

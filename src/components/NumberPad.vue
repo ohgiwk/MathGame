@@ -131,6 +131,16 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown))
   grid-auto-rows: 1fr;
   gap: 0.6rem;
 }
+.num-pad {
+  --pad-tap-shadow: 0 0 18px rgba(var(--blue-rgb), 0.6), inset 0 1px 0 rgba(var(--sheen-rgb), 0.1);
+}
+/* light theme: flat keys with a thin border */
+:root[data-theme='light'] .num-pad {
+  --pad-tap-shadow: 0 0 0 1px var(--gem-blue);
+}
+:root[data-theme='light'] .pad-key {
+  box-shadow: var(--shadow-card);
+}
 .pad-key {
   background: var(--bg-card);
   border: 1px solid var(--border-gem);
@@ -143,7 +153,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown))
   touch-action: manipulation;
   user-select: none;
   -webkit-user-select: none;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 1px 0 var(--highlight);
   transition:
     transform 0.08s ease,
     background 0.08s ease;
@@ -151,7 +161,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown))
 .pad-key:active:not(:disabled) {
   filter: none;
   transform: scale(0.95);
-  background: #1c2b50;
+  background: var(--bg-pressed);
   border-color: var(--gem-blue);
 }
 /* Tap feedback: the key dips and flashes */
@@ -161,11 +171,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown))
 @keyframes pad-tap {
   0% {
     transform: scale(0.9);
-    background: #24376a;
+    background: var(--bg-flash);
     border-color: var(--gem-blue);
-    box-shadow:
-      0 0 18px rgba(76, 124, 255, 0.6),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    box-shadow: var(--pad-tap-shadow);
   }
   60% {
     transform: scale(1.04);

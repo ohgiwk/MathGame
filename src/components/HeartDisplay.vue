@@ -42,10 +42,13 @@ watch(
   user-select: none;
 }
 .heart-on {
-  color: #ff3355;
-  filter: drop-shadow(0 0 5px rgba(255, 50, 80, 0.7));
+  color: var(--heart);
+  filter: drop-shadow(0 0 5px rgba(var(--heart-rgb), 0.7));
 }
 .heart-off {
-  color: #2a3a55;
+  color: var(--heart-off);
+}
+:root[data-theme='light'] .heart-on {
+  filter: none;
 }
 </style>

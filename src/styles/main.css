@@ -1,17 +1,56 @@
+/* Color tokens. The dark theme (navy and gold, RPG gems) is the default; [data-theme='light']
+   below swaps in the light theme (beige paper, ink lines and geometric shapes).
+   index.html / useThemeSync set data-theme on <html>. */
 :root {
+  color-scheme: dark;
+  /* page: the flat band under the status bar, and the radial gradient behind everything */
+  --bg-status: #0e1a35;
+  --bg-status-rgb: 14, 26, 53;
+  --bg-glow: #0e1a35;
+  --bg-page: #080d1a;
+  --bg-page-edge: #050a14;
   --bg-deep: #080d1a;
   /* flat color the page fades to at its bottom edge, and the color of whatever shows below it */
   --bg-floor: #070c18;
   --bg-floor-rgb: 7, 12, 24;
-  --bg-mid: #0d1628;
   --bg-card: #111e38;
   --bg-card2: #162040;
+  /* dialogs and toasts that float above the page */
+  --bg-raised: #162040;
+  --bg-raised2: #1a2744;
+  /* selected tabs and options */
+  --bg-selected: #1c2b50;
+  --bg-selected2: #162040;
+  /* number pad keys while held, and the flash of a tap */
+  --bg-pressed: #1c2b50;
+  --bg-flash: #24376a;
+  /* sunken tracks such as the tab bar and the switch */
+  --bg-inset: rgba(0, 0, 0, 0.2);
+  --bg-inset-strong: rgba(0, 0, 0, 0.3);
+  /* translucent washes and hairlines are this color at a low alpha: light on dark, ink on light */
+  --wash-rgb: 255, 255, 255;
+  /* shadows are this color */
+  --shade-rgb: 0, 0, 0;
+  --overlay: rgba(0, 0, 0, 0.7);
   --border: #2a3f6a;
   --border-gem: #3b5080;
   --gold: #c9a836;
+  /* gold for text and thin lines: lighter than --gold here, darker in the light theme */
   --gold-light: #e0c060;
+  --gold-deep: #a07820;
+  /* a near-white gold, and the color of text on a solid gold fill */
+  --gold-pale: #fff4d0;
+  --gold-shine: #fff3c4;
+  --gold-ink: #1a1406;
   --text-main: #d6e0f5;
   --text-sub: #7a95bf;
+  --text-muted: #8090b0;
+  /* days and rows with nothing in them */
+  --text-faint: #4a5e85;
+  --text-placeholder: #3a4e70;
+  --text-on-accent: #fff;
+  /* Saturdays in the calendar */
+  --text-sat: #8fb0ff;
   --gem-blue: #4c7cff;
   --gem-indigo: #7b5cf6;
   --gem-teal: #0bbfa0;
@@ -20,12 +59,135 @@
   /* text on the translucent emerald / ruby fills used for correct / incorrect states */
   --success-text: #5ef0b5;
   --danger-text: #ff8aa5;
-  /* channel triplets of --gold, --gem-emerald and --gem-ruby, for rgba(var(--x-rgb), alpha) */
+  /* channel triplets of the colors above, for rgba(var(--x-rgb), alpha) */
   --gold-rgb: 201, 168, 54;
+  --gold-light-rgb: 224, 192, 96;
+  --blue-rgb: 76, 124, 255;
+  --indigo-rgb: 123, 92, 246;
+  --teal-rgb: 11, 191, 160;
   --emerald-rgb: 16, 200, 122;
   --ruby-rgb: 224, 48, 96;
-  --shadow-gem: 0 0 18px rgba(76, 124, 255, 0.25);
-  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.5);
+  /* the primary button and the progress bar */
+  --primary: #3b5cf0;
+  --primary2: #5b3cf0;
+  --progress-end: #9b5bf0;
+  /* the gold-framed button's plate */
+  --plate: #1e2e58;
+  --plate2: #131d3c;
+  /* the destructive button in dialogs */
+  --danger: #7b1a2a;
+  --danger2: #b02030;
+  --danger-rgb: 180, 30, 50;
+  /* the settings switch when on */
+  --switch-on: #3a3416;
+  --switch-on2: #2a2510;
+  --switch-knob-on: var(--gold-light);
+  /* the gold-framed button: its label, frame and the ornaments beside the label */
+  --plate-text: var(--gold-light);
+  --plate-frame: var(--gold);
+  --plate-gem: var(--gold);
+  --heart: #ff3355;
+  --heart-rgb: 255, 50, 80;
+  --heart-off: #2a3a55;
+  /* the gold title: its gradient, and the streak of light that sweeps across it */
+  --title-from: var(--gold-light);
+  --title-mid: var(--gold);
+  --title-to: var(--gold-deep);
+  --title-shine: rgba(255, 250, 225, 0.95);
+  --shadow-gem: 0 0 18px rgba(var(--blue-rgb), 0.25);
+  --shadow-card: 0 4px 24px rgba(var(--shade-rgb), 0.5);
+  --shadow-raised: 0 8px 40px rgba(var(--shade-rgb), 0.7);
+  /* the inner top highlight on cards and keys */
+  --highlight: rgba(255, 255, 255, 0.05);
+  /* sheens drawn over the colored buttons, the same in both themes */
+  --sheen-rgb: 255, 255, 255;
+  --gold-sheen-rgb: 255, 236, 170;
+  /* the phone-width column's outline and shadow on wide screens */
+  --column-shadow:
+    0 0 0 1px rgba(120, 150, 220, 0.18), 0 0 50px rgba(var(--shade-rgb), 0.85),
+    0 0 110px rgba(var(--shade-rgb), 0.6);
+}
+
+/* Light theme: off-white paper with ink lines; the gold becomes ochre and the gems flat inks */
+:root[data-theme='light'] {
+  color-scheme: light;
+  /* stays dark so the white status bar text of an iOS home-screen app can be read */
+  --bg-status: #262c3b;
+  --bg-status-rgb: 38, 44, 59;
+  --bg-glow: #f8f4ec;
+  --bg-page: #f5f0e6;
+  --bg-page-edge: #efe9dc;
+  --bg-deep: #fffdf8;
+  --bg-floor: #f2ede2;
+  --bg-floor-rgb: 242, 237, 226;
+  --bg-card: #fffdf8;
+  --bg-card2: #fcf9f2;
+  --bg-raised: #fffdf8;
+  --bg-raised2: #fbf7ef;
+  --bg-selected: #fdf3d8;
+  --bg-selected2: #faecc6;
+  --bg-pressed: #efe9dc;
+  --bg-flash: #e3eafb;
+  --bg-inset: rgba(38, 44, 59, 0.05);
+  --bg-inset-strong: rgba(38, 44, 59, 0.12);
+  --wash-rgb: 38, 44, 59;
+  --shade-rgb: 70, 56, 28;
+  --overlay: rgba(46, 40, 28, 0.4);
+  --border: #e2dbcc;
+  --border-gem: #c3baa6;
+  --gold: #b8820f;
+  --gold-light: #865a00;
+  --gold-deep: #5c3e00;
+  --gold-pale: #fffdf8;
+  --gold-shine: #fff7dc;
+  --gold-ink: #3a2800;
+  --text-main: #1f2738;
+  --text-sub: #575f70;
+  --text-muted: #687083;
+  --text-faint: #8e93a0;
+  --text-placeholder: #aeb2bc;
+  --text-on-accent: #fff;
+  --text-sat: #2f5bd3;
+  --gem-blue: #2f5bd3;
+  --gem-indigo: #5b45c9;
+  --gem-teal: #0a7a68;
+  --gem-ruby: #c8283f;
+  --gem-emerald: #138a55;
+  --success-text: #0d6b40;
+  --danger-text: #b01f37;
+  --gold-rgb: 184, 130, 15;
+  --gold-light-rgb: 134, 90, 0;
+  --blue-rgb: 47, 91, 211;
+  --indigo-rgb: 91, 69, 201;
+  --teal-rgb: 10, 122, 104;
+  --emerald-rgb: 19, 138, 85;
+  --ruby-rgb: 200, 40, 63;
+  --primary: #2f5bd3;
+  --primary2: #2a50bd;
+  --progress-end: #2f5bd3;
+  --plate: #2a3142;
+  --plate2: #1f2534;
+  --danger: #c8283f;
+  --danger2: #b01f37;
+  --danger-rgb: 200, 40, 63;
+  --switch-on: #d29a1e;
+  --switch-on2: #c08914;
+  --switch-knob-on: #fffdf8;
+  --plate-text: #fffdf8;
+  --plate-frame: #262c3b;
+  --plate-gem: #e0aa35;
+  --heart: #d8314b;
+  --heart-rgb: 216, 49, 75;
+  --heart-off: #d6cfbf;
+  --title-from: #262c3b;
+  --title-mid: #2a3a6b;
+  --title-to: #2f5bd3;
+  --title-shine: rgba(255, 253, 248, 0.9);
+  --shadow-gem: none;
+  --shadow-card: 0 1px 3px rgba(var(--shade-rgb), 0.06);
+  --shadow-raised: 0 12px 36px rgba(var(--shade-rgb), 0.18);
+  --highlight: rgba(255, 255, 255, 0.7);
+  --column-shadow: 0 0 0 1px rgba(var(--wash-rgb), 0.14), 0 0 40px rgba(var(--shade-rgb), 0.12);
 }
 
 * {
@@ -46,7 +208,7 @@ html {
   touch-action: pan-x pan-y;
 }
 body {
-  /* The top band is a flat #0e1a35 (same as theme-color) under the status bar, fading into the gradient.
+  /* The top band is a flat --bg-status (theme-color in the dark theme) under the status bar, fading into the gradient.
      The bottom fades to the flat --bg-floor so the page's edge cannot be told from the html behind it. */
   background:
     linear-gradient(
@@ -57,11 +219,16 @@ body {
     ),
     linear-gradient(
       to bottom,
-      #0e1a35 0,
-      #0e1a35 env(safe-area-inset-top, 0px),
-      rgba(14, 26, 53, 0) calc(env(safe-area-inset-top, 0px) + 140px)
+      var(--bg-status) 0,
+      var(--bg-status) env(safe-area-inset-top, 0px),
+      rgba(var(--bg-status-rgb), 0) calc(env(safe-area-inset-top, 0px) + 140px)
     ),
-    radial-gradient(ellipse at 30% 20%, #0e1a35 0%, #080d1a 60%, #050a14 100%);
+    radial-gradient(
+      ellipse at 30% 20%,
+      var(--bg-glow) 0%,
+      var(--bg-page) 60%,
+      var(--bg-page-edge) 100%
+    );
   /* Cinzel covers Latin letters only (see index.html); digits and Japanese use Shippori Mincho B1 */
   font-family:
     'Cinzel', 'Shippori Mincho B1', 'Hiragino Mincho ProN', 'Hiragino Kaku Gothic ProN',
@@ -101,9 +268,9 @@ body::before {
   position: fixed;
   inset: 0;
   background-image:
-    radial-gradient(circle at 15% 15%, rgba(76, 124, 255, 0.06) 0%, transparent 50%),
-    radial-gradient(circle at 85% 80%, rgba(123, 92, 246, 0.06) 0%, transparent 50%),
-    radial-gradient(circle at 50% 50%, rgba(11, 191, 160, 0.03) 0%, transparent 60%);
+    radial-gradient(circle at 15% 15%, rgba(var(--blue-rgb), 0.06) 0%, transparent 50%),
+    radial-gradient(circle at 85% 80%, rgba(var(--indigo-rgb), 0.06) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(var(--teal-rgb), 0.03) 0%, transparent 60%);
   /* fade the shimmer in below the status bar and out again at the bottom, so both edges stay flat */
   -webkit-mask-image: linear-gradient(
     to bottom,
@@ -132,10 +299,7 @@ body::before {
   #app {
     max-width: 430px;
     margin: 0 auto;
-    box-shadow:
-      0 0 0 1px rgba(120, 150, 220, 0.18),
-      0 0 50px rgba(0, 0, 0, 0.85),
-      0 0 110px rgba(0, 0, 0, 0.6);
+    box-shadow: var(--column-shadow);
     /* keeps fixed overlays (dialogs, toasts) inside the column */
     transform: translateZ(0);
   }
@@ -197,10 +361,10 @@ body::before {
 @keyframes gem-pulse {
   0%,
   100% {
-    box-shadow: 0 0 12px rgba(76, 124, 255, 0.3);
+    box-shadow: 0 0 12px rgba(var(--blue-rgb), 0.3);
   }
   50% {
-    box-shadow: 0 0 24px rgba(76, 124, 255, 0.55);
+    box-shadow: 0 0 24px rgba(var(--blue-rgb), 0.55);
   }
 }
 
@@ -244,7 +408,7 @@ body::before {
   border-radius: 16px;
   box-shadow:
     var(--shadow-card),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    inset 0 1px 0 var(--highlight);
 }
 
 /* Option buttons */
@@ -268,12 +432,12 @@ body::before {
     transform: translateY(-2px);
     border-color: var(--border-gem);
     color: var(--text-main);
-    box-shadow: 0 4px 14px rgba(76, 124, 255, 0.2);
+    box-shadow: 0 4px 14px rgba(var(--blue-rgb), 0.2);
   }
 }
 .opt-btn.active {
   border-color: var(--gold);
-  background: linear-gradient(135deg, #1c2b50, #162040);
+  background: linear-gradient(135deg, var(--bg-selected), var(--bg-selected2));
   color: var(--gold-light);
   box-shadow:
     0 0 12px rgba(var(--gold-rgb), 0.25),
@@ -287,15 +451,15 @@ body::before {
   padding: 16px;
   border: none;
   border-radius: 16px;
-  background: linear-gradient(135deg, #3b5cf0 0%, #5b3cf0 100%);
-  color: #fff;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary2) 100%);
+  color: var(--text-on-accent);
   font-size: 18px;
   font-weight: 800;
   letter-spacing: 0.05em;
   cursor: pointer;
   box-shadow:
-    0 4px 20px rgba(76, 124, 255, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    0 4px 20px rgba(var(--blue-rgb), 0.4),
+    inset 0 1px 0 rgba(var(--sheen-rgb), 0.15);
   transition: all 0.15s ease;
   position: relative;
   overflow: hidden;
@@ -308,7 +472,7 @@ body::before {
   background: linear-gradient(
     100deg,
     transparent 35%,
-    rgba(255, 255, 255, 0.28) 50%,
+    rgba(var(--sheen-rgb), 0.28) 50%,
     transparent 65%
   );
   transform: translateX(-110%);
@@ -322,16 +486,16 @@ body::before {
   transform: translateY(2px) scale(0.97);
   filter: brightness(0.9);
   box-shadow:
-    0 1px 8px rgba(76, 124, 255, 0.3),
-    inset 0 2px 6px rgba(0, 0, 0, 0.25);
+    0 1px 8px rgba(var(--blue-rgb), 0.3),
+    inset 0 2px 6px rgba(var(--shade-rgb), 0.25);
 }
 @media (hover: hover) {
   .btn-gem:hover:not(:disabled):not(:active) {
     transform: translateY(-2px);
     filter: brightness(1.12);
     box-shadow:
-      0 8px 28px rgba(76, 124, 255, 0.6),
-      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      0 8px 28px rgba(var(--blue-rgb), 0.6),
+      inset 0 1px 0 rgba(var(--sheen-rgb), 0.2);
   }
   .btn-gem:hover:not(:disabled)::after {
     transform: translateX(110%);
@@ -352,16 +516,16 @@ body::before {
   justify-content: space-between;
   font-size: 1.15rem;
   letter-spacing: 0.14em;
-  color: var(--gold-light);
-  text-shadow: 0 0 10px rgba(224, 192, 96, 0.5);
-  background: linear-gradient(180deg, #1e2e58 0%, #131d3c 100%);
-  border: 1px solid var(--gold);
+  color: var(--plate-text);
+  text-shadow: 0 0 10px rgba(var(--gold-light-rgb), 0.5);
+  background: linear-gradient(180deg, var(--plate) 0%, var(--plate2) 100%);
+  border: 1px solid var(--plate-frame);
   outline: 1px solid rgba(var(--gold-rgb), 0.35);
   outline-offset: -5px;
   box-shadow:
     0 0 18px rgba(var(--gold-rgb), 0.3),
-    0 4px 20px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 236, 170, 0.25),
+    0 4px 20px rgba(var(--shade-rgb), 0.5),
+    inset 0 1px 0 rgba(var(--gold-sheen-rgb), 0.25),
     inset 0 0 16px rgba(var(--gold-rgb), 0.1);
 }
 .btn-gold-label {
@@ -371,20 +535,20 @@ body::before {
 .btn-gold-gem {
   font-size: 0.5rem;
   letter-spacing: 0;
-  color: var(--gold);
-  filter: drop-shadow(0 0 4px rgba(224, 192, 96, 0.8));
+  color: var(--plate-gem);
+  filter: drop-shadow(0 0 4px rgba(var(--gold-light-rgb), 0.8));
 }
 .btn-gem.btn-gold:active:not(:disabled) {
   box-shadow:
     0 0 10px rgba(var(--gold-rgb), 0.25),
-    inset 0 2px 8px rgba(0, 0, 0, 0.45);
+    inset 0 2px 8px rgba(var(--shade-rgb), 0.45);
 }
 @media (hover: hover) {
   .btn-gem.btn-gold:hover:not(:disabled):not(:active) {
     box-shadow:
-      0 0 28px rgba(224, 192, 96, 0.55),
-      0 8px 24px rgba(0, 0, 0, 0.5),
-      inset 0 1px 0 rgba(255, 236, 170, 0.35),
+      0 0 28px rgba(var(--gold-light-rgb), 0.55),
+      0 8px 24px rgba(var(--shade-rgb), 0.5),
+      inset 0 1px 0 rgba(var(--gold-sheen-rgb), 0.35),
       inset 0 0 18px rgba(var(--gold-rgb), 0.18);
   }
 }
@@ -405,17 +569,17 @@ body::before {
 }
 .btn-ghost:active {
   transform: scale(0.97);
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(var(--wash-rgb), 0.08);
   border-color: var(--gem-blue);
   color: var(--text-main);
 }
 @media (hover: hover) {
   .btn-ghost:hover:not(:active) {
     transform: translateY(-1px);
-    background: rgba(255, 255, 255, 0.04);
+    background: rgba(var(--wash-rgb), 0.04);
     border-color: var(--gem-blue);
     color: var(--text-main);
-    box-shadow: 0 0 14px rgba(76, 124, 255, 0.25);
+    box-shadow: 0 0 14px rgba(var(--blue-rgb), 0.25);
   }
 }
 
@@ -456,7 +620,7 @@ body::before {
 
 /* Small framed box holding one number and its label */
 .tile {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(var(--wash-rgb), 0.03);
   border: 1px solid var(--border);
   border-radius: 12px;
   text-align: center;
@@ -477,4 +641,74 @@ body::before {
   color: var(--gem-blue);
   font-size: 0.6rem;
   filter: drop-shadow(0 0 4px var(--gem-blue));
+}
+
+/* ---- Light theme: plain paper with thin lines ----
+   The page is off-white with a faint dot grid; the gems become small rings, and glows give way
+   to thin borders and soft, low shadows. */
+:root[data-theme='light'] body {
+  background:
+    linear-gradient(
+      to top,
+      var(--bg-floor) 0,
+      var(--bg-floor) env(safe-area-inset-bottom, 0px),
+      rgba(var(--bg-floor-rgb), 0) calc(env(safe-area-inset-bottom, 0px) + 140px)
+    ),
+    /* a hard-edged ink band under the status bar (zero tall outside an installed app) */
+    linear-gradient(
+        to bottom,
+        var(--bg-status) 0,
+        var(--bg-status) env(safe-area-inset-top, 0px),
+        transparent env(safe-area-inset-top, 0px)
+      )
+      no-repeat,
+    radial-gradient(circle, rgba(var(--wash-rgb), 0.11) 1px, transparent 1.2px) 0 0 / 22px 22px,
+    var(--bg-page);
+}
+:root[data-theme='light'] body::before {
+  display: none;
+}
+
+:root[data-theme='light'] .rpg-card {
+  background: var(--bg-card);
+  box-shadow: var(--shadow-card);
+}
+:root[data-theme='light'] .opt-btn.active {
+  box-shadow: none;
+}
+@media (hover: hover) {
+  :root[data-theme='light'] .opt-btn:hover:not(.active),
+  :root[data-theme='light'] .btn-ghost:hover:not(:active) {
+    box-shadow: none;
+  }
+}
+
+:root[data-theme='light'] .btn-gem,
+:root[data-theme='light'] .btn-gem.btn-gold {
+  text-shadow: none;
+  outline: none;
+  box-shadow: 0 2px 8px rgba(var(--shade-rgb), 0.14);
+}
+:root[data-theme='light'] .btn-gem:active:not(:disabled),
+:root[data-theme='light'] .btn-gem.btn-gold:active:not(:disabled) {
+  box-shadow: 0 1px 3px rgba(var(--shade-rgb), 0.14);
+}
+@media (hover: hover) {
+  :root[data-theme='light'] .btn-gem:hover:not(:disabled):not(:active),
+  :root[data-theme='light'] .btn-gem.btn-gold:hover:not(:disabled):not(:active) {
+    filter: brightness(1.08);
+    box-shadow: 0 4px 12px rgba(var(--shade-rgb), 0.18);
+  }
+}
+
+/* gems become small rings */
+:root[data-theme='light'] .section-gem,
+:root[data-theme='light'] .btn-gold-gem {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  font-size: 0;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+  filter: none;
 }

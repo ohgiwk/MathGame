@@ -6,8 +6,10 @@ import ResultScreen from './components/ResultScreen.vue'
 import StatsScreen from './components/StatsScreen.vue'
 import SettingsScreen from './components/SettingsScreen.vue'
 import PWAPrompt from './components/PWAPrompt.vue'
+import { useThemeSync } from './composables/useThemeSync'
 
 const store = useGameStore()
+useThemeSync()
 </script>
 
 <template>

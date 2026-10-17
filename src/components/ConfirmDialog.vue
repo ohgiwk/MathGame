@@ -35,7 +35,7 @@ const emit = defineEmits<{
   position: fixed;
   inset: 0;
   z-index: 60;
-  background: rgba(0, 0, 0, 0.7);
+  background: var(--overlay);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -43,7 +43,7 @@ const emit = defineEmits<{
   padding: 1.5rem;
 }
 .dialog-box {
-  background: linear-gradient(145deg, #162040, #1a2744);
+  background: linear-gradient(145deg, var(--bg-raised), var(--bg-raised2));
   border: 1px solid var(--border-gem);
   border-radius: 20px;
   padding: 2rem 1.5rem 1.5rem;
@@ -51,8 +51,18 @@ const emit = defineEmits<{
   width: 100%;
   max-width: 320px;
   box-shadow:
-    0 8px 40px rgba(0, 0, 0, 0.7),
-    0 0 24px rgba(59, 92, 240, 0.2);
+    var(--shadow-raised),
+    0 0 24px rgba(var(--blue-rgb), 0.2);
+}
+:root[data-theme='light'] .dialog-box {
+  border-radius: 16px;
+  box-shadow: var(--shadow-raised);
+}
+:root[data-theme='light'] .dialog-icon {
+  filter: none;
+}
+:root[data-theme='light'] .dialog-confirm {
+  box-shadow: none;
 }
 .dialog-icon {
   font-size: 2.2rem;
@@ -92,15 +102,15 @@ const emit = defineEmits<{
   color: var(--text-main);
 }
 .dialog-confirm {
-  background: linear-gradient(135deg, #7b1a2a, #b02030);
+  background: linear-gradient(135deg, var(--danger), var(--danger2));
   border: none;
   border-radius: 12px;
-  color: #fff;
+  color: var(--text-on-accent);
   font-size: 0.95rem;
   font-weight: 700;
   padding: 12px;
   cursor: pointer;
-  box-shadow: 0 2px 12px rgba(180, 30, 50, 0.4);
+  box-shadow: 0 2px 12px rgba(var(--danger-rgb), 0.4);
   transition: transform 0.1s;
 }
 .dialog-confirm:active {

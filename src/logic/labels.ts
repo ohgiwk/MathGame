@@ -5,6 +5,7 @@ import type {
   QuestionCount,
   Rating,
   TimeLimitLength,
+  ThemePreference,
 } from '../types/game'
 
 export const QUESTION_COUNTS: QuestionCount[] = [5, 10, 15, 'endless']
@@ -50,6 +51,14 @@ export const TIME_LIMIT_LABELS: Record<TimeLimitLength, string> = {
   short: '短め',
   normal: '普通',
   long: '長め',
+}
+
+export const THEME_PREFERENCES: ThemePreference[] = ['auto', 'light', 'dark']
+
+export const THEME_LABELS: Record<ThemePreference, string> = {
+  auto: '自動',
+  light: 'ライト',
+  dark: 'ダーク',
 }
 
 export const RATING_LABELS: Record<Rating, string> = {

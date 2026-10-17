@@ -66,7 +66,16 @@ function handleStart() {
     </button>
     <!-- Header -->
     <div class="setup-header enter-item" style="--i: 0">
-      <div class="temple-icon">⬡</div>
+      <div class="temple-icon" aria-hidden="true">
+        <span class="emblem-gem">⬡</span>
+        <!-- light theme: the hexagon drawn as a cube (gold top, ink and paper sides) in a thin ring -->
+        <svg class="emblem-geo" viewBox="0 0 48 48">
+          <circle class="geo-ring" cx="24" cy="24" r="22.5" />
+          <path class="geo-top" d="M24 6.5 39.16 15.25 24 24 8.84 15.25Z" />
+          <path class="geo-left" d="M8.84 15.25 24 24v17.5L8.84 32.75Z" />
+          <path class="geo-right" d="M39.16 15.25 24 24v17.5l15.16-8.75Z" />
+        </svg>
+      </div>
       <h1 class="setup-title">数の王国</h1>
       <p class="setup-sub">KINGDOM OF NUMBERS</p>
     </div>
@@ -192,6 +201,38 @@ function handleStart() {
   margin-bottom: 0.4rem;
   display: block;
 }
+.emblem-geo {
+  display: none;
+  width: 1.3em;
+  height: 1.3em;
+  margin: 0 auto;
+  stroke: var(--text-main);
+  stroke-width: 1.2;
+  stroke-linejoin: round;
+}
+.geo-ring {
+  fill: none;
+  stroke-width: 0.8;
+  opacity: 0.45;
+}
+.geo-top {
+  fill: var(--gold);
+}
+.geo-left {
+  fill: var(--text-main);
+}
+.geo-right {
+  fill: var(--bg-card);
+}
+:root[data-theme='light'] .temple-icon {
+  filter: none;
+}
+:root[data-theme='light'] .emblem-gem {
+  display: none;
+}
+:root[data-theme='light'] .emblem-geo {
+  display: block;
+}
 
 /* A streak of light sweeps across the gold title from left to right */
 .setup-title {
@@ -199,9 +240,8 @@ function handleStart() {
   font-size: 2.2rem;
   font-weight: 900;
   background:
-    linear-gradient(100deg, transparent 44%, rgba(255, 250, 225, 0.95) 50%, transparent 56%)
-      no-repeat,
-    linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 60%, #a07820 100%);
+    linear-gradient(100deg, transparent 44%, var(--title-shine) 50%, transparent 56%) no-repeat,
+    linear-gradient(135deg, var(--title-from) 0%, var(--title-mid) 60%, var(--title-to) 100%);
   background-size:
     250% 100%,
     100% 100%;
@@ -215,6 +255,9 @@ function handleStart() {
   line-height: 1.2;
   filter: drop-shadow(0 0 6px rgba(var(--gold-rgb), 0.35));
   animation: title-shine 3.2s ease-in-out infinite;
+}
+:root[data-theme='light'] .setup-title {
+  filter: none;
 }
 @keyframes title-shine {
   0% {
@@ -357,7 +400,7 @@ function handleStart() {
     transparent 0%,
     transparent 55%,
     var(--gold) 75%,
-    #fff3c4 92%,
+    var(--gold-shine) 92%,
     transparent 100%
   );
   -webkit-mask:
@@ -368,10 +411,18 @@ function handleStart() {
     linear-gradient(#000 0 0) content-box,
     linear-gradient(#000 0 0);
   mask-composite: exclude;
-  filter: drop-shadow(0 0 3px rgba(224, 192, 96, 0.5));
+  filter: drop-shadow(0 0 3px rgba(var(--gold-light-rgb), 0.5));
   opacity: 0.55;
   pointer-events: none;
   animation: opt-spin 2.4s linear infinite;
+}
+/* light theme: just the gold border, without the circling light or the glow */
+:root[data-theme='light'] .opt-btn.active {
+  border-color: var(--gold);
+  animation: opt-select 0.35s ease;
+}
+:root[data-theme='light'] .opt-btn.active::before {
+  display: none;
 }
 @keyframes opt-select {
   0% {
