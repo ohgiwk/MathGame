@@ -54,13 +54,17 @@ export function recordsFor(
   return records.filter((r) => r.difficulty === difficulty && r.operation === operation)
 }
 
-export function summarizeByOperation(
+/** One row per operation: its highest-scoring game at the given difficulty, null when unplayed */
+export function bestByOperation(
   records: GameRecord[],
   difficulty: Difficulty,
-): { operation: Operation; summary: StatsSummary }[] {
+): { operation: Operation; best: GameRecord | null }[] {
   return OPERATIONS.map((operation) => ({
     operation,
-    summary: summarize(recordsFor(records, difficulty, operation)),
+    best: recordsFor(records, difficulty, operation).reduce<GameRecord | null>(
+      (best, r) => (best === null || r.score > best.score ? r : best),
+      null,
+    ),
   }))
 }
 

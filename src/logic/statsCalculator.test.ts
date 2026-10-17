@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import type { GameRecord } from '../types/game'
-import { summarize, summarizeByOperation, recordsLike } from './statsCalculator'
+import { summarize, bestByOperation, recordsLike } from './statsCalculator'
 
 function record(overrides: Partial<GameRecord> = {}): GameRecord {
   return {
@@ -58,13 +58,14 @@ describe('summarize', () => {
   })
 })
 
-describe('summarizeByOperation', () => {
-  it('returns one row per operation, counting only the given difficulty', () => {
-    const rows = summarizeByOperation(
+describe('bestByOperation', () => {
+  it('returns one row per operation with its best game at the given difficulty', () => {
+    const rows = bestByOperation(
       [
-        record(),
-        record({ operation: 'division', score: 300 }),
-        record({ difficulty: 'hard', score: 5000 }),
+        record({ id: 'a', score: 700 }),
+        record({ id: 'b', score: 900 }),
+        record({ id: 'c', operation: 'division', score: 300 }),
+        record({ id: 'd', difficulty: 'hard', score: 5000 }),
       ],
       'easy',
     )
@@ -75,8 +76,12 @@ describe('summarizeByOperation', () => {
       'division',
       'mixed',
     ])
-    expect(rows.map((r) => r.summary.playCount)).toEqual([1, 0, 0, 1, 0])
-    expect(rows[0].summary.bestScore).toBe(900)
+    expect(rows.map((r) => r.best?.id ?? null)).toEqual(['b', null, null, 'c', null])
+  })
+
+  it('keeps the newer of two games tied for best, since records come newest first', () => {
+    const rows = bestByOperation([record({ id: 'new' }), record({ id: 'old' })], 'easy')
+    expect(rows[0].best?.id).toBe('new')
   })
 })
 

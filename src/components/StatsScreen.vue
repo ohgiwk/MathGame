@@ -5,8 +5,8 @@ import { useStatsStore } from '../stores/statsStore'
 import type { Difficulty } from '../types/game'
 import type { DayKey } from '../logic/dailyStats'
 import { DIFFICULTIES, DIFFICULTY_LABELS, OPERATION_LABELS } from '../logic/labels'
-import { summarize, summarizeByOperation } from '../logic/statsCalculator'
-import { formatScore, formatTotalTime } from '../logic/format'
+import { summarize, bestByOperation } from '../logic/statsCalculator'
+import { formatScore, formatElapsedTime, formatTotalTime } from '../logic/format'
 import HistoryView from './HistoryView.vue'
 import PlayCalendar from './PlayCalendar.vue'
 import ScoreTrendChart from './ScoreTrendChart.vue'
@@ -30,9 +30,7 @@ function openDay(day: DayKey) {
 const selectedDifficulty = ref<Difficulty>(store.settings.difficulty)
 
 const total = computed(() => summarize(statsStore.records))
-const byOperation = computed(() =>
-  summarizeByOperation(statsStore.records, selectedDifficulty.value),
-)
+const byOperation = computed(() => bestByOperation(statsStore.records, selectedDifficulty.value))
 </script>
 
 <template>
@@ -118,25 +116,35 @@ const byOperation = computed(() =>
             <thead>
               <tr>
                 <th class="col-name">種類</th>
-                <th>クリア</th>
-                <th>正答率</th>
                 <th>ベスト</th>
+                <th>正答率</th>
+                <th>問題数</th>
+                <th>時間</th>
               </tr>
             </thead>
             <tbody>
-              <tr
-                v-for="row in byOperation"
-                :key="row.operation"
-                :class="{ unplayed: row.summary.playCount === 0 }"
-              >
+              <tr v-for="row in byOperation" :key="row.operation" :class="{ unplayed: !row.best }">
                 <td class="col-name">{{ OPERATION_LABELS[row.operation] }}</td>
-                <td>{{ row.summary.clearCount }}</td>
-                <td class="col-accuracy">
-                  {{ row.summary.accuracy !== null ? `${row.summary.accuracy}%` : '–' }}
-                </td>
-                <td class="col-best">
-                  {{ row.summary.bestScore !== null ? formatScore(row.summary.bestScore) : '–' }}
-                </td>
+                <template v-if="row.best">
+                  <td class="col-best">{{ formatScore(row.best.score) }}</td>
+                  <td class="col-accuracy">
+                    {{
+                      row.best.totalAnswered > 0
+                        ? `${Math.round((row.best.correctCount / row.best.totalAnswered) * 100)}%`
+                        : '–'
+                    }}
+                  </td>
+                  <!-- an endless game has no set count, so it shows how many were answered -->
+                  <td>
+                    {{
+                      row.best.questionCount === 'endless'
+                        ? `∞ ${row.best.totalAnswered}`
+                        : `${row.best.questionCount}問`
+                    }}
+                  </td>
+                  <td>{{ formatElapsedTime(row.best.elapsedSeconds) }}</td>
+                </template>
+                <template v-else><td v-for="i in 4" :key="i">–</td></template>
               </tr>
             </tbody>
           </table>
@@ -307,14 +315,16 @@ const byOperation = computed(() =>
   white-space: nowrap;
 }
 .op-table td {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 700;
   text-align: right;
-  padding: 6px 0;
+  padding: 6px 0 6px 0.5rem;
+  white-space: nowrap;
   border-top: 1px solid rgba(var(--wash-rgb), 0.06);
 }
 .op-table .col-name {
   text-align: left;
+  padding-left: 0;
   font-weight: 600;
   color: var(--text-main);
 }
