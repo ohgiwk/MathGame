@@ -11,7 +11,8 @@ const emit = defineEmits<{
   delete: []
 }>()
 
-const DIGIT_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
+// in the order of a numeric keypad: 7 8 9 on top, 1 2 3 at the bottom
+const DIGIT_KEYS = ['7', '8', '9', '4', '5', '6', '1', '2', '3']
 /** how far outside a key a touch may land and still count for it; a little more than the gap */
 const GAP_REACH_PX = 12
 
