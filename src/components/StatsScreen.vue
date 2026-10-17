@@ -200,6 +200,7 @@ const history = computed(() => statsStore.records.slice(0, HISTORY_LIMIT))
   align-items: center;
   justify-content: center;
   min-height: 40px;
+  padding: 0.6rem 0 0.9rem;
 }
 .back-btn {
   position: absolute;
