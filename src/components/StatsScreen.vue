@@ -5,8 +5,8 @@ import { useStatsStore } from '../stores/statsStore'
 import type { Difficulty } from '../types/game'
 import type { DayKey } from '../logic/dailyStats'
 import { DIFFICULTIES, DIFFICULTY_LABELS, OPERATION_LABELS } from '../logic/labels'
-import { summarize, bestByOperation } from '../logic/statsCalculator'
-import { formatScore, formatElapsedTime, formatTotalTime } from '../logic/format'
+import { bestByOperation } from '../logic/statsCalculator'
+import { formatScore, formatElapsedTime } from '../logic/format'
 import HistoryView from './HistoryView.vue'
 import PlayCalendar from './PlayCalendar.vue'
 import ScoreTrendChart from './ScoreTrendChart.vue'
@@ -29,7 +29,6 @@ function openDay(day: DayKey) {
 
 const selectedDifficulty = ref<Difficulty>(store.settings.difficulty)
 
-const total = computed(() => summarize(statsStore.records))
 const byOperation = computed(() => bestByOperation(statsStore.records, selectedDifficulty.value))
 </script>
 
@@ -72,29 +71,6 @@ const byOperation = computed(() => bestByOperation(statsStore.records, selectedD
       <template v-else>
         <PlayCalendar :records="statsStore.records" @select="openDay" />
         <ScoreTrendChart :records="statsStore.records" />
-
-        <!-- 累計 -->
-        <div class="rpg-card stats-section">
-          <h2 class="section-label">
-            <span class="section-gem">◆</span> 累計
-            <span class="section-note">
-              正解 {{ total.correctCount }} / {{ total.totalAnswered }}問 ·
-              {{ formatTotalTime(total.elapsedSeconds) }}
-            </span>
-          </h2>
-          <div class="total-row">
-            <div class="tile total-item">
-              <div class="total-label">クリア</div>
-              <div class="total-value">
-                {{ total.clearCount }}<span class="total-unit">回</span>
-              </div>
-            </div>
-            <div class="tile total-item">
-              <div class="total-label">累計スコア</div>
-              <div class="total-value">{{ formatScore(total.totalScore) }}</div>
-            </div>
-          </div>
-        </div>
 
         <!-- 難易度・種類ごと -->
         <div class="rpg-card stats-section">
@@ -245,36 +221,6 @@ const byOperation = computed(() => bestByOperation(statsStore.records, selectedD
   color: var(--gold-light);
   background: linear-gradient(135deg, var(--bg-selected), var(--bg-selected2));
   box-shadow: 0 0 10px rgba(var(--gold-rgb), 0.2);
-}
-
-/* 累計 */
-.total-row {
-  display: grid;
-  grid-template-columns: 1fr 1.6fr;
-  gap: 0.4rem;
-}
-.total-item {
-  border-radius: 10px;
-  padding: 6px 2px 7px;
-  min-width: 0;
-}
-.total-label {
-  font-size: 0.62rem;
-  color: var(--text-sub);
-  letter-spacing: 0.06em;
-}
-.total-value {
-  font-size: 1.15rem;
-  font-weight: 900;
-  color: var(--gold-light);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-.total-unit {
-  font-size: 0.65rem;
-  font-weight: 600;
-  color: var(--text-sub);
-  margin-left: 1px;
 }
 
 /* 難易度・種類ごと */

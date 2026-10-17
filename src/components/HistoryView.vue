@@ -3,7 +3,8 @@ import { ref, computed, watch } from 'vue'
 import type { GameRecord } from '../types/game'
 import { DIFFICULTY_LABELS, operationLabel, questionCountLabel } from '../logic/labels'
 import { type DayKey, dayKey, summarizeByDay } from '../logic/dailyStats'
-import { formatScore, formatElapsedTime } from '../logic/format'
+import { formatScore, formatElapsedTime, formatTotalTime } from '../logic/format'
+import { summarize } from '../logic/statsCalculator'
 
 const props = defineProps<{
   /** Newest first */
@@ -15,6 +16,8 @@ const props = defineProps<{
 /** A day with more games than this shows only the newest ones until it is opened */
 const DAY_PREVIEW = 5
 const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土']
+
+const total = computed(() => summarize(props.records))
 
 // ---- date filter: every day unless one is picked ----
 const days = computed(() => summarizeByDay(props.records))
@@ -56,23 +59,46 @@ function formatDayHeading(key: DayKey) {
 
 <template>
   <div class="history-view">
-    <!-- 日付で絞り込み -->
-    <div v-if="days.length > 0" class="day-filter">
-      <label for="day-filter" class="day-filter-label">日付</label>
-      <select id="day-filter" v-model="dayFilter" class="day-select">
-        <option :value="null">すべての日</option>
-        <option v-for="d in dayOptions" :key="d.day" :value="d.day">
-          {{ formatDayHeading(d.day) }} · {{ d.playCount }}回
-        </option>
-      </select>
-      <button
-        v-if="dayFilter"
-        class="day-clear"
-        aria-label="絞り込みを解除"
-        @click="dayFilter = null"
-      >
-        ×
-      </button>
+    <!-- 累計 -->
+    <div class="rpg-card stats-section">
+      <h2 class="section-label">
+        <span class="section-gem">◆</span> 累計
+        <span class="section-note">
+          正解 {{ total.correctCount }} / {{ total.totalAnswered }}問 ·
+          {{ formatTotalTime(total.elapsedSeconds) }}
+        </span>
+      </h2>
+      <div class="total-row">
+        <div class="tile total-item">
+          <div class="total-label">クリア</div>
+          <div class="total-value">{{ total.clearCount }}<span class="total-unit">回</span></div>
+        </div>
+        <div class="tile total-item">
+          <div class="total-label">累計スコア</div>
+          <div class="total-value">{{ formatScore(total.totalScore) }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 履歴の見出しと日付の絞り込み -->
+    <div class="history-head">
+      <h2 class="section-label history-title"><span class="section-gem">◆</span> 履歴</h2>
+      <template v-if="days.length > 0">
+        <select v-model="dayFilter" class="day-select" aria-label="日付で絞り込み">
+          <option :value="null">すべての日</option>
+          <option v-for="d in dayOptions" :key="d.day" :value="d.day">
+            {{ formatDayHeading(d.day) }} · {{ d.playCount }}回
+          </option>
+        </select>
+        <button
+          v-if="dayFilter"
+          class="day-clear"
+          aria-label="絞り込みを解除"
+          @click="dayFilter = null"
+        >
+          ×
+        </button>
+      </template>
     </div>
 
     <!-- 履歴: 日付ごと -->
@@ -157,21 +183,49 @@ function formatDayHeading(key: DayKey) {
   padding: 1rem 0;
 }
 
-/* 日付で絞り込み */
-.day-filter {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+/* 累計 */
+.total-row {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr;
+  gap: 0.4rem;
 }
-.day-filter-label {
-  flex-shrink: 0;
-  font-size: 0.75rem;
-  font-weight: 700;
+.total-item {
+  border-radius: 10px;
+  padding: 6px 2px 7px;
+  min-width: 0;
+}
+.total-label {
+  font-size: 0.62rem;
   color: var(--text-sub);
   letter-spacing: 0.06em;
 }
+.total-value {
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: var(--gold-light);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.total-unit {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-sub);
+  margin-left: 1px;
+}
+
+/* 履歴の見出しと日付の絞り込み */
+.history-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+  padding: 0 0.25rem;
+}
+.history-title {
+  margin: 0 auto 0 0;
+  min-height: 0;
+}
 .day-select {
-  flex: 1;
   min-width: 0;
   height: 34px;
   padding: 0 0.7rem;
