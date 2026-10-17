@@ -108,7 +108,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown))
     >
       {{ key }}
     </button>
-    <span></span>
+    <span class="pad-blank"></span>
     <button class="pad-key" data-key="0" :disabled="disabled">0</button>
     <button
       class="pad-key pad-delete"
@@ -122,64 +122,49 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown))
 </template>
 
 <style scoped>
+/* Edge to edge with no gaps: the keys tile the width, and 1px of the pad's background shows
+   between them as hairlines */
 .num-pad {
-  flex: 1;
-  min-height: 0;
-  max-height: 320px;
+  flex-shrink: 0;
+  height: clamp(220px, 42vh, 360px);
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-auto-rows: 1fr;
-  gap: 0.6rem;
+  gap: 1px;
+  background: var(--border);
+  border-top: 1px solid var(--border);
 }
-.num-pad {
-  --pad-tap-shadow: 0 0 18px rgba(var(--blue-rgb), 0.6), inset 0 1px 0 rgba(var(--sheen-rgb), 0.1);
-}
-/* light theme: flat keys with a thin border */
-:root[data-theme='light'] .num-pad {
-  --pad-tap-shadow: 0 0 0 1px var(--gem-blue);
-}
-:root[data-theme='light'] .pad-key {
-  box-shadow: var(--shadow-card);
+.pad-key,
+.pad-blank {
+  background: var(--bg-card);
 }
 .pad-key {
-  background: var(--bg-card);
-  border: 1px solid var(--border-gem);
-  border-radius: 14px;
+  border: none;
+  border-radius: 0;
   color: var(--text-main);
-  font-size: 1.7rem;
+  font-size: 1.8rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   cursor: pointer;
   touch-action: manipulation;
   user-select: none;
   -webkit-user-select: none;
-  box-shadow: inset 0 1px 0 var(--highlight);
-  transition:
-    transform 0.08s ease,
-    background 0.08s ease;
+  transition: background 0.08s ease;
 }
+/* keys stay in place when pressed (scaling would open gaps in the grid); they light up instead */
 .pad-key:active:not(:disabled) {
   filter: none;
-  transform: scale(0.95);
+  transform: none;
   background: var(--bg-pressed);
-  border-color: var(--gem-blue);
 }
-/* Tap feedback: the key dips and flashes */
+/* Tap feedback: the key flashes and fades back */
 .pad-key.tapped {
   animation: pad-tap 0.32s ease-out;
 }
 @keyframes pad-tap {
   0% {
-    transform: scale(0.9);
     background: var(--bg-flash);
-    border-color: var(--gem-blue);
-    box-shadow: var(--pad-tap-shadow);
-  }
-  60% {
-    transform: scale(1.04);
-  }
-  100% {
-    transform: scale(1);
+    box-shadow: inset 0 0 0 2px var(--gem-blue);
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -188,17 +173,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown))
   }
 }
 .pad-key:disabled {
-  opacity: 0.45;
+  color: var(--text-faint);
   cursor: default;
 }
 .pad-delete {
   color: var(--text-sub);
-  font-size: 1.4rem;
-}
-
-@media (max-height: 700px) {
-  .num-pad {
-    gap: 0.45rem;
-  }
+  font-size: 1.5rem;
 }
 </style>

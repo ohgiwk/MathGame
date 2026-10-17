@@ -223,7 +223,7 @@ function confirmQuit() {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .game-header {
@@ -397,16 +397,23 @@ function confirmQuit() {
 }
 
 /* Question */
+/* the card takes whatever height the header and the pad leave */
 .question-area {
-  flex-shrink: 0;
+  flex: 1;
+  min-height: 0;
   display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 1.5rem 1.2rem 1rem;
+  padding: 1.25rem 0 1rem;
 }
+/* The card spans the screen like the number pad, ruled off above and below */
 .question-card {
   width: 100%;
-  max-width: 360px;
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   /* bottom = top + badge height + badge margin, so the expression sits at the vertical center */
   padding: 2.5rem 1.5rem calc(2.5rem + 26px + 1.2rem);
@@ -518,33 +525,31 @@ function confirmQuit() {
   right: 12px;
 }
 
-/* Input */
+/* Input: the answer and the pad sit at the bottom of the screen, edge to edge */
 .input-area {
-  flex: 1;
-  min-height: 0;
-  padding: 0 1.2rem;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  max-width: 400px;
-  margin: 0 auto;
-  width: 100%;
 }
 .answer-display {
   flex-shrink: 0;
   font-size: 32px;
   line-height: 1.2;
   padding: 10px;
+  border-radius: 0;
+  border-width: 1px 0 0;
+  border-color: var(--border);
 }
+/* the state is drawn inside, so it lines up with the pad below */
 .answer-display.correct {
-  border-color: var(--gem-emerald);
   color: var(--success-text);
-  box-shadow: 0 0 0 3px rgba(var(--emerald-rgb), 0.2);
+  background: rgba(var(--emerald-rgb), 0.08);
+  box-shadow: inset 0 0 0 2px var(--gem-emerald);
 }
 .answer-display.incorrect {
-  border-color: var(--gem-ruby);
   color: var(--danger-text);
-  box-shadow: 0 0 0 3px rgba(var(--ruby-rgb), 0.2);
+  background: rgba(var(--ruby-rgb), 0.08);
+  box-shadow: inset 0 0 0 2px var(--gem-ruby);
 }
 .answer-display.empty {
   color: var(--text-placeholder);
@@ -555,7 +560,7 @@ function confirmQuit() {
 /* Compact layout for short screens */
 @media (max-height: 700px) {
   .question-area {
-    padding: 0.6rem 1.2rem;
+    padding: 0.6rem 0;
   }
   .question-card {
     padding: 1.2rem 1.5rem calc(1.2rem + 26px + 0.5rem);
@@ -565,9 +570,6 @@ function confirmQuit() {
   }
   .feedback-slot {
     bottom: 0.6rem;
-  }
-  .input-area {
-    gap: 0.5rem;
   }
 }
 </style>
