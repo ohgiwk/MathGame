@@ -55,11 +55,11 @@ export interface GameState {
   questionStartedAt: number
   /** set while the game is paused (quit dialog open) */
   pausedAt: number | null
-  /** seconds taken on each answered question, in order */
-  answerSeconds: number[]
+  /** points earned by the answers so far; only the total is kept */
+  points: number
 }
 
-/** What happened in one finished game; everything the score is computed from. */
+/** What happened in one finished game */
 export interface GameOutcome {
   difficulty: Difficulty
   operation: Operation
@@ -69,20 +69,13 @@ export interface GameOutcome {
   endReason: GameEndReason
   correctCount: number
   totalAnswered: number
-  /** to the millisecond, so small differences still count in the score */
   elapsedSeconds: number
-  /**
-   * seconds taken on each answered question, not counting feedback or pauses; the speed bonus is
-   * worked out from these. Absent on records saved before answers were timed one by one.
-   */
-  answerSeconds?: number[]
 }
 
 export interface ScoreBreakdown {
-  /** correct answers × 100 × difficulty × operation */
-  base: number
-  speedMultiplier: number
-  mistakeMultiplier: number
+  /** the points of every answer added up */
+  points: number
+  /** the clear and no-miss bonuses together; 1 without them */
   clearMultiplier: number
   score: number
 }

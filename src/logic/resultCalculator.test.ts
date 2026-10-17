@@ -16,7 +16,7 @@ function state(overrides: Partial<GameState> = {}): GameState {
     pausedRemainingMs: null,
     questionStartedAt: 0,
     pausedAt: null,
-    answerSeconds: [1.1, 1.1, 1.1, 1.1, 1.1],
+    points: 900,
     ...overrides,
   }
 }
@@ -37,11 +37,10 @@ describe('calculateResult', () => {
       correctCount: 5,
       totalAnswered: 5,
       elapsedSeconds: 10,
-      answerSeconds: [1.1, 1.1, 1.1, 1.1, 1.1],
     })
     expect(r.accuracy).toBe(100)
-    // 1.1s per answer beats the 3s par, so the speed bonus goes past 1.5
-    expect(r.score.score).toBe(1078)
+    // the points earned during the game, with the clear and no-miss bonuses
+    expect(r.score).toEqual({ points: 900, clearMultiplier: expect.closeTo(1.21), score: 1089 })
   })
 
   it('records the chosen operations only for a mixed game', () => {

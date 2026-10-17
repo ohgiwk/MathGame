@@ -6,7 +6,7 @@ import {
   OPERATIONS,
   QUESTION_COUNTS,
 } from './labels'
-import { calculateScore } from './scoreCalculator'
+import { estimateScore } from './scoreCalculator'
 
 const END_REASONS: GameEndReason[] = ['clear', 'gameover']
 
@@ -26,11 +26,6 @@ function isMixedOperations(value: unknown): boolean {
   )
 }
 
-/** Absent on records saved before answers were timed one by one */
-function isAnswerSeconds(value: unknown): boolean {
-  return value === undefined || (Array.isArray(value) && value.every(isCount))
-}
-
 function isStoredRecord(value: unknown): value is StoredRecord {
   if (typeof value !== 'object' || value === null) return false
   const r = value as Record<string, unknown>
@@ -44,17 +39,21 @@ function isStoredRecord(value: unknown): value is StoredRecord {
     (END_REASONS as unknown[]).includes(r.endReason) &&
     isCount(r.correctCount) &&
     isCount(r.totalAnswered) &&
-    isCount(r.elapsedSeconds) &&
-    isAnswerSeconds(r.answerSeconds)
+    isCount(r.elapsedSeconds)
   )
 }
 
 /** Turns whatever was read from storage into records, dropping entries that are not usable. */
 export function parseRecords(stored: unknown): GameRecord[] {
   if (!Array.isArray(stored)) return []
-  return stored.filter(isStoredRecord).map((r) => ({
-    ...r,
-    // records saved before scoring existed get their score from the same formula
-    score: isCount(r.score) ? r.score : calculateScore(r).score,
-  }))
+  return stored.filter(isStoredRecord).map((entry) => {
+    const r: StoredRecord & { answerSeconds?: unknown } = { ...entry }
+    // answer times were saved with records for a while; they are no longer kept
+    delete r.answerSeconds
+    return {
+      ...r,
+      // records saved before scoring existed get an estimate of their score
+      score: isCount(r.score) ? r.score : estimateScore(r),
+    }
+  })
 }

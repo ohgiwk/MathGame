@@ -1,5 +1,12 @@
 <script setup lang="ts">
-defineProps<{ open: boolean }>()
+defineProps<{
+  open: boolean
+  icon: string
+  title: string
+  message: string
+  cancelLabel: string
+  confirmLabel: string
+}>()
 
 const emit = defineEmits<{
   cancel: []
@@ -11,12 +18,12 @@ const emit = defineEmits<{
   <Transition name="dialog">
     <div v-if="open" class="dialog-overlay" @click.self="emit('cancel')">
       <div class="dialog-box">
-        <div class="dialog-icon">⚑</div>
-        <h2 class="dialog-title">ゲームを中断しますか？</h2>
-        <p class="dialog-sub">進行中の記録は失われます</p>
+        <div class="dialog-icon">{{ icon }}</div>
+        <h2 class="dialog-title">{{ title }}</h2>
+        <p class="dialog-sub">{{ message }}</p>
         <div class="dialog-actions">
-          <button class="dialog-cancel" @click="emit('cancel')">続ける</button>
-          <button class="dialog-confirm" @click="emit('confirm')">中断する</button>
+          <button class="dialog-cancel" @click="emit('cancel')">{{ cancelLabel }}</button>
+          <button class="dialog-confirm" @click="emit('confirm')">{{ confirmLabel }}</button>
         </div>
       </div>
     </div>

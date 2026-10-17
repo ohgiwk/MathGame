@@ -1,173 +1,110 @@
 import { describe, it, expect } from 'vitest'
-import type { GameOutcome } from '../types/game'
-import { calculateScore, calculateRating } from './scoreCalculator'
+import type { ActualOperation, GameOutcome } from '../types/game'
+import { questionPoints, calculateScore, estimateScore, calculateRating } from './scoreCalculator'
+
+const easyAddition = { difficulty: 'easy', operation: 'addition' } as const
 
 const base: GameOutcome = {
-  difficulty: 'easy',
-  operation: 'addition',
+  ...easyAddition,
   questionCount: 5,
   endReason: 'clear',
   correctCount: 5,
   totalAnswered: 5,
-  elapsedSeconds: 10,
+  elapsedSeconds: 19.5,
 }
 
-describe('calculateScore', () => {
-  it('gives a perfect clear at par the par speed, clear and perfect bonuses', () => {
-    // 3s of thinking per question (par) plus 0.9s of feedback
-    const s = calculateScore({ ...base, elapsedSeconds: 19.5 })
-    expect(s.base).toBe(500)
-    expect(s.speedMultiplier).toBeCloseTo(1.5)
-    expect(s.mistakeMultiplier).toBe(1)
-    expect(s.clearMultiplier).toBeCloseTo(1.3)
-    expect(s.score).toBe(975)
+describe('questionPoints', () => {
+  it('gives 150 for an easy addition answered at par (3s)', () => {
+    expect(questionPoints(easyAddition, 'addition', 3)).toBe(150)
   })
 
-  it('keeps raising the speed bonus past par, up to 1.75 at no thinking time', () => {
-    expect(calculateScore({ ...base, elapsedSeconds: 12 }).speedMultiplier).toBeCloseTo(1.625)
-    expect(calculateScore({ ...base, elapsedSeconds: 4.5 }).speedMultiplier).toBeCloseTo(1.75)
-    expect(calculateScore({ ...base, elapsedSeconds: 0 }).speedMultiplier).toBeCloseTo(1.75)
+  it('scales the speed bonus in a straight line, with no cap past par', () => {
+    // nothing at the slow limit (9s) and beyond, up to 1.75 at no thinking time
+    expect(questionPoints(easyAddition, 'addition', 9)).toBe(100)
+    expect(questionPoints(easyAddition, 'addition', 60)).toBe(100)
+    expect(questionPoints(easyAddition, 'addition', 6)).toBe(125)
+    expect(questionPoints(easyAddition, 'addition', 0)).toBe(175)
   })
 
-  it('gives each answer its own speed bonus and averages them', () => {
-    // par (3s) earns 1.5 and the slow limit (9s) or beyond earns nothing
-    const at = (answerSeconds: number[]) =>
-      calculateScore({ ...base, answerSeconds }).speedMultiplier
-    expect(at([3, 3, 3, 3, 3])).toBeCloseTo(1.5)
-    expect(at([3, 3, 3, 3, 9])).toBeCloseTo(1.4)
-    // one very slow answer costs only its own bonus
-    expect(at([3, 3, 3, 3, 60])).toBeCloseTo(1.4)
-    expect(at([0, 0, 0, 0, 0])).toBeCloseTo(1.75)
+  it('lets a fraction of a second change the points', () => {
+    expect(questionPoints(easyAddition, 'addition', 4)).toBeGreaterThan(
+      questionPoints(easyAddition, 'addition', 4.5),
+    )
   })
 
-  it('ignores the total time when answer times are known', () => {
-    const answerSeconds = [3, 3, 3, 3, 3]
+  it('multiplies by the difficulty and the operation', () => {
+    // hard: par 12s, slow 36s; 36s leaves only the base
+    expect(questionPoints({ difficulty: 'hard', operation: 'division' }, 'division', 36)).toBe(350)
     expect(
-      calculateScore({ ...base, elapsedSeconds: 500, answerSeconds }).speedMultiplier,
-    ).toBeCloseTo(1.5)
+      questionPoints({ difficulty: 'normal', operation: 'multiplication' }, 'multiplication', 18),
+    ).toBe(195)
   })
 
-  it('lets a fraction of a second change the score', () => {
-    const a = calculateScore({ ...base, elapsedSeconds: 31 }).score
-    const b = calculateScore({ ...base, elapsedSeconds: 31.5 }).score
-    expect(a).toBeGreaterThan(b)
+  it('values each question of a mix by its own operation plus the switching bonus', () => {
+    const allFour = { difficulty: 'easy', operation: 'mixed' } as const
+    expect(questionPoints(allFour, 'addition', 9)).toBe(130)
+    expect(questionPoints(allFour, 'division', 9)).toBe(170)
+    const two = { ...allFour, mixedOperations: ['addition', 'division'] as ActualOperation[] }
+    expect(questionPoints(two, 'division', 9)).toBe(150)
+  })
+})
+
+describe('calculateScore', () => {
+  it('adds the clear and no-miss bonuses to the points', () => {
+    const s = calculateScore(base, 1000)
+    expect(s.points).toBe(1000)
+    expect(s.clearMultiplier).toBeCloseTo(1.21)
+    expect(s.score).toBe(1210)
   })
 
-  it('drops the speed bonus once thinking time reaches three times par', () => {
-    const s = calculateScore({ ...base, elapsedSeconds: 50 })
-    expect(s.speedMultiplier).toBe(1)
-    expect(s.score).toBe(650)
+  it('gives only the clear bonus after a mistake', () => {
+    expect(calculateScore({ ...base, correctCount: 4 }, 1000).score).toBe(1100)
   })
 
-  it('scales the speed bonus linearly between par and the slow limit', () => {
-    // 6s of thinking per question plus 0.9s of feedback: halfway between par (3s) and slow (9s)
-    const s = calculateScore({ ...base, elapsedSeconds: 34.5 })
-    expect(s.speedMultiplier).toBeCloseTo(1.25)
+  it('gives no bonus on a game over or in an endless game', () => {
+    expect(calculateScore({ ...base, endReason: 'gameover' }, 1000).score).toBe(1000)
+    expect(calculateScore({ ...base, questionCount: 'endless' }, 1000).score).toBe(1000)
   })
 
-  it('applies the mistake penalty and no perfect bonus on a clear with mistakes', () => {
-    const s = calculateScore({
-      ...base,
-      difficulty: 'normal',
-      operation: 'multiplication',
-      questionCount: 10,
-      correctCount: 8,
-      totalAnswered: 10,
-      elapsedSeconds: 500,
-    })
-    expect(s.base).toBe(1560)
-    expect(s.mistakeMultiplier).toBeCloseTo(0.8)
-    expect(s.clearMultiplier).toBeCloseTo(1.2)
-    expect(s.score).toBe(1498)
+  it('keeps the score in proportion to the points, whatever the question count', () => {
+    const five = calculateScore(base, 1000).score
+    const fifteen = calculateScore({ ...base, questionCount: 15 }, 3000).score
+    expect(fifteen).toBe(five * 3)
   })
+})
 
-  it('gives no clear bonus on a game over', () => {
-    const s = calculateScore({
-      ...base,
-      difficulty: 'hard',
-      operation: 'mixed',
-      questionCount: 10,
-      endReason: 'gameover',
-      correctCount: 2,
-      totalAnswered: 5,
-      elapsedSeconds: 200,
-    })
-    expect(s.base).toBe(750)
-    expect(s.clearMultiplier).toBe(1)
-    expect(s.mistakeMultiplier).toBeCloseTo(0.7)
-    expect(s.score).toBe(525)
-  })
-
-  it('values a mix by the operations in it', () => {
-    const mix = (mixedOperations?: GameOutcome['mixedOperations']) =>
-      calculateScore({ ...base, operation: 'mixed', mixedOperations }).base
-    // all four, chosen or not, keep the full mix multiplier
-    expect(mix()).toBe(750)
-    expect(mix(['addition', 'subtraction', 'multiplication', 'division'])).toBe(750)
-    expect(mix(['addition', 'subtraction'])).toBe(575)
-    expect(mix(['multiplication', 'division'])).toBe(725)
+describe('estimateScore', () => {
+  it('takes every correct answer at the average time per answer', () => {
+    // 3s of thinking (par) plus 0.9s of feedback per answer: 5 × 150, then both bonuses
+    expect(estimateScore(base)).toBe(908)
   })
 
   it('scores zero when nothing was answered correctly', () => {
-    const s = calculateScore({ ...base, endReason: 'gameover', correctCount: 0, totalAnswered: 3 })
-    expect(s.score).toBe(0)
+    expect(
+      estimateScore({ ...base, endReason: 'gameover', correctCount: 0, totalAnswered: 3 }),
+    ).toBe(0)
   })
 })
 
 describe('calculateRating', () => {
-  const rate = (overrides: Partial<GameOutcome>) => {
-    const outcome: GameOutcome = {
-      ...base,
-      questionCount: 10,
-      correctCount: 10,
-      totalAnswered: 10,
-      ...overrides,
-    }
-    return calculateRating(outcome, calculateScore(outcome).score)
-  }
+  const tenEasy: GameOutcome = { ...base, questionCount: 10, correctCount: 10, totalAnswered: 10 }
+  // a perfect clear of ten easy additions at par: 10 × 150 × 1.21
+  const model = 1815
+  const rate = (score: number, overrides: Partial<GameOutcome> = {}) =>
+    calculateRating({ ...tenEasy, ...overrides }, score)
 
-  it('rates a fast perfect clear excellent on any settings', () => {
-    expect(rate({ elapsedSeconds: 20 })).toBe('excellent')
-    expect(
-      rate({
-        difficulty: 'hard',
-        operation: 'mixed',
-        questionCount: 15,
-        correctCount: 15,
-        totalAnswered: 15,
-        elapsedSeconds: 60,
-      }),
-    ).toBe('excellent')
+  it('rates by the share of a perfect game at par', () => {
+    expect(rate(model)).toBe('excellent')
+    expect(rate(model * 2)).toBe('excellent')
+    expect(rate(model * 0.85)).toBe('excellent')
+    expect(rate(model * 0.84)).toBe('great')
+    expect(rate(model * 0.6)).toBe('great')
+    expect(rate(model * 0.5)).toBe('good')
+    expect(rate(model * 0.3)).toBe('nice')
   })
 
-  it('rates by answer times when they are known', () => {
-    expect(rate({ answerSeconds: Array(10).fill(3) })).toBe('excellent')
-    expect(rate({ answerSeconds: Array(10).fill(9) })).toBe('great')
-  })
-
-  it('rates lower as mistakes and time add up', () => {
-    // 39s is par speed for ten easy questions: 3s of thinking plus 0.9s of feedback each
-    expect(rate({ correctCount: 9, elapsedSeconds: 39 })).toBe('great')
-    expect(rate({ elapsedSeconds: 120 })).toBe('great')
-    expect(rate({ correctCount: 8, elapsedSeconds: 39 })).toBe('good')
-    expect(rate({ correctCount: 8, elapsedSeconds: 120 })).toBe('nice')
-  })
-
-  it('gives no rating to an endless game', () => {
-    const outcome = {
-      difficulty: 'easy',
-      operation: 'addition',
-      questionCount: 'endless',
-      endReason: 'clear',
-      correctCount: 20,
-      totalAnswered: 20,
-      elapsedSeconds: 30,
-    } as const
-    expect(calculateRating(outcome, calculateScore(outcome).score)).toBeNull()
-    expect(calculateScore(outcome).clearMultiplier).toBe(1)
-  })
-
-  it('gives no rating on a game over', () => {
-    expect(rate({ endReason: 'gameover', correctCount: 7 })).toBeNull()
+  it('gives no rating on a game over or to an endless game', () => {
+    expect(rate(model, { endReason: 'gameover' })).toBeNull()
+    expect(rate(model, { questionCount: 'endless' })).toBeNull()
   })
 })

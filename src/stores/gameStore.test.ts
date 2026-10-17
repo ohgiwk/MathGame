@@ -255,16 +255,26 @@ describe('gameStore', () => {
     })
   })
 
-  describe('answer timing', () => {
-    it('times each answer from when its question is shown, not counting feedback', () => {
+  describe('points', () => {
+    it('gives each correct answer points by how fast it came, not counting feedback', () => {
       const store = useGameStore()
       store.startGame(settings)
-      vi.advanceTimersByTime(2000)
+      // easy addition at par (3s) earns 150
+      vi.advanceTimersByTime(3000)
       answer(store, true)
+      expect(store.gameState!.points).toBe(150)
       vi.advanceTimersByTime(FEEDBACK_DURATION_MS)
-      vi.advanceTimersByTime(3500)
+      // at the slow limit (9s) only the base 100 is left
+      vi.advanceTimersByTime(9000)
+      answer(store, true)
+      expect(store.gameState!.points).toBe(250)
+    })
+
+    it('gives nothing for a wrong answer', () => {
+      const store = useGameStore()
+      store.startGame(settings)
       answer(store, false)
-      expect(store.gameState!.answerSeconds).toEqual([2, 3.5])
+      expect(store.gameState!.points).toBe(0)
     })
 
     it('leaves time spent paused out of the answer', () => {
@@ -274,21 +284,37 @@ describe('gameStore', () => {
       store.pauseQuestion()
       vi.advanceTimersByTime(30_000)
       store.resumeQuestion()
-      vi.advanceTimersByTime(500)
+      vi.advanceTimersByTime(2000)
       answer(store, true)
-      expect(store.gameState!.answerSeconds).toEqual([1.5])
+      expect(store.gameState!.points).toBe(150)
     })
 
-    it('saves the answer times with the record', () => {
+    it('scores the total with the bonuses and keeps no answer details in the record', () => {
       const store = useGameStore()
       const stats = useStatsStore()
       store.startGame(settings)
       for (let i = 0; i < 5; i++) {
-        vi.advanceTimersByTime(1000 * (i + 1))
+        vi.advanceTimersByTime(9000)
         answer(store, true)
         vi.advanceTimersByTime(FEEDBACK_DURATION_MS)
       }
-      expect(stats.records[0].answerSeconds).toEqual([1, 2, 3, 4, 5])
+      // 5 × 100, then the clear and no-miss bonuses (× 1.1 × 1.1)
+      expect(store.result!.score).toMatchObject({ points: 500, score: 605 })
+      expect(stats.records[0].score).toBe(605)
+      expect(Object.keys(stats.records[0]).sort()).toEqual(
+        [
+          'correctCount',
+          'difficulty',
+          'elapsedSeconds',
+          'endReason',
+          'id',
+          'operation',
+          'playedAt',
+          'questionCount',
+          'score',
+          'totalAnswered',
+        ].sort(),
+      )
     })
   })
 })

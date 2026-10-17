@@ -11,7 +11,7 @@ const valid = {
   correctCount: 5,
   totalAnswered: 5,
   elapsedSeconds: 10,
-  score: 1078,
+  score: 1003,
 }
 
 describe('parseRecords', () => {
@@ -24,9 +24,8 @@ describe('parseRecords', () => {
     expect(parseRecords([valid])).toEqual([valid])
   })
 
-  it('keeps the answer times of a record', () => {
-    const timed = { ...valid, answerSeconds: [1.2, 0.8, 3, 2.5, 1] }
-    expect(parseRecords([timed])).toEqual([timed])
+  it('drops the answer times that records were saved with for a while', () => {
+    expect(parseRecords([{ ...valid, answerSeconds: [1.2, 0.8, 3, 2.5, 1] }])).toEqual([valid])
   })
 
   it('keeps the chosen operations of a mixed record', () => {
@@ -34,7 +33,7 @@ describe('parseRecords', () => {
     expect(parseRecords([mixed])).toEqual([mixed])
   })
 
-  it('computes the score of records saved before scoring existed', () => {
+  it('estimates the score of records saved before scoring existed', () => {
     const legacy: Record<string, unknown> = { ...valid }
     delete legacy.score
     expect(parseRecords([legacy])).toEqual([valid])
@@ -55,8 +54,6 @@ describe('parseRecords', () => {
     ['a missing id', { ...valid, id: undefined }],
     ['a non-numeric count', { ...valid, correctCount: '5' }],
     ['a NaN time', { ...valid, elapsedSeconds: NaN }],
-    ['answer times that are not numbers', { ...valid, answerSeconds: [1, 'x'] }],
-    ['answer times that are not a list', { ...valid, answerSeconds: 3 }],
   ])('drops %s', (_name, entry) => {
     expect(parseRecords([entry, valid])).toEqual([valid])
   })

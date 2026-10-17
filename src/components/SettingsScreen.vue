@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { useGameStore } from '../stores/gameStore'
+import { useStatsStore } from '../stores/statsStore'
 import { usePreferencesStore } from '../stores/preferencesStore'
 import {
   DIFFICULTIES,
@@ -8,9 +10,20 @@ import {
   TIME_LIMIT_LABELS,
 } from '../logic/labels'
 import { TIME_LIMIT_SECONDS } from '../logic/constants'
+import ConfirmDialog from './ConfirmDialog.vue'
 
 const store = useGameStore()
 const preferences = usePreferencesStore()
+const statsStore = useStatsStore()
+
+const showResetDialog = ref(false)
+const resetDone = ref(false)
+
+function confirmReset() {
+  statsStore.clearRecords()
+  showResetDialog.value = false
+  resetDone.value = true
+}
 </script>
 
 <template>
@@ -69,7 +82,39 @@ const preferences = usePreferencesStore()
           </div>
         </div>
       </div>
+
+      <!-- 記録 -->
+      <div class="rpg-card settings-section">
+        <h2 class="section-label"><span class="section-gem">◆</span> 記録</h2>
+        <div class="setting-row">
+          <div class="setting-text">
+            <div class="setting-name">記録をリセット</div>
+            <div class="setting-desc">
+              これまでのプレイ記録（{{ statsStore.records.length }}件）をすべて削除します
+            </div>
+          </div>
+          <button
+            class="reset-btn"
+            :disabled="statsStore.records.length === 0"
+            @click="showResetDialog = true"
+          >
+            リセット
+          </button>
+        </div>
+        <p v-if="resetDone" class="reset-done" role="status">記録をリセットしました</p>
+      </div>
     </div>
+
+    <ConfirmDialog
+      :open="showResetDialog"
+      icon="⚠"
+      title="記録をリセットしますか？"
+      message="すべてのプレイ記録が削除され、元に戻せません"
+      cancel-label="やめる"
+      confirm-label="リセットする"
+      @cancel="showResetDialog = false"
+      @confirm="confirmReset"
+    />
   </div>
 </template>
 
@@ -178,6 +223,27 @@ const preferences = usePreferencesStore()
 .switch.on .switch-knob {
   transform: translateX(22px);
   background: var(--gold-light);
+}
+
+.reset-btn {
+  flex-shrink: 0;
+  border: 1px solid rgba(var(--ruby-rgb), 0.6);
+  border-radius: 10px;
+  background: rgba(var(--ruby-rgb), 0.12);
+  color: var(--danger-text);
+  font-size: 0.85rem;
+  font-weight: 800;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+.reset-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.reset-done {
+  margin-top: 0.6rem;
+  font-size: 0.75rem;
+  color: var(--success-text);
 }
 
 .limit-options {

@@ -6,6 +6,7 @@ import { ACTUAL_OPERATIONS } from '../logic/labels'
 import { generateQuestions } from '../logic/questionGenerator'
 import { checkAnswer } from '../logic/answerChecker'
 import { calculateResult } from '../logic/resultCalculator'
+import { questionPoints } from '../logic/scoreCalculator'
 import { useStatsStore } from './statsStore'
 
 export const useGameStore = defineStore('game', () => {
@@ -89,7 +90,7 @@ export const useGameStore = defineStore('game', () => {
       pausedRemainingMs: null,
       questionStartedAt: Date.now(),
       pausedAt: null,
-      answerSeconds: [],
+      points: 0,
     }
     startCountdown(gameState.value, timeLimitMs)
 
@@ -113,7 +114,10 @@ export const useGameStore = defineStore('game', () => {
     clearLimitTimer()
     state.deadline = null
     state.pausedRemainingMs = null
-    state.answerSeconds.push((Date.now() - state.questionStartedAt) / 1000)
+    // the time taken is only needed for this answer's points, so it is not kept
+    const seconds = (Date.now() - state.questionStartedAt) / 1000
+    const points = correct ? questionPoints(state.settings, q.operation, seconds) : 0
+    state.points += points
 
     if (correct) {
       state.correctCount++

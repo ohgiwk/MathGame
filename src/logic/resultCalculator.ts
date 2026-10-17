@@ -18,10 +18,9 @@ export function calculateResult(
     correctCount: state.correctCount,
     totalAnswered: state.currentIndex + 1,
     elapsedSeconds: (now - state.startedAt) / 1000,
-    answerSeconds: [...state.answerSeconds],
   }
 
-  const score = calculateScore(outcome)
+  const score = calculateScore(outcome, state.points)
   return {
     outcome,
     accuracy: Math.round((outcome.correctCount / outcome.totalAnswered) * 100),

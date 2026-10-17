@@ -33,6 +33,16 @@ export const useStatsStore = defineStore('stats', () => {
     }
   }
 
+  /** Deletes every record, for good */
+  function clearRecords() {
+    records.value = []
+    try {
+      localStorage.removeItem(STORAGE_KEY)
+    } catch {
+      // storage unavailable: nothing was saved there to remove
+    }
+  }
+
   /**
    * 0 when the combination has never been played. Endless games are only compared with each
    * other, since a long endless run would otherwise outscore any fixed-length game.
@@ -44,5 +54,5 @@ export const useStatsStore = defineStore('stats', () => {
     return summarize(same).bestScore ?? 0
   }
 
-  return { records, addRecord, bestScore }
+  return { records, addRecord, clearRecords, bestScore }
 })

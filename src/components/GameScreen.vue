@@ -8,7 +8,7 @@ import ProgressBar from './ProgressBar.vue'
 import HeartDisplay from './HeartDisplay.vue'
 import FeedbackDisplay from './FeedbackDisplay.vue'
 import NumberPad from './NumberPad.vue'
-import QuitDialog from './QuitDialog.vue'
+import ConfirmDialog from './ConfirmDialog.vue'
 import CloseIcon from './CloseIcon.vue'
 
 const store = useGameStore()
@@ -204,7 +204,16 @@ function confirmQuit() {
       />
     </div>
 
-    <QuitDialog :open="showQuitDialog" @cancel="showQuitDialog = false" @confirm="confirmQuit" />
+    <ConfirmDialog
+      :open="showQuitDialog"
+      icon="⚑"
+      title="ゲームを中断しますか？"
+      message="進行中の記録は失われます"
+      cancel-label="続ける"
+      confirm-label="中断する"
+      @cancel="showQuitDialog = false"
+      @confirm="confirmQuit"
+    />
   </div>
 </template>
 
