@@ -1,21 +1,27 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useGameStore } from '../stores/gameStore'
 import { useCourseStore } from '../stores/courseStore'
 import { courseMeta } from '../logic/dailyCourses'
 import { operationLabel } from '../logic/labels'
 import { timeGreeting, courseGreetingMessage } from '../logic/greeting'
 import CloseIcon from './CloseIcon.vue'
+import CourseCalendar from './CourseCalendar.vue'
 
 /** Today's daily courses: tap one to play it; cleared ones are checked until the date changes */
 const store = useGameStore()
 const courseStore = useCourseStore()
 
-// the checks belong to the day the list is opened on
+/** today's courses, or the calendar of days with all of them cleared */
+const tab = ref<'courses' | 'calendar'>('courses')
+
+// the checks belong to the day the list is opened on; once all are cleared it opens on the calendar
 watch(
   () => store.courseDialogOpen,
   (open) => {
-    if (open) courseStore.refreshDay()
+    if (!open) return
+    courseStore.refreshDay()
+    tab.value = courseStore.allClearedToday ? 'calendar' : 'courses'
   },
   { immediate: true },
 )
@@ -46,55 +52,79 @@ function close() {
         </div>
         <h2 id="course-dialog-title" class="dialog-title">毎日コース</h2>
 
-        <div class="streaks">
-          <div class="tile streak-tile">
-            <div class="streak-label">連続クリア</div>
-            <div class="streak-value">
-              {{ courseStore.streak }}<span class="streak-unit">日</span>
-            </div>
-          </div>
-          <div class="tile streak-tile">
-            <div class="streak-label">最高記録</div>
-            <div class="streak-value best">
-              {{ courseStore.bestStreak }}<span class="streak-unit">日</span>
-            </div>
-          </div>
-        </div>
-
         <template v-if="courseStore.courses.length > 0">
-          <div class="today">
-            <span>今日のコース</span>
-            <span v-if="courseStore.allClearedToday" class="pill pill-success all-done"
-              >全クリア！</span
+          <div class="view-tabs dialog-tabs" role="tablist">
+            <button
+              role="tab"
+              class="view-tab"
+              :class="{ active: tab === 'courses' }"
+              :aria-selected="tab === 'courses'"
+              @click="tab = 'courses'"
             >
-            <span v-else class="today-count"
-              >{{ courseStore.clearedCount }} / {{ courseStore.courses.length }}</span
+              コース
+            </button>
+            <button
+              role="tab"
+              class="view-tab"
+              :class="{ active: tab === 'calendar' }"
+              :aria-selected="tab === 'calendar'"
+              @click="tab = 'calendar'"
             >
+              カレンダー
+            </button>
           </div>
-          <ul class="course-list">
-            <li v-for="course in courseStore.courses" :key="course.id">
-              <button
-                class="course-item"
-                :class="{ done: courseStore.isCleared(course.id) }"
-                @click="store.startCourse(course)"
+
+          <CourseCalendar v-if="tab === 'calendar'" :completed-days="courseStore.completedDays" />
+          <template v-else>
+            <div class="streaks">
+              <div class="tile streak-tile">
+                <div class="streak-label">連続クリア</div>
+                <div class="streak-value">
+                  {{ courseStore.streak }}<span class="streak-unit">日</span>
+                </div>
+              </div>
+              <div class="tile streak-tile">
+                <div class="streak-label">最高記録</div>
+                <div class="streak-value best">
+                  {{ courseStore.bestStreak }}<span class="streak-unit">日</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="today">
+              <span>今日のコース</span>
+              <span v-if="courseStore.allClearedToday" class="pill pill-success all-done"
+                >全クリア！</span
               >
-                <span class="check" aria-hidden="true">
-                  <svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7" /></svg>
-                </span>
-                <span class="course-text">
-                  <span class="course-name">{{
-                    operationLabel(course.operation, course.mixedOperations)
+              <span v-else class="today-count"
+                >{{ courseStore.clearedCount }} / {{ courseStore.courses.length }}</span
+              >
+            </div>
+            <ul class="course-list">
+              <li v-for="course in courseStore.courses" :key="course.id">
+                <button
+                  class="course-item"
+                  :class="{ done: courseStore.isCleared(course.id) }"
+                  @click="store.startCourse(course)"
+                >
+                  <span class="check" aria-hidden="true">
+                    <svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7" /></svg>
+                  </span>
+                  <span class="course-text">
+                    <span class="course-name">{{
+                      operationLabel(course.operation, course.mixedOperations)
+                    }}</span>
+                    <span class="course-meta">{{ courseMeta(course) }}</span>
+                  </span>
+                  <span class="sr-only">{{
+                    courseStore.isCleared(course.id) ? '（クリア済み）' : ''
                   }}</span>
-                  <span class="course-meta">{{ courseMeta(course) }}</span>
-                </span>
-                <span class="sr-only">{{
-                  courseStore.isCleared(course.id) ? '（クリア済み）' : ''
-                }}</span>
-                <span class="play" aria-hidden="true">▶</span>
-              </button>
-            </li>
-          </ul>
-          <button class="btn-ghost edit-btn" @click="store.openCourses()">コースを編集</button>
+                  <span class="play" aria-hidden="true">▶</span>
+                </button>
+              </li>
+            </ul>
+            <button class="btn-ghost edit-btn" @click="store.openCourses()">コースを編集</button>
+          </template>
         </template>
         <template v-else>
           <p class="empty">
@@ -222,6 +252,10 @@ function close() {
 .streak-unit {
   font-size: 0.8rem;
   margin-left: 2px;
+}
+
+.dialog-tabs {
+  margin-bottom: 0.9rem;
 }
 
 .today {

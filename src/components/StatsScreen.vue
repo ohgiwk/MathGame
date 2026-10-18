@@ -126,36 +126,6 @@ const byOperation = computed(() =>
 </template>
 
 <style scoped>
-/* 記録 / 履歴 */
-.view-tabs {
-  flex-shrink: 0;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4px;
-  padding: 4px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--bg-inset);
-}
-.view-tab {
-  border: 1px solid transparent;
-  border-radius: 9px;
-  background: transparent;
-  color: var(--text-sub);
-  font-size: 0.85rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  padding: 7px 0;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-.view-tab.active {
-  border-color: var(--gold);
-  color: var(--gold-light);
-  background: linear-gradient(135deg, var(--bg-selected), var(--bg-selected2));
-  box-shadow: 0 0 10px rgba(var(--gold-rgb), 0.2);
-}
-
 /* 難易度・種類ごと */
 .diff-tabs {
   margin-left: auto;

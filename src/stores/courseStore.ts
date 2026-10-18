@@ -53,6 +53,8 @@ export const useCourseStore = defineStore('courses', () => {
     )
   })
   const bestStreak = computed(() => longestStreak(progress.value.completedDays))
+  /** days on which every course was cleared, oldest first */
+  const completedDays = computed(() => progress.value.completedDays)
 
   function isCleared(id: string): boolean {
     return clearedIds.value.includes(id)
@@ -113,6 +115,7 @@ export const useCourseStore = defineStore('courses', () => {
     allClearedToday,
     streak,
     bestStreak,
+    completedDays,
     refreshDay,
     isCleared,
     nextCourse,

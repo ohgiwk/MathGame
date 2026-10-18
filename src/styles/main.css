@@ -621,6 +621,37 @@ body::before {
   color: var(--danger-text);
 }
 
+/* Two or more views of one screen, switched like a segmented control */
+.view-tabs {
+  flex-shrink: 0;
+  display: grid;
+  grid-auto-columns: 1fr;
+  grid-auto-flow: column;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-inset);
+}
+.view-tab {
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-sub);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 7px 0;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.view-tab.active {
+  border-color: var(--gold);
+  color: var(--gold-light);
+  background: linear-gradient(135deg, var(--bg-selected), var(--bg-selected2));
+  box-shadow: 0 0 10px rgba(var(--gold-rgb), 0.2);
+}
+
 /* Small framed box holding one number and its label */
 .tile {
   background: rgba(var(--wash-rgb), 0.03);
