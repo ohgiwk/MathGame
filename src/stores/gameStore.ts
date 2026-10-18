@@ -31,7 +31,12 @@ export const useGameStore = defineStore('game', () => {
    * whether home shows the daily course list; it stays open while a course is played or the
    * courses are edited, so the player comes back to it
    */
-  const courseDialogOpen = ref(false)
+  // opened on launch while today's courses are still to clear, with a greeting for the day
+  courseStore.refreshDay()
+  const opensWithCourses = courseStore.courses.length > 0 && !courseStore.allClearedToday
+  const courseDialogOpen = ref(opensWithCourses)
+  /** whether the course list greets the player; only on launch, until they pick or close */
+  const courseGreeting = ref(opensWithCourses)
 
   let feedbackTimer: ReturnType<typeof setTimeout> | null = null
   let limitTimer: ReturnType<typeof setTimeout> | null = null
@@ -85,6 +90,7 @@ export const useGameStore = defineStore('game', () => {
       courseId.value = course
       courseDialogOpen.value = course !== null
     }
+    courseGreeting.value = false
 
     clearTimers()
 
@@ -223,6 +229,7 @@ export const useGameStore = defineStore('game', () => {
   }
 
   function openCourses() {
+    courseGreeting.value = false
     screen.value = 'courses'
   }
 
@@ -233,6 +240,7 @@ export const useGameStore = defineStore('game', () => {
     result,
     courseId,
     courseDialogOpen,
+    courseGreeting,
     currentQuestion,
     startGame,
     submitAnswer,

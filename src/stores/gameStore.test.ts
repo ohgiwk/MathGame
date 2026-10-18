@@ -143,6 +143,26 @@ describe('gameStore', () => {
       expect(courses.isCleared(id)).toBe(true)
     })
 
+    it('opens with the courses and a greeting while some are still to clear', () => {
+      expect(useGameStore()).toMatchObject({ courseDialogOpen: false, courseGreeting: false })
+
+      setActivePinia(createPinia())
+      useCourseStore().addCourse(settings)
+      const store = useGameStore()
+      expect(store).toMatchObject({ courseDialogOpen: true, courseGreeting: true })
+
+      // the greeting is only for the launch; the list stays open around the course
+      store.startGame(settings, useCourseStore().courses[0].id)
+      expect(store).toMatchObject({ courseDialogOpen: true, courseGreeting: false })
+    })
+
+    it('does not open once every course is cleared today', () => {
+      const courses = useCourseStore()
+      courses.addCourse(settings)
+      courses.markCleared(courses.courses[0].id)
+      expect(useGameStore().courseDialogOpen).toBe(false)
+    })
+
     it('does not check a course off for a game set up on the home screen', () => {
       const store = useGameStore()
       const courses = useCourseStore()

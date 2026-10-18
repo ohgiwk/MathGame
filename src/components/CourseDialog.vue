@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { watch } from 'vue'
+import { computed, watch } from 'vue'
 import type { Course } from '../types/game'
 import { useGameStore } from '../stores/gameStore'
 import { useCourseStore } from '../stores/courseStore'
 import { usePreferencesStore } from '../stores/preferencesStore'
 import { courseMeta } from '../logic/dailyCourses'
 import { operationLabel } from '../logic/labels'
+import { timeGreeting, courseGreetingMessage } from '../logic/greeting'
 import CloseIcon from './CloseIcon.vue'
 
 /** Today's daily courses: tap one to play it; cleared ones are checked until the date changes */
@@ -22,8 +23,18 @@ watch(
   { immediate: true },
 )
 
+const greeting = computed(() => timeGreeting(new Date().getHours()))
+const greetingMessage = computed(() =>
+  courseGreetingMessage(
+    courseStore.streak,
+    courseStore.courses.length - courseStore.clearedCount,
+    courseStore.courses.length,
+  ),
+)
+
 function close() {
   store.courseDialogOpen = false
+  store.courseGreeting = false
 }
 
 function play(course: Course) {
@@ -45,6 +56,10 @@ function play(course: Course) {
     <div v-if="store.courseDialogOpen" class="dialog-overlay" @click.self="close">
       <div class="dialog-box" role="dialog" aria-labelledby="course-dialog-title">
         <button class="close-btn" aria-label="閉じる" @click="close"><CloseIcon /></button>
+        <div v-if="store.courseGreeting" class="greeting">
+          <p class="greeting-hello">{{ greeting }}</p>
+          <p class="greeting-message">{{ greetingMessage }}</p>
+        </div>
         <h2 id="course-dialog-title" class="dialog-title">毎日コース</h2>
 
         <div class="streaks">
@@ -165,6 +180,35 @@ function play(course: Course) {
   color: var(--gold-light);
   text-align: center;
   margin: 0.2rem 0 1rem;
+}
+
+.greeting {
+  text-align: center;
+  margin: 0.2rem 2rem 0.9rem;
+  animation: greeting-in 0.5s ease-out 0.1s backwards;
+}
+.greeting-hello {
+  font-size: 1.35rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  color: var(--text-main);
+}
+.greeting-message {
+  margin-top: 0.25rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-sub);
+}
+@keyframes greeting-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .greeting {
+    animation: none;
+  }
 }
 
 .streaks {
