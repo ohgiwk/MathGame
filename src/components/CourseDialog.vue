@@ -42,8 +42,14 @@ function close() {
 </script>
 
 <template>
-  <Transition name="dialog">
-    <div v-if="store.courseDialogOpen" class="dialog-overlay" @click.self="close">
+  <!-- timed by the transitions alone, not by the launch animation still set on a closing dialog -->
+  <Transition name="dialog" type="transition">
+    <div
+      v-if="store.courseDialogOpen"
+      class="dialog-overlay"
+      :class="{ launch: store.courseGreeting }"
+      @click.self="close"
+    >
       <div class="dialog-box" role="dialog" aria-labelledby="course-dialog-title">
         <button class="close-btn" aria-label="閉じる" @click="close"><CloseIcon /></button>
         <div v-if="store.courseGreeting" class="greeting">
@@ -199,7 +205,7 @@ function close() {
 .greeting {
   text-align: center;
   margin: 0.2rem 2rem 0.9rem;
-  animation: greeting-in 0.5s ease-out 0.1s backwards;
+  animation: greeting-in 0.5s ease-out 0.95s backwards;
 }
 .greeting-hello {
   font-size: 1.35rem;
@@ -221,6 +227,32 @@ function close() {
 }
 @media (prefers-reduced-motion: reduce) {
   .greeting {
+    animation: none;
+  }
+}
+
+/* On launch: once home has started to appear, the backdrop fades in, the box rises with a little
+   bounce, and then the greeting follows */
+.dialog-overlay.launch {
+  animation: launch-fade 0.4s ease 0.45s backwards;
+}
+.launch .dialog-box {
+  animation: launch-rise 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.55s backwards;
+}
+@keyframes launch-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes launch-rise {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.92);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dialog-overlay.launch,
+  .launch .dialog-box {
     animation: none;
   }
 }
