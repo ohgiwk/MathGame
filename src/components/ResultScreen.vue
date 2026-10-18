@@ -258,6 +258,15 @@ onBeforeUnmount(cancelAutoSlide)
             <span class="btn-gold-gem">◆</span>
           </button>
         </div>
+        <button
+          v-else-if="courseCleared && courseStore.allClearedToday"
+          class="btn-gem btn-gold"
+          @click="store.goHome()"
+        >
+          <span class="btn-gold-gem">◆</span>
+          <span class="btn-gold-label">COMPLETE</span>
+          <span class="btn-gold-gem">◆</span>
+        </button>
         <button v-else class="btn-gem btn-gold" @click="store.startGame()">
           <span class="btn-gold-gem">◆</span>
           <span class="btn-gold-label">TRY AGAIN</span>
@@ -614,7 +623,7 @@ onBeforeUnmount(cancelAutoSlide)
   font-weight: 800;
   color: var(--text-main);
 }
-/* home and records as icon buttons, side by side under NEXT or TRY AGAIN */
+/* home and records as icon buttons, side by side under the main button */
 .result-links {
   display: grid;
   grid-template-columns: 1fr 1fr;
