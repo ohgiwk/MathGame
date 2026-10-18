@@ -17,6 +17,7 @@ import {
   operationLabel,
   questionCountLabel,
 } from '../logic/labels'
+import { courseLabel } from '../logic/dailyCourses'
 import { useCountUp } from '../composables/useCountUp'
 
 const store = useGameStore()
@@ -30,6 +31,11 @@ const isGameOver = computed(() => outcome.value?.endReason === 'gameover' && !is
 /** a daily course was played and cleared; it is checked off in the course list */
 const courseCleared = computed(
   () => store.courseId !== null && outcome.value?.endReason === 'clear',
+)
+
+/** after a cleared course, the next one still to clear today, played with NEXT */
+const nextCourse = computed(() =>
+  courseCleared.value && store.courseId !== null ? courseStore.nextCourse(store.courseId) : null,
 )
 
 // The result is fixed while this screen is shown, so the numbers count up once on entry.
@@ -241,7 +247,18 @@ onBeforeUnmount(cancelAutoSlide)
 
       <!-- Buttons -->
       <div class="result-actions">
-        <button class="btn-gem btn-gold" @click="store.startGame()">
+        <div v-if="nextCourse" class="next-course">
+          <div class="rpg-card next-card">
+            <span class="next-heading">次のコース</span>
+            <span class="next-name">{{ courseLabel(nextCourse) }}</span>
+          </div>
+          <button class="btn-gem btn-gold" @click="store.startCourse(nextCourse)">
+            <span class="btn-gold-gem">◆</span>
+            <span class="btn-gold-label">NEXT</span>
+            <span class="btn-gold-gem">◆</span>
+          </button>
+        </div>
+        <button v-else class="btn-gem btn-gold" @click="store.startGame()">
           <span class="btn-gold-gem">◆</span>
           <span class="btn-gold-label">TRY AGAIN</span>
           <span class="btn-gold-gem">◆</span>
@@ -574,7 +591,30 @@ onBeforeUnmount(cancelAutoSlide)
   flex-direction: column;
   gap: 0.75rem;
 }
-/* home and records as icon buttons, side by side under TRY AGAIN */
+.next-course {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+.next-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.6rem 1rem;
+}
+.next-heading {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-sub);
+  letter-spacing: 0.1em;
+}
+.next-name {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
+/* home and records as icon buttons, side by side under NEXT or TRY AGAIN */
 .result-links {
   display: grid;
   grid-template-columns: 1fr 1fr;

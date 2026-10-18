@@ -4,6 +4,7 @@ import { FEEDBACK_DURATION_MS, MAX_LIVES, TIME_LIMIT_SECONDS } from '../logic/co
 import { useGameStore } from './gameStore'
 import { useStatsStore } from './statsStore'
 import { useCourseStore } from './courseStore'
+import { usePreferencesStore } from './preferencesStore'
 
 const settings = { questionCount: 10, difficulty: 'easy', operation: 'addition' } as const
 
@@ -161,6 +162,23 @@ describe('gameStore', () => {
       courses.addCourse(settings)
       courses.markCleared(courses.courses[0].id)
       expect(useGameStore().courseDialogOpen).toBe(false)
+    })
+
+    it('starts a course with its settings and the chosen time limit', () => {
+      const store = useGameStore()
+      const courses = useCourseStore()
+      usePreferencesStore().timeLimit = true
+      courses.addCourse({ difficulty: 'hard', operation: 'division', questionCount: 20 })
+      const course = courses.courses[0]
+
+      store.startCourse(course)
+      expect(store.courseId).toBe(course.id)
+      expect(store.gameState!.settings).toMatchObject({
+        difficulty: 'hard',
+        operation: 'division',
+        questionCount: 20,
+        timeLimit: 'normal',
+      })
     })
 
     it('does not check a course off for a game set up on the home screen', () => {

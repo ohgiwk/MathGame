@@ -1,6 +1,13 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
-import type { Screen, GameSettings, GameState, GameResult, GameEndReason } from '../types/game'
+import type {
+  Screen,
+  GameSettings,
+  GameState,
+  GameResult,
+  GameEndReason,
+  Course,
+} from '../types/game'
 import { MAX_LIVES, FEEDBACK_DURATION_MS, TIME_LIMIT_SECONDS } from '../logic/constants'
 import { ACTUAL_OPERATIONS } from '../logic/labels'
 import { generateQuestions } from '../logic/questionGenerator'
@@ -9,10 +16,12 @@ import { calculateResult } from '../logic/resultCalculator'
 import { questionPoints } from '../logic/scoreCalculator'
 import { useStatsStore } from './statsStore'
 import { useCourseStore } from './courseStore'
+import { usePreferencesStore } from './preferencesStore'
 
 export const useGameStore = defineStore('game', () => {
   const statsStore = useStatsStore()
   const courseStore = useCourseStore()
+  const preferences = usePreferencesStore()
 
   const screen = ref<Screen>('setup')
 
@@ -118,6 +127,20 @@ export const useGameStore = defineStore('game', () => {
 
     result.value = null
     screen.value = 'game'
+  }
+
+  /** Starts a daily course, with the time limit chosen in the settings */
+  function startCourse(course: Course) {
+    startGame(
+      {
+        questionCount: course.questionCount,
+        difficulty: course.difficulty,
+        operation: course.operation,
+        mixedOperations: course.mixedOperations,
+        timeLimit: preferences.timeLimit ? preferences.timeLimitLength : undefined,
+      },
+      course.id,
+    )
   }
 
   function submitAnswer(input: string) {
@@ -243,6 +266,7 @@ export const useGameStore = defineStore('game', () => {
     courseGreeting,
     currentQuestion,
     startGame,
+    startCourse,
     submitAnswer,
     pauseQuestion,
     resumeQuestion,

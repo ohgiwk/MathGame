@@ -107,6 +107,20 @@ export function markCourseCleared(
   return syncCompletion({ ...progress, day, clearedIds }, courses, day)
 }
 
+/**
+ * The course to play after `currentId`: the first one not yet cleared, looking down the list from
+ * just after it and wrapping around to the top. Null once every other course is cleared.
+ */
+export function nextCourse(
+  courses: readonly Course[],
+  clearedIds: readonly string[],
+  currentId: string,
+): Course | null {
+  const start = courses.findIndex((c) => c.id === currentId) + 1
+  const ordered = [...courses.slice(start), ...courses.slice(0, start)]
+  return ordered.find((c) => c.id !== currentId && !clearedIds.includes(c.id)) ?? null
+}
+
 function nextDay(key: DayKey): DayKey {
   const { year, month, date } = parseDayKey(key)
   return dayKey(new Date(year, month, date + 1).getTime())

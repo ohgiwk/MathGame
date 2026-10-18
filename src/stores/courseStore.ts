@@ -8,6 +8,7 @@ import {
   allCleared,
   markCourseCleared,
   syncCompletion,
+  nextCourse as nextCourseIn,
   longestStreak,
   type CourseProgress,
 } from '../logic/dailyCourses'
@@ -55,6 +56,11 @@ export const useCourseStore = defineStore('courses', () => {
 
   function isCleared(id: string): boolean {
     return clearedIds.value.includes(id)
+  }
+
+  /** The uncleared course to play after `id`, in list order */
+  function nextCourse(id: string): Course | null {
+    return nextCourseIn(courses.value, clearedIds.value, id)
   }
 
   function saveCourses() {
@@ -109,6 +115,7 @@ export const useCourseStore = defineStore('courses', () => {
     bestStreak,
     refreshDay,
     isCleared,
+    nextCourse,
     addCourse,
     updateCourse,
     removeCourse,

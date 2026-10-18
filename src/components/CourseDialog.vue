@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue'
-import type { Course } from '../types/game'
 import { useGameStore } from '../stores/gameStore'
 import { useCourseStore } from '../stores/courseStore'
-import { usePreferencesStore } from '../stores/preferencesStore'
 import { courseMeta } from '../logic/dailyCourses'
 import { operationLabel } from '../logic/labels'
 import { timeGreeting, courseGreetingMessage } from '../logic/greeting'
@@ -12,7 +10,6 @@ import CloseIcon from './CloseIcon.vue'
 /** Today's daily courses: tap one to play it; cleared ones are checked until the date changes */
 const store = useGameStore()
 const courseStore = useCourseStore()
-const preferences = usePreferencesStore()
 
 // the checks belong to the day the list is opened on
 watch(
@@ -35,19 +32,6 @@ const greetingMessage = computed(() =>
 function close() {
   store.courseDialogOpen = false
   store.courseGreeting = false
-}
-
-function play(course: Course) {
-  store.startGame(
-    {
-      questionCount: course.questionCount,
-      difficulty: course.difficulty,
-      operation: course.operation,
-      mixedOperations: course.mixedOperations,
-      timeLimit: preferences.timeLimit ? preferences.timeLimitLength : undefined,
-    },
-    course.id,
-  )
 }
 </script>
 
@@ -92,7 +76,7 @@ function play(course: Course) {
               <button
                 class="course-item"
                 :class="{ done: courseStore.isCleared(course.id) }"
-                @click="play(course)"
+                @click="store.startCourse(course)"
               >
                 <span class="check" aria-hidden="true">
                   <svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7" /></svg>

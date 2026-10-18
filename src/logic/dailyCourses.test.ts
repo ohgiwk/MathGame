@@ -8,6 +8,7 @@ import {
   allCleared,
   markCourseCleared,
   syncCompletion,
+  nextCourse,
   longestStreak,
   courseLabel,
   courseMeta,
@@ -112,6 +113,21 @@ describe('syncCompletion', () => {
 
   it('does not complete a day with no courses', () => {
     expect(syncCompletion(EMPTY_PROGRESS, [], day)).toEqual(EMPTY_PROGRESS)
+  })
+})
+
+describe('nextCourse', () => {
+  const c = course('c')
+
+  it('takes the first uncleared course below the current one, wrapping to the top', () => {
+    expect(nextCourse([a, b, c], [], 'a')).toBe(b)
+    expect(nextCourse([a, b, c], ['b'], 'a')).toBe(c)
+    expect(nextCourse([a, b, c], ['a'], 'c')).toBe(b)
+  })
+
+  it('is null once every other course is cleared', () => {
+    expect(nextCourse([a, b], ['b'], 'a')).toBeNull()
+    expect(nextCourse([a], [], 'a')).toBeNull()
   })
 })
 
