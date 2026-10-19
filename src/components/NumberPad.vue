@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 
 const props = defineProps<{
   disabled: boolean
@@ -15,6 +15,9 @@ const emit = defineEmits<{
 const DIGIT_KEYS = ['7', '8', '9', '4', '5', '6', '1', '2', '3']
 /** how far outside a key a touch may land and still count for it; a little more than the gap */
 const GAP_REACH_PX = 12
+/** while tracing, a key joins the stroke only once the finger is this far inside it (each side),
+    so a path that cuts across a corner does not pick up the keys beside it */
+const TRACE_INSET_RATIO = 0.2
 
 const padRef = ref<HTMLElement | null>(null)
 
@@ -58,14 +61,99 @@ function keyAt(e: PointerEvent): HTMLButtonElement | null {
 // second finger lands before the first lifts, or when the press ends outside the shrunken key.
 let pointerPressedKey: HTMLButtonElement | null = null
 
+// Tracing: like a pattern lock, sliding from a digit onto other digits without lifting enters
+// each of them in turn. The same digit twice in a row still needs a second tap.
+interface Point {
+  x: number
+  y: number
+}
+let tracePointerId: number | null = null
+let traceLastKey: HTMLButtonElement | null = null
+const traceNodes = ref<Point[]>([])
+const traceFinger = ref<Point | null>(null)
+/** the whole path, ending at the finger once it has moved */
+const tracePoints = computed(() => [
+  ...traceNodes.value,
+  ...(traceFinger.value ? [traceFinger.value] : []),
+])
+
+function keyCenter(key: HTMLElement): Point {
+  const pad = padRef.value!.getBoundingClientRect()
+  const r = key.getBoundingClientRect()
+  return { x: r.left + r.width / 2 - pad.left, y: r.top + r.height / 2 - pad.top }
+}
+
+function digitKeyInsideAt(e: PointerEvent): HTMLButtonElement | null {
+  if (!padRef.value) return null
+  for (const key of padRef.value.querySelectorAll<HTMLButtonElement>('.pad-key:not(.pad-delete)')) {
+    const r = key.getBoundingClientRect()
+    const insetX = r.width * TRACE_INSET_RATIO
+    const insetY = r.height * TRACE_INSET_RATIO
+    if (
+      e.clientX >= r.left + insetX &&
+      e.clientX <= r.right - insetX &&
+      e.clientY >= r.top + insetY &&
+      e.clientY <= r.bottom - insetY
+    ) {
+      return key
+    }
+  }
+  return null
+}
+
+function startTrace(e: PointerEvent, key: HTMLButtonElement) {
+  tracePointerId = e.pointerId
+  traceLastKey = key
+  traceNodes.value = [keyCenter(key)]
+  traceFinger.value = null
+  // keep the moves coming to the pad wherever the finger goes; fails if the pointer is already gone
+  try {
+    padRef.value?.setPointerCapture(e.pointerId)
+  } catch {
+    endTrace()
+  }
+}
+
+function endTrace() {
+  tracePointerId = null
+  traceLastKey = null
+  traceNodes.value = []
+  traceFinger.value = null
+}
+
 function handlePointerDown(e: PointerEvent) {
   pointerPressedKey = null
+  endTrace()
   if (e.button !== 0) return
   const key = keyAt(e)
   if (!key || key.disabled) return
   pointerPressedKey = key
   press(key)
+  if (key.dataset.key !== 'delete' && !props.disabled) startTrace(e, key)
 }
+
+function handlePointerMove(e: PointerEvent) {
+  if (e.pointerId !== tracePointerId || !padRef.value) return
+  const pad = padRef.value.getBoundingClientRect()
+  traceFinger.value = { x: e.clientX - pad.left, y: e.clientY - pad.top }
+  const key = digitKeyInsideAt(e)
+  if (!key || key === traceLastKey || key.disabled) return
+  traceLastKey = key
+  traceNodes.value = [...traceNodes.value, keyCenter(key)]
+  press(key)
+}
+
+function handlePointerEnd(e: PointerEvent) {
+  if (e.pointerId === tracePointerId) endTrace()
+}
+
+// The answer is checked as soon as its last digit goes in, which disables the pad: the stroke stops there
+watch(
+  () => props.disabled,
+  (disabled) => {
+    if (disabled) endTrace()
+  },
+)
 
 // Clicks that come without a pointer press (Enter/Space on a focused key, assistive tech) still work
 function handleClick(e: MouseEvent) {
@@ -96,6 +184,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown))
     ref="padRef"
     class="num-pad"
     @pointerdown="handlePointerDown"
+    @pointermove="handlePointerMove"
+    @pointerup="handlePointerEnd"
+    @pointercancel="handlePointerEnd"
     @click="handleClick"
     @animationend="handleAnimationEnd"
   >
@@ -118,6 +209,26 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown))
     >
       ⌫
     </button>
+    <svg v-if="traceNodes.length" class="trace" aria-hidden="true">
+      <defs>
+        <!-- sized to the pad, not the path: a straight line's box has no height and would blur away -->
+        <filter
+          id="trace-blur"
+          filterUnits="userSpaceOnUse"
+          x="-10%"
+          y="-10%"
+          width="120%"
+          height="120%"
+        >
+          <feGaussianBlur stdDeviation="5" />
+        </filter>
+      </defs>
+      <!-- Lit like neon: a blurred halo, the colored line, and a white-hot core -->
+      <g v-for="layer in ['halo', 'line', 'core']" :key="layer" :class="`trace-${layer}`">
+        <polyline :points="tracePoints.map((p) => `${p.x},${p.y}`).join(' ')" />
+        <circle v-for="(p, i) in traceNodes" :key="i" :cx="p.x" :cy="p.y" />
+      </g>
+    </svg>
   </div>
 </template>
 
@@ -133,6 +244,94 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown))
   gap: 1px;
   background: var(--border);
   border-top: 1px solid var(--border);
+  position: relative;
+  /* the browser must not take a slide over the pad as a scroll, or tracing would be cut off */
+  touch-action: none;
+}
+/* The traced path: lines from key to key, and on to the finger */
+.trace {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+  --trace-color: var(--gold-light);
+}
+/* the light theme's --gold-light is a dark ink brown; its spark gold reads as a bright stroke */
+:root[data-theme='light'] .trace {
+  --trace-color: var(--gold-spark);
+}
+.trace polyline {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.trace-halo,
+.trace-line {
+  stroke: var(--trace-color);
+  fill: var(--trace-color);
+}
+.trace-halo {
+  filter: url(#trace-blur);
+  stroke-width: 16;
+  animation: trace-flicker 3s ease-in-out infinite;
+}
+.trace-line {
+  stroke-width: 6;
+}
+.trace circle {
+  stroke: none;
+}
+.trace-halo circle {
+  r: 13px;
+  animation: trace-flicker-dot 3s ease-in-out infinite;
+}
+.trace-line circle {
+  r: 7px;
+}
+.trace-core circle {
+  r: 3px;
+}
+.trace-core {
+  stroke: #fff;
+  fill: #fff;
+  stroke-width: 2;
+  opacity: 0.85;
+}
+/* The halo slowly swells and settles, like a calm flame */
+@keyframes trace-flicker {
+  0%,
+  100% {
+    stroke-width: 14;
+    opacity: 0.85;
+  }
+  40% {
+    stroke-width: 20;
+    opacity: 1;
+  }
+  70% {
+    stroke-width: 16;
+    opacity: 0.9;
+  }
+}
+@keyframes trace-flicker-dot {
+  0%,
+  100% {
+    r: 12px;
+  }
+  40% {
+    r: 15px;
+  }
+  70% {
+    r: 13px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .trace-halo,
+  .trace-halo circle {
+    animation: none;
+  }
 }
 .pad-key,
 .pad-blank {
@@ -146,7 +345,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown))
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   cursor: pointer;
-  touch-action: manipulation;
+  touch-action: none;
   user-select: none;
   -webkit-user-select: none;
   transition: background 0.08s ease;
