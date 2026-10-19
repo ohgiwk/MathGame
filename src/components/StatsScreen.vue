@@ -36,8 +36,9 @@ function openDay(day: DayKey) {
 const selectedCount = ref<QuestionCount>(store.settings.questionCount)
 
 const byOperation = computed(() =>
-  bestByOperation(statsStore.records, selectedCount.value).map(({ operation, best }) => ({
+  bestByOperation(statsStore.records, selectedCount.value).map(({ operation, games, best }) => ({
     operation,
+    games,
     best,
     accuracy: best ? accuracyPercent(best.correctCount, best.totalAnswered) : null,
   })),
@@ -75,9 +76,9 @@ const byOperation = computed(() =>
 
     <template v-else>
       <PlayCalendar :records="statsStore.records" @select="openDay" />
-      <ScoreTrendChart :records="statsStore.records" />
 
-      <!-- ベストスコア: each operation's best game of the chosen length, at any difficulty -->
+      <!-- ベストスコア: each operation's best game of the chosen length, at any difficulty, over
+           a chart of its daily bests -->
       <div class="rpg-card stats-section">
         <h2 class="section-label"><span class="section-gem">◆</span> ベストスコア</h2>
         <div class="count-tabs" role="tablist" aria-label="問題数">
@@ -120,6 +121,7 @@ const byOperation = computed(() =>
               {{ formatElapsedTime(row.best.elapsedSeconds) }}
             </span>
             <span v-else class="best-detail">まだ記録がありません</span>
+            <ScoreTrendChart v-if="row.best" class="best-chart" :records="row.games" />
           </li>
         </ul>
       </div>
@@ -151,7 +153,8 @@ const byOperation = computed(() =>
   grid-template-columns: 1fr auto;
   grid-template-areas:
     'name score'
-    'detail score';
+    'detail score'
+    'chart chart';
   align-items: center;
   column-gap: 0.8rem;
   padding: 8px 0;
@@ -165,6 +168,10 @@ const byOperation = computed(() =>
   font-size: 0.9rem;
   font-weight: 800;
   color: var(--text-main);
+}
+.best-chart {
+  grid-area: chart;
+  margin-top: 0.4rem;
 }
 /* a flex row, so the separators alone set the spacing, whatever whitespace the template has */
 .best-detail {

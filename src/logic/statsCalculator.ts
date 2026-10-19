@@ -66,22 +66,26 @@ export function recordsFor(
 }
 
 /**
- * One row per operation: its highest-scoring game of the given length, at any difficulty;
- * null when unplayed
+ * One row per operation: its games of the given length at any difficulty, in the order given,
+ * and the highest-scoring of them (null when unplayed)
  */
 export function bestByOperation(
   records: GameRecord[],
   questionCount: RecordedQuestionCount,
-): { operation: Operation; best: GameRecord | null }[] {
-  return OPERATIONS.map((operation) => ({
-    operation,
-    best: records
-      .filter((r) => r.questionCount === questionCount && r.operation === operation)
-      .reduce<GameRecord | null>(
+): { operation: Operation; games: GameRecord[]; best: GameRecord | null }[] {
+  return OPERATIONS.map((operation) => {
+    const games = records.filter(
+      (r) => r.questionCount === questionCount && r.operation === operation,
+    )
+    return {
+      operation,
+      games,
+      best: games.reduce<GameRecord | null>(
         (best, r) => (best === null || r.score > best.score ? r : best),
         null,
       ),
-  }))
+    }
+  })
 }
 
 /**

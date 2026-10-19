@@ -86,6 +86,8 @@ describe('bestByOperation', () => {
       'mixed',
     ])
     expect(rows.map((r) => r.best?.id ?? null)).toEqual(['b', null, null, 'c', null])
+    expect(rows[0].games.map((r) => r.id)).toEqual(['a', 'b'])
+    expect(rows[1].games).toEqual([])
   })
 
   it('compares games of every difficulty', () => {
