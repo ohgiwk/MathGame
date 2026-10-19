@@ -198,9 +198,12 @@
   margin: 0;
   padding: 0;
 }
+/* The page, and every fixed layer below, is as tall as the visible area that main.ts measures into
+   --app-height. iOS home screen apps can make the layout viewport (100%, inset: 0) end above the
+   bottom of the screen, which used to cut the app off there and leave a bare strip below it. */
 html,
 body {
-  height: 100%;
+  height: var(--app-height, 100%);
   overflow: hidden;
   overscroll-behavior: none;
 }
@@ -269,7 +272,8 @@ button {
 body::before {
   content: '';
   position: fixed;
-  inset: 0;
+  /* down to the bottom of the visible area, past where the layout viewport may end (see html) */
+  inset: 0 0 calc(100% - var(--app-height, 100%));
   background-image:
     radial-gradient(circle at 15% 15%, rgba(var(--blue-rgb), 0.06) 0%, transparent 50%),
     radial-gradient(circle at 85% 80%, rgba(var(--indigo-rgb), 0.06) 0%, transparent 50%),

@@ -40,7 +40,8 @@ function dismiss() {
 <style scoped>
 .pwa-toast {
   position: fixed;
-  bottom: calc(1.5rem + env(safe-area-inset-bottom));
+  /* measured from the bottom of the visible area, which may lie below the layout viewport's */
+  bottom: calc(1.5rem + env(safe-area-inset-bottom) + 100% - var(--app-height, 100%));
   left: 50%;
   transform: translateX(-50%);
   z-index: 100;

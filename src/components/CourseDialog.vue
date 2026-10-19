@@ -143,7 +143,8 @@ function close() {
 <style scoped>
 .dialog-overlay {
   position: fixed;
-  inset: 0;
+  /* covers the visible area to its bottom, past where the layout viewport may end (see main.css) */
+  inset: 0 0 calc(100% - var(--app-height, 100%));
   z-index: 60;
   background: var(--overlay);
   backdrop-filter: blur(4px);
