@@ -176,10 +176,11 @@ onBeforeUnmount(() => {
         </p>
         <p v-if="courseCleared" class="course-clear pill pill-success">
           <template v-if="courseStore.allClearedToday">
-            今日のコース全クリア！ 連続 {{ courseStore.streak }}日
+            今日のミッション全クリア！ 連続 {{ courseStore.streak }}日
           </template>
           <template v-else>
-            毎日コース クリア ✓ {{ courseStore.clearedCount }} / {{ courseStore.courses.length }}
+            デイリーミッション クリア ✓ {{ courseStore.clearedCount }} /
+            {{ courseStore.courses.length }}
           </template>
         </p>
       </div>
@@ -330,7 +331,7 @@ onBeforeUnmount(() => {
       <div class="result-actions">
         <div v-if="nextCourse" class="next-course">
           <div class="rpg-card next-card">
-            <span class="next-heading">次のコース</span>
+            <span class="next-heading">次のミッション</span>
             <span class="next-name">{{ courseLabel(nextCourse) }}</span>
           </div>
           <button class="btn-gem btn-gold" @click="store.startCourse(nextCourse)">

@@ -157,7 +157,7 @@ function handleStart() {
       <div class="sub-actions enter-item" style="--i: 5">
         <button
           class="btn-ghost icon-action"
-          aria-label="毎日コース"
+          aria-label="デイリーミッション"
           @click="store.courseDialogOpen = true"
         >
           <!-- a calendar page with a check -->

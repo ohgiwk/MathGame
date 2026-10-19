@@ -19,10 +19,10 @@ describe('courseGreetingMessage', () => {
   })
 
   it('counts the courses left once some are cleared', () => {
-    expect(courseGreetingMessage(0, 1, 3)).toBe('のこり 1コース、がんばろう')
+    expect(courseGreetingMessage(0, 1, 3)).toBe('のこり 1ミッション、がんばろう')
   })
 
   it('invites to start when nothing is cleared yet', () => {
-    expect(courseGreetingMessage(0, 2, 2)).toBe('今日のコースに挑戦しよう')
+    expect(courseGreetingMessage(0, 2, 2)).toBe('今日のミッションに挑戦しよう')
   })
 })

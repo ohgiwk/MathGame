@@ -11,6 +11,6 @@ export function timeGreeting(hour: number): string {
  */
 export function courseGreetingMessage(streak: number, remaining: number, total: number): string {
   if (streak > 0) return `今日もクリアして ${streak + 1}日連続 をめざそう`
-  if (remaining < total) return `のこり ${remaining}コース、がんばろう`
-  return '今日のコースに挑戦しよう'
+  if (remaining < total) return `のこり ${remaining}ミッション、がんばろう`
+  return '今日のミッションに挑戦しよう'
 }

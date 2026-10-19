@@ -59,7 +59,7 @@ function close() {
           <p class="greeting-hello">{{ greeting }}</p>
           <p class="greeting-message">{{ greetingMessage }}</p>
         </div>
-        <h2 id="course-dialog-title" class="dialog-title">毎日コース</h2>
+        <h2 id="course-dialog-title" class="dialog-title">デイリーミッション</h2>
 
         <div class="view-tabs dialog-tabs" role="tablist">
           <button
@@ -69,7 +69,7 @@ function close() {
             :aria-selected="tab === 'courses'"
             @click="tab = 'courses'"
           >
-            コース
+            ミッション
           </button>
           <button
             role="tab"
@@ -101,7 +101,9 @@ function close() {
 
           <div class="today">
             <span
-              >今日のコース<span class="today-level">Lv.{{ courseStore.level }} 向け</span></span
+              >今日のミッション<span class="today-level"
+                >Lv.{{ courseStore.level }} 向け</span
+              ></span
             >
             <span v-if="courseStore.allClearedToday" class="pill pill-success all-done"
               >全クリア！</span
@@ -133,7 +135,7 @@ function close() {
               </button>
             </li>
           </ul>
-          <p class="auto-note">コースは毎日、レベルに合わせて自動で決まります</p>
+          <p class="auto-note">ミッションは毎日、レベルに合わせて自動で決まります</p>
         </template>
       </div>
     </div>
