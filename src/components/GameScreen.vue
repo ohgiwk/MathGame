@@ -85,19 +85,30 @@ watch(
   { immediate: true },
 )
 
+/** the delete key clicks a little lower than the digits */
+const DELETE_TAP_PITCH = 0.8
+
+function playTapSound(pitch = 1) {
+  if (preferences.soundEffects) soundPlayer.play('tap', pitch)
+}
+
 // The answer is confirmed automatically once as many digits as the answer has are entered
 function pressDigit(digit: string) {
   if (padDisabled.value) return
   if (inputValue.value.length >= answerLength.value) return
   inputValue.value += digit
   if (inputValue.value.length >= answerLength.value) {
+    // the correct or wrong sound plays for this press instead of the click
     store.submitAnswer(inputValue.value)
+  } else {
+    playTapSound()
   }
 }
 
 function pressDelete() {
   if (padDisabled.value) return
   inputValue.value = inputValue.value.slice(0, -1)
+  playTapSound(DELETE_TAP_PITCH)
 }
 
 function confirmQuit() {

@@ -56,6 +56,10 @@ describe('SOUNDS', () => {
     expect(soundDuration(SOUNDS.tap)).toBeLessThanOrEqual(0.05)
   })
 
+  it('keeps the start sound short, so the game screen is not kept waiting', () => {
+    expect(soundDuration(SOUNDS.start)).toBeLessThanOrEqual(0.3)
+  })
+
   it('keeps an EXP tick shorter than the gap between ticks', () => {
     expect(soundDuration(SOUNDS.expTick)).toBeLessThanOrEqual(0.06)
   })

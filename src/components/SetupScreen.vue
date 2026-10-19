@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useGameStore } from '../stores/gameStore'
 import { usePreferencesStore } from '../stores/preferencesStore'
 import { useCourseStore } from '../stores/courseStore'
+import { useButtonSounds } from '../composables/useButtonSounds'
 import CourseDialog from './CourseDialog.vue'
 import type { QuestionCount, Difficulty, Operation, ActualOperation } from '../types/game'
 import {
@@ -24,6 +25,8 @@ const store = useGameStore()
 const preferences = usePreferencesStore()
 const courseStore = useCourseStore()
 courseStore.refreshDay()
+// every button here clicks, including those in the daily mission dialog
+const playButtonSound = useButtonSounds()
 
 const selectedCount = ref<QuestionCount>(store.settings.questionCount)
 const selectedDifficulty = ref<Difficulty>(store.settings.difficulty)
@@ -50,7 +53,7 @@ function handleStart() {
 </script>
 
 <template>
-  <div class="setup-root">
+  <div class="setup-root" @click="playButtonSound">
     <button class="settings-btn" aria-label="設定" @click="store.openSettings()">
       <!-- sliders: three rails, each with a knob -->
       <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -149,7 +152,12 @@ function handleStart() {
       </div>
 
       <!-- スタートボタン -->
-      <button class="btn-gem btn-gold start-btn enter-item" style="--i: 4" @click="handleStart">
+      <button
+        class="btn-gem btn-gold start-btn enter-item"
+        style="--i: 4"
+        data-sound="start"
+        @click="handleStart"
+      >
         <span class="btn-gold-gem">◆</span>
         <span class="btn-gold-label">START</span>
         <span class="btn-gold-gem">◆</span>

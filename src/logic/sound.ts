@@ -1,7 +1,7 @@
 // Short sound effects made with the Web Audio API, so the app ships no audio files.
 
 export type SoundName =
-  'correct' | 'incorrect' | 'clear' | 'gameover' | 'expTick' | 'levelUp' | 'tap'
+  'correct' | 'incorrect' | 'clear' | 'gameover' | 'expTick' | 'levelUp' | 'tap' | 'start'
 
 interface Note {
   /** seconds after the sound starts */
@@ -76,6 +76,15 @@ export const SOUNDS: Record<SoundName, SoundSpec> = {
     wave: 'triangle',
     volume: 0.1,
     notes: [{ start: 0, duration: 0.03, frequency: 1200, endFrequency: 900 }],
+  },
+  // a button that starts a game: a quick upward swoop into a bright note
+  start: {
+    wave: 'triangle',
+    volume: 0.16,
+    notes: [
+      { start: 0, duration: 0.1, frequency: 392, endFrequency: 784 },
+      { start: 0.09, duration: 0.16, frequency: 1174.66 },
+    ],
   },
 }
 

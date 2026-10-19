@@ -117,6 +117,7 @@ function close() {
               <button
                 class="course-item"
                 :class="{ done: courseStore.isCleared(course.id) }"
+                data-sound="start"
                 @click="store.startCourse(course)"
               >
                 <span class="check" aria-hidden="true">
