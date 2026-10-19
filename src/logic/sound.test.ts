@@ -52,6 +52,10 @@ describe('SOUNDS', () => {
     }
   })
 
+  it('keeps a key tap brief, so fast typing does not pile sounds up', () => {
+    expect(soundDuration(SOUNDS.tap)).toBeLessThanOrEqual(0.05)
+  })
+
   it('keeps an EXP tick shorter than the gap between ticks', () => {
     expect(soundDuration(SOUNDS.expTick)).toBeLessThanOrEqual(0.06)
   })

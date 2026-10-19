@@ -1,6 +1,7 @@
 // Short sound effects made with the Web Audio API, so the app ships no audio files.
 
-export type SoundName = 'correct' | 'incorrect' | 'clear' | 'gameover' | 'expTick' | 'levelUp'
+export type SoundName =
+  'correct' | 'incorrect' | 'clear' | 'gameover' | 'expTick' | 'levelUp' | 'tap'
 
 interface Note {
   /** seconds after the sound starts */
@@ -69,6 +70,12 @@ export const SOUNDS: Record<SoundName, SoundSpec> = {
       { start: 0, duration: 0.1, frequency: 1567.98 },
       { start: 0.08, duration: 0.2, frequency: 2093 },
     ],
+  },
+  // a soft click for a number pad key; short enough for quick typing
+  tap: {
+    wave: 'triangle',
+    volume: 0.1,
+    notes: [{ start: 0, duration: 0.03, frequency: 1200, endFrequency: 900 }],
   },
 }
 

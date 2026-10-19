@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { usePreferencesStore } from '../stores/preferencesStore'
+import { soundPlayer } from '../logic/sound'
 
 const props = defineProps<{
   disabled: boolean
@@ -17,6 +19,9 @@ const DIGIT_KEYS = ['7', '8', '9', '4', '5', '6', '1', '2', '3']
 const GAP_REACH_PX = 12
 
 const padRef = ref<HTMLElement | null>(null)
+const preferences = usePreferencesStore()
+/** the delete key clicks a little lower than the digits */
+const DELETE_TAP_PITCH = 0.8
 
 // Restart the tap animation on every press so quick repeated taps each get feedback
 function playTap(key: HTMLButtonElement) {
@@ -24,6 +29,9 @@ function playTap(key: HTMLButtonElement) {
   void key.offsetWidth
   key.classList.add('tapped')
   navigator.vibrate?.(8)
+  if (preferences.soundEffects) {
+    soundPlayer.play('tap', key.dataset.key === 'delete' ? DELETE_TAP_PITCH : 1)
+  }
 }
 
 function press(key: HTMLButtonElement | null | undefined) {
