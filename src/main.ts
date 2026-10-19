@@ -15,11 +15,11 @@ function safeAreaTop(): number {
 }
 
 /**
- * How far the screen reaches below the viewport iOS reports. In a home screen app with the
- * translucent status bar, the page starts at the very top of the screen, yet iOS gives every height
- * (innerHeight, the visual viewport, 100%) short by about the top safe area, which left a bare strip
- * at the bottom. Only a gap of that size is this bug; any other (a resized iPad window, a fixed iOS)
- * is left alone.
+ * How far the screen reaches below the layout viewport. In a home screen app with the translucent
+ * status bar, the page starts at the very top of the screen, yet iOS gives the layout viewport
+ * (innerHeight, 100%, inset: 0) short by about the top safe area, which left a bare strip at the
+ * bottom. Only a gap of that size is this bug; any other (a resized iPad window, a fixed iOS) is
+ * left alone.
  */
 function standaloneGap(): number {
   if ((navigator as Navigator & { standalone?: boolean }).standalone !== true) return 0
@@ -36,10 +36,14 @@ function standaloneGap(): number {
 const viewport = window.visualViewport
 if (viewport) {
   const syncAppHeight = () => {
-    document.documentElement.style.setProperty(
-      '--app-height',
-      `${viewport.height * viewport.scale + standaloneGap()}px`,
-    )
+    const visible = viewport.height * viewport.scale
+    // With the gap, the app reaches the bottom of the screen. The visual viewport may or may not be
+    // short like the layout viewport, so the gap is added to the layout viewport, never on top of
+    // a visual viewport that already reaches the screen's bottom.
+    const gap = standaloneGap()
+    const height =
+      gap > 0 ? Math.max(visible, document.documentElement.clientHeight + gap) : visible
+    document.documentElement.style.setProperty('--app-height', `${height}px`)
     window.scrollTo(0, 0)
   }
   viewport.addEventListener('resize', syncAppHeight)
