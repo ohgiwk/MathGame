@@ -13,9 +13,15 @@ interface Preferences {
   /** kept while the time limit is off, so turning it back on restores the choice */
   timeLimitLength: TimeLimitLength
   theme: ThemePreference
+  soundEffects: boolean
 }
 
-const DEFAULTS: Preferences = { timeLimit: false, timeLimitLength: 'normal', theme: 'auto' }
+const DEFAULTS: Preferences = {
+  timeLimit: false,
+  timeLimitLength: 'normal',
+  theme: 'auto',
+  soundEffects: true,
+}
 
 function loadPreferences(): Preferences {
   const raw = readJson(STORAGE_KEY)
@@ -27,6 +33,8 @@ function loadPreferences(): Preferences {
       ? stored.timeLimitLength
       : DEFAULTS.timeLimitLength,
     theme: isOneOf(THEME_PREFERENCES, stored.theme) ? stored.theme : DEFAULTS.theme,
+    soundEffects:
+      typeof stored.soundEffects === 'boolean' ? stored.soundEffects : DEFAULTS.soundEffects,
   }
 }
 
@@ -36,15 +44,17 @@ export const usePreferencesStore = defineStore('preferences', () => {
   const timeLimit = ref(initial.timeLimit)
   const timeLimitLength = ref(initial.timeLimitLength)
   const theme = ref(initial.theme)
+  const soundEffects = ref(initial.soundEffects)
 
-  watch([timeLimit, timeLimitLength, theme], () => {
+  watch([timeLimit, timeLimitLength, theme, soundEffects], () => {
     const prefs: Preferences = {
       timeLimit: timeLimit.value,
       timeLimitLength: timeLimitLength.value,
       theme: theme.value,
+      soundEffects: soundEffects.value,
     }
     writeJson(STORAGE_KEY, prefs)
   })
 
-  return { timeLimit, timeLimitLength, theme }
+  return { timeLimit, timeLimitLength, theme, soundEffects }
 })

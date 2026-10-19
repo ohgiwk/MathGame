@@ -3,6 +3,7 @@ import { createPinia } from 'pinia'
 import 'virtual:uno.css'
 import './styles/main.css'
 import App from './App.vue'
+import { soundPlayer, unlockOnUserInput } from './logic/sound'
 
 /** env(safe-area-inset-top) in px, which a script can only read off an element using it */
 function safeAreaTop(): number {
@@ -54,5 +55,8 @@ if (viewport) {
 
 // iOS Safari only applies :active styles to elements when a touch listener exists
 document.addEventListener('touchstart', () => {}, { passive: true })
+
+// iOS only lets audio start inside a user's input, so the first tap or key press starts it
+unlockOnUserInput(soundPlayer, document)
 
 createApp(App).use(createPinia()).mount('#app')

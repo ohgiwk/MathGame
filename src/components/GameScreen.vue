@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ref, watch, computed, onBeforeUnmount } from 'vue'
 import { useGameStore } from '../stores/gameStore'
+import { usePreferencesStore } from '../stores/preferencesStore'
 import { MAX_LIVES } from '../logic/constants'
 import { formatQuestion } from '../logic/format'
 import { DIFFICULTY_LABELS } from '../logic/labels'
+import { soundPlayer } from '../logic/sound'
 import ProgressBar from './ProgressBar.vue'
 import HeartDisplay from './HeartDisplay.vue'
 import FeedbackDisplay from './FeedbackDisplay.vue'
@@ -12,6 +14,7 @@ import ConfirmDialog from './ConfirmDialog.vue'
 import CloseIcon from './CloseIcon.vue'
 
 const store = useGameStore()
+const preferences = usePreferencesStore()
 const inputValue = ref('')
 const showQuitDialog = ref(false)
 
@@ -60,6 +63,16 @@ watch(showQuitDialog, (open) => {
   if (open) store.pauseQuestion()
   else store.resumeQuestion()
 })
+
+// a time-out sounds like a wrong answer
+watch(
+  () => state.value?.feedback,
+  (feedback) => {
+    if (feedback && preferences.soundEffects) {
+      soundPlayer.play(feedback.correct ? 'correct' : 'incorrect')
+    }
+  },
+)
 
 const answerLength = computed(() => String(question.value?.answer ?? '').length)
 const padDisabled = computed(() => !!state.value?.feedback || showQuitDialog.value)

@@ -100,6 +100,27 @@ function confirmReset() {
       </div>
     </div>
 
+    <!-- サウンド -->
+    <div class="rpg-card settings-section">
+      <h2 class="section-label"><span class="section-gem">◆</span> サウンド</h2>
+      <div class="setting-row">
+        <div class="setting-text">
+          <div id="sound-effects-label" class="setting-name">効果音</div>
+          <div class="setting-desc">答えたときに正解・不正解の音を鳴らします</div>
+        </div>
+        <button
+          class="switch"
+          role="switch"
+          aria-labelledby="sound-effects-label"
+          :aria-checked="preferences.soundEffects"
+          :class="{ on: preferences.soundEffects }"
+          @click="preferences.soundEffects = !preferences.soundEffects"
+        >
+          <span class="switch-knob" />
+        </button>
+      </div>
+    </div>
+
     <!-- 記録 -->
     <div class="rpg-card settings-section">
       <h2 class="section-label"><span class="section-gem">◆</span> 記録</h2>
