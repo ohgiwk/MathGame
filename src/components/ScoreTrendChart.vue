@@ -46,6 +46,10 @@ const chartDays = computed(() =>
     -CHART_DAYS,
   ),
 )
+/** The day's best score, the value charted; every summarized day has at least one game */
+function dayBest(d: DaySummary): number {
+  return d.bestScore ?? 0
+}
 
 // the day whose value the bubble shows; the latest one unless a dot is tapped
 const selectedDay = ref<DayKey | null>(null)
@@ -66,7 +70,7 @@ function niceCeil(value: number): number {
   const step = [1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10].find((s) => s * magnitude >= value) ?? 10
   return step * magnitude
 }
-const yMax = computed(() => niceCeil(Math.max(...chartDays.value.map((d) => d.averageScore), 0)))
+const yMax = computed(() => niceCeil(Math.max(...chartDays.value.map(dayBest), 0)))
 const yTicks = computed(() => [0, yMax.value / 2, yMax.value])
 /** Where a score sits vertically in the plot */
 function yFor(value: number) {
@@ -78,9 +82,9 @@ const points = computed(() => {
   const step = list.length > 1 ? plotW / (list.length - 1) : 0
   return list.map((d, i) => ({
     day: d.day,
-    value: d.averageScore,
+    value: dayBest(d),
     x: PAD.left + (list.length > 1 ? i * step : plotW / 2),
-    y: yFor(d.averageScore),
+    y: yFor(dayBest(d)),
     // hit area spans halfway to each neighbour
     hitX: PAD.left + (list.length > 1 ? i * step - step / 2 : 0),
     hitW: list.length > 1 ? step : plotW,
@@ -105,12 +109,12 @@ const bubbleX = computed(() => {
 /** the bubble's top, above the dot but never off the top of the chart */
 const bubbleY = computed(() => Math.max((selectedPoint.value?.y ?? 0) - 26, 2))
 
-/** Average of the newest half of the chart against the older half */
+/** Mean daily best of the newest half of the chart against the older half */
 const trend = computed(() => {
   const list = chartDays.value
   if (list.length < 4) return null
   const half = Math.floor(list.length / 2)
-  const avg = (xs: DaySummary[]) => xs.reduce((s, d) => s + d.averageScore, 0) / xs.length
+  const avg = (xs: DaySummary[]) => xs.reduce((s, d) => s + dayBest(d), 0) / xs.length
   const older = avg(list.slice(0, half))
   const newer = avg(list.slice(-half))
   if (older === 0) return null
@@ -125,7 +129,7 @@ function formatAxis(value: number) {
 <template>
   <div v-if="records.length > 0" class="rpg-card stats-section">
     <h2 class="section-label">
-      <span class="section-gem">◆</span> 平均スコアの推移
+      <span class="section-gem">◆</span> 最高スコアの推移
       <span v-if="chartDays.length > 0" class="section-note">
         直近{{ chartDays.length }}日
         <template v-if="trend !== null">
@@ -166,7 +170,7 @@ function formatAxis(value: number) {
       </button>
     </div>
     <p v-if="chartDays.length === 0" class="empty-note">まだ記録がありません</p>
-    <svg v-else class="chart" :viewBox="`0 0 ${W} ${H}`" role="img" aria-label="日ごとの平均スコア">
+    <svg v-else class="chart" :viewBox="`0 0 ${W} ${H}`" role="img" aria-label="日ごとの最高スコア">
       <defs>
         <linearGradient id="growth-area" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stop-color="var(--gold)" stop-opacity="0.28" />

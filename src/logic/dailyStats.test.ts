@@ -40,15 +40,15 @@ describe('summarizeByDay', () => {
     expect(summarizeByDay([])).toEqual([])
   })
 
-  it('groups records by day, oldest first, with the average score', () => {
+  it('groups records by day, oldest first, with the best score', () => {
     const days = summarizeByDay([
       record({ playedAt: at(2026, 9, 16, 20), score: 1000 }),
       record({ playedAt: at(2026, 9, 16, 8), score: 501 }),
       record({ playedAt: at(2026, 9, 3), score: 300 }),
     ])
     expect(days.map((d) => d.day)).toEqual(['2026-10-03', '2026-10-16'])
-    expect(days[1]).toMatchObject({ playCount: 2, averageScore: 751, bestScore: 1000 })
-    expect(days[0]).toMatchObject({ playCount: 1, averageScore: 300 })
+    expect(days[1]).toMatchObject({ playCount: 2, bestScore: 1000 })
+    expect(days[0]).toMatchObject({ playCount: 1, bestScore: 300 })
   })
 })
 

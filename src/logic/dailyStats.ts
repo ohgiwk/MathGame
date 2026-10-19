@@ -6,8 +6,6 @@ export type DayKey = string
 
 export interface DaySummary extends StatsSummary {
   day: DayKey
-  /** rounded mean score of the day's games */
-  averageScore: number
 }
 
 export function dayKey(timestamp: number): DayKey {
@@ -39,14 +37,7 @@ export function summarizeByDay(records: GameRecord[]): DaySummary[] {
   }
   return [...byDay.entries()]
     .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
-    .map(([day, list]) => {
-      const summary = summarize(list)
-      return {
-        ...summary,
-        day,
-        averageScore: Math.round(summary.totalScore / summary.playCount),
-      }
-    })
+    .map(([day, list]) => ({ ...summarize(list), day }))
 }
 
 /** The weeks of a month for a Sunday-first calendar; days outside the month are null. */
