@@ -72,10 +72,10 @@ const byOperation = computed(() =>
       <PlayCalendar :records="statsStore.records" @select="openDay" />
       <ScoreTrendChart :records="statsStore.records" />
 
-      <!-- 難易度・種類ごと -->
+      <!-- ベストスコア: each operation's best game at the chosen difficulty -->
       <div class="rpg-card stats-section">
         <h2 class="section-label">
-          <span class="section-gem">◆</span> 種類ごと
+          <span class="section-gem">◆</span> ベストスコア
           <span class="diff-tabs">
             <button
               v-for="d in DIFFICULTIES"
@@ -88,45 +88,41 @@ const byOperation = computed(() =>
             </button>
           </span>
         </h2>
-        <table class="op-table">
-          <thead>
-            <tr>
-              <th class="col-name">種類</th>
-              <th>ベスト</th>
-              <th>正答率</th>
-              <th>問題数</th>
-              <th>時間</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="row in byOperation" :key="row.operation" :class="{ unplayed: !row.best }">
-              <td class="col-name">{{ OPERATION_LABELS[row.operation] }}</td>
-              <template v-if="row.best">
-                <td class="col-best">{{ formatScore(row.best.score) }}</td>
-                <td class="col-accuracy">
-                  {{ row.accuracy !== null ? `${row.accuracy}%` : '–' }}
-                </td>
-                <!-- an endless game has no set count, so it shows how many were answered -->
-                <td>
-                  {{
-                    row.best.questionCount === 'endless'
-                      ? `∞ ${row.best.totalAnswered}`
-                      : `${row.best.questionCount}問`
-                  }}
-                </td>
-                <td>{{ formatElapsedTime(row.best.elapsedSeconds) }}</td>
-              </template>
-              <template v-else><td v-for="i in 4" :key="i">–</td></template>
-            </tr>
-          </tbody>
-        </table>
+        <ul class="best-list">
+          <li
+            v-for="row in byOperation"
+            :key="row.operation"
+            class="best-row"
+            :class="{ unplayed: !row.best }"
+          >
+            <span class="best-name">{{ OPERATION_LABELS[row.operation] }}</span>
+            <span class="best-score">{{ row.best ? formatScore(row.best.score) : '–' }}</span>
+            <!-- the details of the game that set the best -->
+            <span v-if="row.best" class="best-detail">
+              正答率
+              <span class="detail-accuracy">{{
+                row.accuracy !== null ? `${row.accuracy}%` : '–'
+              }}</span>
+              <span class="detail-sep">·</span>
+              <!-- an endless game has no set count, so it shows how many were answered -->
+              {{
+                row.best.questionCount === 'endless'
+                  ? `∞ ${row.best.totalAnswered}問`
+                  : `${row.best.questionCount}問`
+              }}
+              <span class="detail-sep">·</span>
+              {{ formatElapsedTime(row.best.elapsedSeconds) }}
+            </span>
+            <span v-else class="best-detail">まだ記録がありません</span>
+          </li>
+        </ul>
       </div>
     </template>
   </SubScreen>
 </template>
 
 <style scoped>
-/* 難易度・種類ごと */
+/* ベストスコア */
 .diff-tabs {
   margin-left: auto;
   display: flex;
@@ -137,44 +133,61 @@ const byOperation = computed(() =>
   padding: 4px 10px;
 }
 
-.op-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-variant-numeric: tabular-nums;
+.best-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
-.op-table th {
-  font-size: 0.65rem;
-  font-weight: 600;
-  color: var(--text-sub);
-  text-align: right;
-  padding: 0 0 4px;
-  white-space: nowrap;
-}
-.op-table td {
-  font-size: 0.8rem;
-  font-weight: 700;
-  text-align: right;
-  padding: 6px 0 6px 0.5rem;
-  white-space: nowrap;
+/* the name over its details on the left, the score large on the right */
+.best-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    'name score'
+    'detail score';
+  align-items: center;
+  column-gap: 0.8rem;
+  padding: 8px 0;
   border-top: 1px solid rgba(var(--wash-rgb), 0.06);
 }
-.op-table .col-name {
-  text-align: left;
-  padding-left: 0;
-  font-weight: 600;
+.best-row:first-child {
+  border-top: none;
+}
+.best-name {
+  grid-area: name;
+  font-size: 0.9rem;
+  font-weight: 800;
   color: var(--text-main);
 }
-.op-table th.col-name {
+.best-detail {
+  grid-area: detail;
+  margin-top: 2px;
+  font-size: 0.68rem;
   color: var(--text-sub);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
-.col-best {
-  color: var(--gold-light);
-}
-.col-accuracy {
+.detail-accuracy {
   color: var(--gem-teal);
+  font-weight: 700;
 }
-.unplayed td {
+.detail-sep {
+  margin: 0 4px;
+}
+.best-score {
+  grid-area: score;
+  font-size: 1.6rem;
+  font-weight: 900;
+  line-height: 1.1;
+  color: var(--gold-light);
+  font-variant-numeric: tabular-nums;
+}
+.unplayed .best-name,
+.unplayed .best-score {
   color: var(--text-faint);
-  font-weight: 500;
+}
+.unplayed .best-score {
+  font-size: 1.2rem;
+  font-weight: 600;
 }
 </style>
