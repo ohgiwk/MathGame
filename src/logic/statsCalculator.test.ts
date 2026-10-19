@@ -68,15 +68,15 @@ describe('summarize', () => {
 })
 
 describe('bestByOperation', () => {
-  it('returns one row per operation with its best game at the given difficulty', () => {
+  it('returns one row per operation with its best game of the given length', () => {
     const rows = bestByOperation(
       [
         record({ id: 'a', score: 700 }),
         record({ id: 'b', score: 900 }),
         record({ id: 'c', operation: 'division', score: 300 }),
-        record({ id: 'd', difficulty: 'hard', score: 5000 }),
+        record({ id: 'd', questionCount: 10, score: 5000 }),
       ],
-      'easy',
+      5,
     )
     expect(rows.map((r) => r.operation)).toEqual([
       'addition',
@@ -88,8 +88,24 @@ describe('bestByOperation', () => {
     expect(rows.map((r) => r.best?.id ?? null)).toEqual(['b', null, null, 'c', null])
   })
 
+  it('compares games of every difficulty', () => {
+    const rows = bestByOperation(
+      [record({ id: 'easy', score: 900 }), record({ id: 'hard', difficulty: 'hard', score: 2000 })],
+      5,
+    )
+    expect(rows[0].best?.id).toBe('hard')
+  })
+
+  it('keeps endless games apart from the fixed lengths', () => {
+    const rows = bestByOperation(
+      [record({ id: 'fixed' }), record({ id: 'endless', questionCount: 'endless', score: 100 })],
+      'endless',
+    )
+    expect(rows[0].best?.id).toBe('endless')
+  })
+
   it('keeps the newer of two games tied for best, since records come newest first', () => {
-    const rows = bestByOperation([record({ id: 'new' }), record({ id: 'old' })], 'easy')
+    const rows = bestByOperation([record({ id: 'new' }), record({ id: 'old' })], 5)
     expect(rows[0].best?.id).toBe('new')
   })
 })

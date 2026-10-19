@@ -2,9 +2,14 @@
 import { ref, computed } from 'vue'
 import { useGameStore } from '../stores/gameStore'
 import { useStatsStore } from '../stores/statsStore'
-import type { Difficulty } from '../types/game'
+import type { QuestionCount } from '../types/game'
 import type { DayKey } from '../logic/dailyStats'
-import { DIFFICULTIES, DIFFICULTY_LABELS, OPERATION_LABELS } from '../logic/labels'
+import {
+  QUESTION_COUNTS,
+  DIFFICULTY_LABELS,
+  OPERATION_LABELS,
+  questionCountLabel,
+} from '../logic/labels'
 import { accuracyPercent, bestByOperation } from '../logic/statsCalculator'
 import { formatScore, formatElapsedTime } from '../logic/format'
 import HistoryView from './HistoryView.vue'
@@ -28,10 +33,10 @@ function openDay(day: DayKey) {
   view.value = 'history'
 }
 
-const selectedDifficulty = ref<Difficulty>(store.settings.difficulty)
+const selectedCount = ref<QuestionCount>(store.settings.questionCount)
 
 const byOperation = computed(() =>
-  bestByOperation(statsStore.records, selectedDifficulty.value).map(({ operation, best }) => ({
+  bestByOperation(statsStore.records, selectedCount.value).map(({ operation, best }) => ({
     operation,
     best,
     accuracy: best ? accuracyPercent(best.correctCount, best.totalAnswered) : null,
@@ -72,22 +77,23 @@ const byOperation = computed(() =>
       <PlayCalendar :records="statsStore.records" @select="openDay" />
       <ScoreTrendChart :records="statsStore.records" />
 
-      <!-- ベストスコア: each operation's best game at the chosen difficulty -->
+      <!-- ベストスコア: each operation's best game of the chosen length, at any difficulty -->
       <div class="rpg-card stats-section">
-        <h2 class="section-label">
-          <span class="section-gem">◆</span> ベストスコア
-          <span class="diff-tabs">
-            <button
-              v-for="d in DIFFICULTIES"
-              :key="d"
-              class="chip diff-tab"
-              :class="{ active: selectedDifficulty === d }"
-              @click="selectedDifficulty = d"
-            >
-              {{ DIFFICULTY_LABELS[d] }}
-            </button>
-          </span>
-        </h2>
+        <h2 class="section-label"><span class="section-gem">◆</span> ベストスコア</h2>
+        <div class="count-tabs" role="tablist" aria-label="問題数">
+          <button
+            v-for="c in QUESTION_COUNTS"
+            :key="c"
+            role="tab"
+            class="chip count-tab"
+            :class="{ active: selectedCount === c }"
+            :aria-selected="selectedCount === c"
+            :aria-label="questionCountLabel(c)"
+            @click="selectedCount = c"
+          >
+            {{ c === 'endless' ? '∞' : `${c}問` }}
+          </button>
+        </div>
         <ul class="best-list">
           <li
             v-for="row in byOperation"
@@ -99,18 +105,18 @@ const byOperation = computed(() =>
             <span class="best-score">{{ row.best ? formatScore(row.best.score) : '–' }}</span>
             <!-- the details of the game that set the best -->
             <span v-if="row.best" class="best-detail">
+              {{ DIFFICULTY_LABELS[row.best.difficulty] }}
+              <span class="detail-sep">·</span>
               正答率
               <span class="detail-accuracy">{{
                 row.accuracy !== null ? `${row.accuracy}%` : '–'
               }}</span>
               <span class="detail-sep">·</span>
               <!-- an endless game has no set count, so it shows how many were answered -->
-              {{
-                row.best.questionCount === 'endless'
-                  ? `∞ ${row.best.totalAnswered}問`
-                  : `${row.best.questionCount}問`
-              }}
-              <span class="detail-sep">·</span>
+              <template v-if="row.best.questionCount === 'endless'">
+                {{ row.best.totalAnswered }}問
+                <span class="detail-sep">·</span>
+              </template>
               {{ formatElapsedTime(row.best.elapsedSeconds) }}
             </span>
             <span v-else class="best-detail">まだ記録がありません</span>
@@ -123,14 +129,15 @@ const byOperation = computed(() =>
 
 <style scoped>
 /* ベストスコア */
-.diff-tabs {
-  margin-left: auto;
-  display: flex;
+.count-tabs {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
   gap: 4px;
+  margin-bottom: 0.3rem;
 }
-.diff-tab {
-  font-size: 0.7rem;
-  padding: 4px 10px;
+.count-tab {
+  font-size: 0.72rem;
+  padding: 5px 0;
 }
 
 .best-list {
@@ -159,8 +166,11 @@ const byOperation = computed(() =>
   font-weight: 800;
   color: var(--text-main);
 }
+/* a flex row, so the separators alone set the spacing, whatever whitespace the template has */
 .best-detail {
   grid-area: detail;
+  display: flex;
+  align-items: baseline;
   margin-top: 2px;
   font-size: 0.68rem;
   color: var(--text-sub);
@@ -168,6 +178,7 @@ const byOperation = computed(() =>
   white-space: nowrap;
 }
 .detail-accuracy {
+  margin-left: 3px;
   color: var(--gem-teal);
   font-weight: 700;
 }

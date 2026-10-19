@@ -1,4 +1,10 @@
-import type { Difficulty, Operation, GameRecord, GameOutcome } from '../types/game'
+import type {
+  Difficulty,
+  Operation,
+  GameRecord,
+  GameOutcome,
+  RecordedQuestionCount,
+} from '../types/game'
 import { OPERATIONS, resolveMixedOperations } from './labels'
 
 export interface StatsSummary {
@@ -59,17 +65,22 @@ export function recordsFor(
   return records.filter((r) => r.difficulty === difficulty && r.operation === operation)
 }
 
-/** One row per operation: its highest-scoring game at the given difficulty, null when unplayed */
+/**
+ * One row per operation: its highest-scoring game of the given length, at any difficulty;
+ * null when unplayed
+ */
 export function bestByOperation(
   records: GameRecord[],
-  difficulty: Difficulty,
+  questionCount: RecordedQuestionCount,
 ): { operation: Operation; best: GameRecord | null }[] {
   return OPERATIONS.map((operation) => ({
     operation,
-    best: recordsFor(records, difficulty, operation).reduce<GameRecord | null>(
-      (best, r) => (best === null || r.score > best.score ? r : best),
-      null,
-    ),
+    best: records
+      .filter((r) => r.questionCount === questionCount && r.operation === operation)
+      .reduce<GameRecord | null>(
+        (best, r) => (best === null || r.score > best.score ? r : best),
+        null,
+      ),
   }))
 }
 
