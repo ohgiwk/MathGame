@@ -67,8 +67,11 @@ function toggleDay(day: DayKey) {
           <div class="total-value">{{ total.clearCount }}<span class="total-unit">回</span></div>
         </div>
         <div class="tile total-item">
-          <div class="total-label">累計スコア</div>
-          <div class="total-value">{{ formatScore(total.totalScore) }}</div>
+          <div class="total-label">正答率</div>
+          <div class="total-value">
+            {{ total.accuracy ?? '–'
+            }}<span v-if="total.accuracy !== null" class="total-unit">%</span>
+          </div>
         </div>
       </div>
     </div>
@@ -159,7 +162,7 @@ function toggleDay(day: DayKey) {
 /* 累計 */
 .total-row {
   display: grid;
-  grid-template-columns: 1fr 1.6fr;
+  grid-template-columns: 1fr 1fr;
   gap: 0.4rem;
 }
 .total-item {

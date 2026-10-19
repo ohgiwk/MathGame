@@ -19,6 +19,8 @@ import {
 } from '../logic/labels'
 import { courseLabel } from '../logic/dailyCourses'
 import { useCountUp } from '../composables/useCountUp'
+import { expForScore, totalExp, levelFromExp } from '../logic/level'
+import LevelBar from './LevelBar.vue'
 
 const store = useGameStore()
 const statsStore = useStatsStore()
@@ -49,6 +51,36 @@ const shownMistakes = useCountUp(mistakes, { duration: 600, delay: 610 })
 const shownSeconds = useCountUp(r?.outcome.elapsedSeconds ?? 0, { duration: 600, delay: 730 })
 // time per question, over everything answered (feedback pauses included, as in the total)
 const averageTime = r ? formatAverageTime(r.outcome.elapsedSeconds, r.outcome.totalAnswered) : null
+
+// The score turns into EXP, which pours into the level bar once the numbers have counted up.
+// The bar fills, empties and fills again for every level gained on the way.
+// This game is already among the records, so the EXP before it is the total less its share.
+const gainedExp = r ? expForScore(r.score.score) : 0
+const expAfter = totalExp(statsStore.records)
+const expBefore = Math.max(expAfter - gainedExp, 0)
+const startLevel = levelFromExp(expBefore).level
+const finalLevel = levelFromExp(expAfter)
+const levelsGained = finalLevel.level - startLevel
+const shownExp = ref(expBefore)
+const shownLevel = computed(() => levelFromExp(shownExp.value))
+/** levels gained so far on screen; the level-up flourish plays again each time it goes up */
+const levelUps = computed(() => shownLevel.value.level - startLevel)
+const EXP_DELAY_MS = 1450
+const EXP_FILL_MS = Math.min(900 + 450 * levelsGained, 3200)
+let expTimer: ReturnType<typeof setTimeout> | null = null
+let expFrame: number | null = null
+
+function fillExp() {
+  const startedAt = performance.now()
+  const tick = (now: number) => {
+    const progress = Math.min((now - startedAt) / EXP_FILL_MS, 1)
+    // eases in and out, so each level-up along the way gets a moment of its own
+    const eased = progress < 0.5 ? 2 * progress ** 2 : 1 - (-2 * progress + 2) ** 2 / 2
+    shownExp.value = Math.round(expBefore + gainedExp * eased)
+    expFrame = progress < 1 ? requestAnimationFrame(tick) : null
+  }
+  expFrame = requestAnimationFrame(tick)
+}
 
 // The panel has three slides side by side: this game's result, the earlier games with the same
 // settings (this one included, as the newest), and the totals over every game played so far.
@@ -89,14 +121,22 @@ function cancelAutoSlide() {
 }
 
 onMounted(() => {
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    shownExp.value = expAfter
+    return
+  }
+  expTimer = setTimeout(fillExp, EXP_DELAY_MS)
   autoSlideTimer = setTimeout(() => {
     autoSlideTimer = null
     showSlide(1)
   }, COUNT_UP_END_MS + RESULT_HOLD_MS)
 })
 
-onBeforeUnmount(cancelAutoSlide)
+onBeforeUnmount(() => {
+  cancelAutoSlide()
+  if (expTimer !== null) clearTimeout(expTimer)
+  if (expFrame !== null) cancelAnimationFrame(expFrame)
+})
 </script>
 
 <template>
@@ -208,8 +248,17 @@ onBeforeUnmount(cancelAutoSlide)
           </div>
           <div class="stats-grid">
             <div class="tile stat-tile stat-wide score-tile">
-              <div class="stat-label">累計スコア</div>
-              <div class="score-value">{{ formatScore(total.totalScore) }}</div>
+              <div class="stat-label">レベル</div>
+              <div class="score-value">
+                <span class="level-prefix">Lv.</span>{{ finalLevel.level }}
+              </div>
+              <div class="stat-average">
+                <template v-if="finalLevel.isMax">最大レベル</template>
+                <template v-else>
+                  次のレベルまで
+                  {{ formatScore(finalLevel.expForLevel - finalLevel.expInLevel) }} EXP
+                </template>
+              </div>
             </div>
             <div class="tile stat-tile">
               <div class="stat-label">プレイ回数</div>
@@ -243,6 +292,18 @@ onBeforeUnmount(cancelAutoSlide)
             @click="(cancelAutoSlide(), showSlide(i))"
           ></button>
         </div>
+      </div>
+
+      <!-- EXP earned and the level it leads to -->
+      <div class="exp-card rpg-card">
+        <div class="exp-head">
+          <span class="exp-label">EXP</span>
+          <span class="exp-gain">+{{ formatScore(gainedExp) }}</span>
+          <span v-if="levelUps > 0" :key="levelUps" class="level-up">
+            LEVEL UP!<template v-if="levelUps > 1"> ×{{ levelUps }}</template>
+          </span>
+        </div>
+        <LevelBar :progress="shownLevel" :bump-key="levelUps" />
       </div>
 
       <!-- Buttons -->
@@ -526,7 +587,9 @@ onBeforeUnmount(cancelAutoSlide)
 }
 @media (prefers-reduced-motion: reduce) {
   .stat-tile,
-  .best-badge {
+  .best-badge,
+  .exp-card,
+  .level-up {
     animation: none;
   }
   .slides {
@@ -593,6 +656,56 @@ onBeforeUnmount(cancelAutoSlide)
   font-weight: 600;
   color: var(--text-sub);
   font-variant-numeric: tabular-nums;
+}
+
+.exp-card {
+  padding: 0.7rem 1rem 0.85rem;
+  animation: tile-pop 0.4s cubic-bezier(0.22, 1, 0.36, 1) 1.2s backwards;
+}
+.exp-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+.exp-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-sub);
+  letter-spacing: 0.1em;
+}
+.exp-gain {
+  font-size: 0.95rem;
+  font-weight: 900;
+  color: var(--gem-teal);
+  font-variant-numeric: tabular-nums;
+}
+.level-up {
+  margin-left: auto;
+  font-size: 0.95rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  color: var(--gold-light);
+  text-shadow: 0 0 12px rgba(var(--gold-light-rgb), 0.6);
+  animation: level-up-pop 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+:root[data-theme='light'] .level-up {
+  text-shadow: none;
+}
+@keyframes level-up-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.6);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-3px) scale(1.2);
+  }
+}
+.level-prefix {
+  font-size: 1.1rem;
+  margin-right: 3px;
+  color: var(--text-sub);
 }
 
 .result-actions {
