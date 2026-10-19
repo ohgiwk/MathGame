@@ -12,13 +12,7 @@ import {
   formatTotalTime,
   formatPlayedDate,
 } from '../logic/format'
-import {
-  RATING_LABELS,
-  DIFFICULTY_LABELS,
-  operationLabel,
-  questionCountLabel,
-} from '../logic/labels'
-import { courseLabel } from '../logic/dailyCourses'
+import { RATING_LABELS, gameKindLabel } from '../logic/labels'
 import { useCountUp } from '../composables/useCountUp'
 import { expForScore, totalExp, levelFromExp, levelRatio } from '../logic/level'
 import { soundPlayer, expTickPitch } from '../logic/sound'
@@ -236,11 +230,7 @@ onBeforeUnmount(() => {
           <div class="history-slide">
             <div class="history-inner">
               <div class="history-head">
-                <span class="history-kind">
-                  {{ DIFFICULTY_LABELS[outcome.difficulty] }} ·
-                  {{ operationLabel(outcome.operation, outcome.mixedOperations) }} ·
-                  {{ questionCountLabel(outcome.questionCount) }}
-                </span>
+                <span class="history-kind">{{ gameKindLabel(outcome) }}</span>
                 <span class="history-count">{{ sameKind.length }}回</span>
               </div>
               <ol class="history-list">
@@ -332,7 +322,7 @@ onBeforeUnmount(() => {
         <div v-if="nextCourse" class="next-course">
           <div class="rpg-card next-card">
             <span class="next-heading">次のミッション</span>
-            <span class="next-name">{{ courseLabel(nextCourse) }}</span>
+            <span class="next-name">{{ gameKindLabel(nextCourse) }}</span>
           </div>
           <button class="btn-gem btn-gold" @click="store.startCourse(nextCourse)">
             <span class="btn-gold-gem">◆</span>

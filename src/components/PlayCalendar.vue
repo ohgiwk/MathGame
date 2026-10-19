@@ -5,13 +5,13 @@ import {
   type DayKey,
   dayKey,
   toDayKey,
-  parseDayKey,
   summarizeByDay,
   monthGrid,
   currentStreak,
 } from '../logic/dailyStats'
 import { WEEKDAY_LABELS } from '../logic/labels'
 import { formatDayHeading } from '../logic/format'
+import { useMonthNav } from '../composables/useMonthNav'
 import HistoryRow from './HistoryRow.vue'
 
 const props = defineProps<{
@@ -29,26 +29,9 @@ const dayMap = computed(() => new Map(days.value.map((d) => [d.day, d])))
 const streak = computed(() => currentStreak(new Set(dayMap.value.keys()), Date.now()))
 const todayKey = dayKey(Date.now())
 
-const now = new Date()
-const viewYear = ref(now.getFullYear())
-const viewMonth = ref(now.getMonth())
-
-function monthIndex(year: number, month: number) {
-  return year * 12 + month
-}
-const viewIndex = computed(() => monthIndex(viewYear.value, viewMonth.value))
-const canGoNext = computed(() => viewIndex.value < monthIndex(now.getFullYear(), now.getMonth()))
-const canGoPrev = computed(() => {
-  const first = days.value[0]
-  if (!first) return false
-  const { year, month } = parseDayKey(first.day)
-  return viewIndex.value > monthIndex(year, month)
-})
-function shiftMonth(delta: number) {
-  const i = viewIndex.value + delta
-  viewYear.value = Math.floor(i / 12)
-  viewMonth.value = i % 12
-}
+const { viewYear, viewMonth, canGoNext, canGoPrev, shiftMonth } = useMonthNav(
+  computed(() => days.value[0]?.day),
+)
 
 // the day whose games show under the calendar; the latest played day unless one is tapped
 const selectedDay = ref<DayKey | null>(null)
@@ -298,22 +281,5 @@ const weeks = computed(() =>
 }
 .day-list {
   list-style: none;
-}
-.more-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  width: 100%;
-  margin-top: 0.6rem;
-  padding: 6px 0;
-  border: 1px solid var(--border);
-  border-radius: 99px;
-  background: transparent;
-  color: var(--text-sub);
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  cursor: pointer;
 }
 </style>

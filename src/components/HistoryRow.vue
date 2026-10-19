@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { GameRecord } from '../types/game'
-import { DIFFICULTY_LABELS, operationLabel, questionCountLabel } from '../logic/labels'
+import { gameKindLabel } from '../logic/labels'
 import { formatScore, formatElapsedTime } from '../logic/format'
 
 defineProps<{
@@ -13,11 +13,7 @@ defineProps<{
 <template>
   <li class="history-row" :class="{ compact }">
     <div class="history-main">
-      <div class="history-mode">
-        {{ DIFFICULTY_LABELS[record.difficulty] }} ·
-        {{ operationLabel(record.operation, record.mixedOperations) }} ·
-        {{ questionCountLabel(record.questionCount) }}
-      </div>
+      <div class="history-mode">{{ gameKindLabel(record) }}</div>
     </div>
     <div class="history-result">
       <div class="history-score">{{ formatScore(record.score) }}</div>

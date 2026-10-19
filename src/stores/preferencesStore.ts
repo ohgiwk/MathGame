@@ -1,4 +1,4 @@
-import { ref, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { defineStore } from 'pinia'
 import type { ThemePreference, TimeLimitLength } from '../types/game'
 import { THEME_PREFERENCES, TIME_LIMIT_LENGTHS } from '../logic/labels'
@@ -56,5 +56,8 @@ export const usePreferencesStore = defineStore('preferences', () => {
     writeJson(STORAGE_KEY, prefs)
   })
 
-  return { timeLimit, timeLimitLength, theme, soundEffects }
+  /** The time limit a new game is played with; undefined while it is off */
+  const activeTimeLimit = computed(() => (timeLimit.value ? timeLimitLength.value : undefined))
+
+  return { timeLimit, timeLimitLength, theme, soundEffects, activeTimeLimit }
 })

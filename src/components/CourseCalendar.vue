@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import { type DayKey, dayKey, toDayKey, parseDayKey, monthGrid } from '../logic/dailyStats'
 import { WEEKDAY_LABELS } from '../logic/labels'
+import { useMonthNav } from '../composables/useMonthNav'
 
 /** A month at a time, with the days on which every daily course was cleared checked */
 const props = defineProps<{ completedDays: DayKey[] }>()
@@ -9,27 +10,10 @@ const props = defineProps<{ completedDays: DayKey[] }>()
 const completed = computed(() => new Set(props.completedDays))
 const todayKey = dayKey(Date.now())
 
-const now = new Date()
-const viewYear = ref(now.getFullYear())
-const viewMonth = ref(now.getMonth())
-
-function monthIndex(year: number, month: number) {
-  return year * 12 + month
-}
-const viewIndex = computed(() => monthIndex(viewYear.value, viewMonth.value))
-const canGoNext = computed(() => viewIndex.value < monthIndex(now.getFullYear(), now.getMonth()))
 // back as far as the month of the first completed day
-const canGoPrev = computed(() => {
-  const first = props.completedDays[0]
-  if (!first) return false
-  const { year, month } = parseDayKey(first)
-  return viewIndex.value > monthIndex(year, month)
-})
-function shiftMonth(delta: number) {
-  const i = viewIndex.value + delta
-  viewYear.value = Math.floor(i / 12)
-  viewMonth.value = i % 12
-}
+const { viewYear, viewMonth, canGoNext, canGoPrev, shiftMonth } = useMonthNav(
+  computed(() => props.completedDays[0]),
+)
 
 const monthCount = computed(
   () =>

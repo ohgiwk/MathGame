@@ -47,7 +47,7 @@ function handleStart() {
     difficulty: selectedDifficulty.value,
     operation: selectedOperation.value,
     mixedOperations: selectedMixed.value,
-    timeLimit: preferences.timeLimit ? preferences.timeLimitLength : undefined,
+    timeLimit: preferences.activeTimeLimit,
   })
 }
 </script>

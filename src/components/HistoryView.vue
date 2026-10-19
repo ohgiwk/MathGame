@@ -115,7 +115,7 @@ function toggleDay(day: DayKey) {
       </ul>
       <button
         v-if="g.records.length > DAY_PREVIEW"
-        class="history-toggle"
+        class="more-btn"
         :aria-expanded="openDays.has(g.day)"
         @click="toggleDay(g.day)"
       >
@@ -204,23 +204,6 @@ function toggleDay(day: DayKey) {
 /* 履歴 */
 .history-list {
   list-style: none;
-}
-.history-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  width: 100%;
-  margin-top: 0.6rem;
-  padding: 6px 0;
-  border: 1px solid var(--border);
-  border-radius: 99px;
-  background: transparent;
-  color: var(--text-sub);
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  cursor: pointer;
 }
 .toggle-arrow {
   transition: transform 0.2s ease;

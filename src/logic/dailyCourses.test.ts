@@ -9,7 +9,6 @@ import {
   markCourseCleared,
   nextCourse,
   longestStreak,
-  courseLabel,
   courseMeta,
 } from './dailyCourses'
 
@@ -140,21 +139,5 @@ describe('longestStreak', () => {
 describe('courseMeta', () => {
   it('names the difficulty and the length', () => {
     expect(courseMeta(course('e', { difficulty: 'easy', questionCount: 50 }))).toBe('易しい · 50問')
-  })
-})
-
-describe('courseLabel', () => {
-  it('names the difficulty, the operation and the length', () => {
-    expect(courseLabel(a)).toBe('普通 · 足し算 · 10問')
-    expect(
-      courseLabel(
-        course('m', {
-          difficulty: 'hard',
-          operation: 'mixed',
-          mixedOperations: ['addition', 'subtraction'],
-          questionCount: 30,
-        }),
-      ),
-    ).toBe('難しい · ミックス（+−） · 30問')
   })
 })

@@ -6,7 +6,6 @@ import {
   MIN_MIXED_OPERATIONS,
   OPERATIONS,
   QUESTION_COUNTS,
-  operationLabel,
 } from './labels'
 import { isOneOf } from './guards'
 import { dayKey, parseDayKey, type DayKey } from './dailyStats'
@@ -147,13 +146,4 @@ export function longestStreak(days: Iterable<DayKey>): number {
 /** The second line under a course's operation, e.g. "普通 · 10問" */
 export function courseMeta(course: Course): string {
   return `${DIFFICULTY_LABELS[course.difficulty]} · ${course.questionCount}問`
-}
-
-/** e.g. "普通 · 足し算 · 10問" */
-export function courseLabel(course: Course): string {
-  return [
-    DIFFICULTY_LABELS[course.difficulty],
-    operationLabel(course.operation, course.mixedOperations),
-    `${course.questionCount}問`,
-  ].join(' · ')
 }

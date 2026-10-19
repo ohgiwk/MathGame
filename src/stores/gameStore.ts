@@ -137,7 +137,7 @@ export const useGameStore = defineStore('game', () => {
         difficulty: course.difficulty,
         operation: course.operation,
         mixedOperations: course.mixedOperations,
-        timeLimit: preferences.timeLimit ? preferences.timeLimitLength : undefined,
+        timeLimit: preferences.activeTimeLimit,
       },
       course.id,
     )

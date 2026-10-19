@@ -706,6 +706,25 @@ body::before {
   min-height: 26px;
 }
 
+/* A full-width button under a card's list, to see more of it */
+.more-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  margin-top: 0.6rem;
+  padding: 6px 0;
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  background: transparent;
+  color: var(--text-sub);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
 /* Small rounded toggle, e.g. a difficulty filter; size it where it is used */
 .chip {
   background: transparent;

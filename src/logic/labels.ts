@@ -126,3 +126,17 @@ export function operationLabel(operation: Operation, mixedOperations?: ActualOpe
   if (ops.length === ACTUAL_OPERATIONS.length) return label
   return `${label}（${ops.map((op) => OPERATOR_SYMBOLS[op]).join('')}）`
 }
+
+/** A game's kind for display, e.g. "普通 · ミックス（+−） · 10問" */
+export function gameKindLabel(game: {
+  difficulty: Difficulty
+  operation: Operation
+  mixedOperations?: ActualOperation[]
+  questionCount: RecordedQuestionCount
+}): string {
+  return [
+    DIFFICULTY_LABELS[game.difficulty],
+    operationLabel(game.operation, game.mixedOperations),
+    questionCountLabel(game.questionCount),
+  ].join(' · ')
+}
