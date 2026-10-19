@@ -1,7 +1,7 @@
 export type Difficulty = 'easy' | 'normal' | 'hard'
 export type Operation = 'addition' | 'subtraction' | 'multiplication' | 'division' | 'mixed'
 export type ActualOperation = Exclude<Operation, 'mixed'>
-export type Screen = 'setup' | 'game' | 'result' | 'stats' | 'settings' | 'courses'
+export type Screen = 'setup' | 'game' | 'result' | 'stats' | 'settings'
 export type GameEndReason = 'clear' | 'gameover'
 /** How long each question may take when the time limit is on */
 export type TimeLimitLength = 'short' | 'normal' | 'long'
@@ -103,7 +103,7 @@ export interface GameRecord extends GameOutcome {
   score: number
 }
 
-/** A daily course: a game setting the player means to clear once every day */
+/** A daily course: one game of the day's set, drawn for the player's level */
 export interface Course {
   id: string
   difficulty: Difficulty

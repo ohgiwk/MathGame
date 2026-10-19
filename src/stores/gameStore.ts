@@ -37,8 +37,8 @@ export const useGameStore = defineStore('game', () => {
   /** the daily course being played, kept for a retry; null for a game set up on the home screen */
   const courseId = ref<string | null>(null)
   /**
-   * whether home shows the daily course list; it stays open while a course is played or the
-   * courses are edited, so the player comes back to it
+   * whether home shows the daily course list; it stays open while a course is played, so the
+   * player comes back to it
    */
   // opened on launch while today's courses are still to clear, with a greeting for the day
   courseStore.refreshDay()
@@ -251,11 +251,6 @@ export const useGameStore = defineStore('game', () => {
     screen.value = 'settings'
   }
 
-  function openCourses() {
-    courseGreeting.value = false
-    screen.value = 'courses'
-  }
-
   return {
     screen,
     settings,
@@ -273,6 +268,5 @@ export const useGameStore = defineStore('game', () => {
     goHome,
     openStats,
     openSettings,
-    openCourses,
   }
 })

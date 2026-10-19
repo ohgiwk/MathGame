@@ -132,66 +132,59 @@ describe('gameStore', () => {
     it('checks the course off when its game is cleared, also on a retry', () => {
       const store = useGameStore()
       const courses = useCourseStore()
-      courses.addCourse(settings)
-      const id = courses.courses[0].id
+      const course = courses.courses[0]
 
-      store.startGame(settings, id)
+      store.startCourse(course)
       playCourse(store, false)
-      expect(courses.isCleared(id)).toBe(false)
+      expect(courses.isCleared(course.id)).toBe(false)
 
       store.startGame()
       playCourse(store, true)
-      expect(courses.isCleared(id)).toBe(true)
+      expect(courses.isCleared(course.id)).toBe(true)
     })
 
     it('opens with the courses and a greeting while some are still to clear', () => {
-      expect(useGameStore()).toMatchObject({ courseDialogOpen: false, courseGreeting: false })
-
-      setActivePinia(createPinia())
-      useCourseStore().addCourse(settings)
       const store = useGameStore()
       expect(store).toMatchObject({ courseDialogOpen: true, courseGreeting: true })
 
       // the greeting is only for the launch; the list stays open around the course
-      store.startGame(settings, useCourseStore().courses[0].id)
+      store.startCourse(useCourseStore().courses[0])
       expect(store).toMatchObject({ courseDialogOpen: true, courseGreeting: false })
     })
 
     it('does not open once every course is cleared today', () => {
       const courses = useCourseStore()
-      courses.addCourse(settings)
-      courses.markCleared(courses.courses[0].id)
-      expect(useGameStore().courseDialogOpen).toBe(false)
+      courses.courses.forEach((c) => courses.markCleared(c.id))
+      expect(useGameStore()).toMatchObject({ courseDialogOpen: false, courseGreeting: false })
     })
 
     it('starts a course with its settings and the chosen time limit', () => {
       const store = useGameStore()
-      const courses = useCourseStore()
+      const course = useCourseStore().courses[0]
       usePreferencesStore().timeLimit = true
-      courses.addCourse({ difficulty: 'hard', operation: 'division', questionCount: 20 })
-      const course = courses.courses[0]
 
       store.startCourse(course)
       expect(store.courseId).toBe(course.id)
       expect(store.gameState!.settings).toMatchObject({
-        difficulty: 'hard',
-        operation: 'division',
-        questionCount: 20,
+        difficulty: course.difficulty,
+        operation: course.operation,
+        mixedOperations: course.mixedOperations,
+        questionCount: course.questionCount,
         timeLimit: 'normal',
       })
+      expect(store.gameState!.questions).toHaveLength(course.questionCount)
     })
 
     it('does not check a course off for a game set up on the home screen', () => {
       const store = useGameStore()
       const courses = useCourseStore()
-      courses.addCourse(settings)
-      const id = courses.courses[0].id
+      const course = courses.courses[0]
 
-      store.startGame(settings, id)
+      store.startCourse(course)
       store.goHome()
       store.startGame(settings)
       playCourse(store, true)
-      expect(courses.isCleared(id)).toBe(false)
+      expect(courses.isCleared(course.id)).toBe(false)
     })
   })
 

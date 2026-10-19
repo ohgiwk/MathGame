@@ -1,9 +1,31 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useCourseStore } from './courseStore'
+import { useStatsStore } from './statsStore'
+import { generateDailyCourses } from '../logic/courseGenerator'
+import { levelFromExp, totalExp } from '../logic/level'
 
-const easy = { difficulty: 'easy', operation: 'addition', questionCount: 10 } as const
-const hard = { difficulty: 'hard', operation: 'division', questionCount: 20 } as const
+/** Saves a cleared game worth `score`, raising the player's level */
+function play(score: number) {
+  useStatsStore().addRecord({
+    difficulty: 'normal',
+    operation: 'addition',
+    questionCount: 10,
+    endReason: 'clear',
+    correctCount: 10,
+    totalAnswered: 10,
+    elapsedSeconds: 30,
+    score,
+  })
+}
+
+function currentLevel(): number {
+  return levelFromExp(totalExp(useStatsStore().records)).level
+}
+
+function clearAll(store: ReturnType<typeof useCourseStore>) {
+  store.courses.forEach((c) => store.markCleared(c.id))
+}
 
 describe('courseStore', () => {
   beforeEach(() => {
@@ -15,65 +37,68 @@ describe('courseStore', () => {
     vi.useRealTimers()
   })
 
-  it('adds, edits, reorders and removes courses', () => {
+  it("sets the day's courses for the level, keeping them through a level up", () => {
+    play(150_000)
+    const level = currentLevel()
+    expect(level).toBeGreaterThan(20)
+
     const store = useCourseStore()
-    store.addCourse(easy)
-    store.addCourse({ ...hard, operation: 'mixed', mixedOperations: ['addition', 'division'] })
-    const [first, second] = store.courses
-    expect(second).toMatchObject({ operation: 'mixed', mixedOperations: ['addition', 'division'] })
+    expect(store.level).toBe(level)
+    const courses = generateDailyCourses(level, '2026-10-17')
+    expect(store.courses).toEqual(courses)
 
-    // operations picked for a mix are dropped once the course is no longer a mix
-    store.updateCourse(second.id, { ...hard, mixedOperations: ['addition', 'division'] })
-    expect(store.courses[1]).toEqual({ id: second.id, ...hard })
+    play(150_000)
+    store.refreshDay()
+    expect(currentLevel()).toBeGreaterThan(level)
+    expect(store.courses).toEqual(courses)
 
-    store.moveCourse(second.id, -1)
-    expect(store.courses.map((c) => c.id)).toEqual([second.id, first.id])
-    store.moveCourse(second.id, -1)
-    expect(store.courses.map((c) => c.id)).toEqual([second.id, first.id])
+    // the next day the courses are set again, for the level reached by then
+    vi.setSystemTime(new Date(2026, 9, 18, 9))
+    store.refreshDay()
+    expect(store.level).toBe(currentLevel())
+    expect(store.courses).toEqual(generateDailyCourses(currentLevel(), '2026-10-18'))
+  })
 
-    store.removeCourse(second.id)
-    expect(store.courses.map((c) => c.id)).toEqual([first.id])
+  it('starts a beginner on level 1 courses', () => {
+    const store = useCourseStore()
+    expect(store.level).toBe(1)
+    expect(store.courses.length).toBeGreaterThanOrEqual(2)
+    expect(store.courses.every((c) => c.difficulty === 'easy')).toBe(true)
   })
 
   it('checks cleared courses for the day and counts the days with all of them cleared', () => {
     const store = useCourseStore()
-    store.addCourse(easy)
-    store.addCourse(hard)
-    const [a, b] = store.courses
+    const [a] = store.courses
 
     store.markCleared(a.id)
     expect(store.isCleared(a.id)).toBe(true)
     expect(store.clearedCount).toBe(1)
     expect(store.allClearedToday).toBe(false)
     expect(store.streak).toBe(0)
+    expect(store.nextCourse(a.id)).toBe(store.courses[1])
 
-    store.markCleared(b.id)
+    clearAll(store)
     expect(store.allClearedToday).toBe(true)
+    expect(store.nextCourse(a.id)).toBeNull()
     expect(store.streak).toBe(1)
 
-    // the next day the checks reset, but the streak holds until the day is missed
+    // the next day there are new courses to clear, and the streak holds until the day is missed
     vi.setSystemTime(new Date(2026, 9, 18, 9))
     store.refreshDay()
     expect(store.clearedCount).toBe(0)
     expect(store.streak).toBe(1)
+
+    // a course of the day before no longer counts
     store.markCleared(a.id)
-    store.markCleared(b.id)
+    expect(store.clearedCount).toBe(0)
+
+    clearAll(store)
     expect(store.streak).toBe(2)
+    expect(store.completedDays).toEqual(['2026-10-17', '2026-10-18'])
 
     vi.setSystemTime(new Date(2026, 9, 20, 9))
     store.refreshDay()
     expect(store.streak).toBe(0)
     expect(store.bestStreak).toBe(2)
-  })
-
-  it('completes the day when the last uncleared course is removed', () => {
-    const store = useCourseStore()
-    store.addCourse(easy)
-    store.addCourse(hard)
-    const [a, b] = store.courses
-    store.markCleared(a.id)
-    store.removeCourse(b.id)
-    expect(store.allClearedToday).toBe(true)
-    expect(store.streak).toBe(1)
   })
 })

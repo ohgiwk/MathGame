@@ -2,12 +2,11 @@ import { describe, it, expect } from 'vitest'
 import type { Course } from '../types/game'
 import {
   EMPTY_PROGRESS,
-  parseCourses,
+  parseDailyCourses,
   parseProgress,
   clearedIdsOn,
   allCleared,
   markCourseCleared,
-  syncCompletion,
   nextCourse,
   longestStreak,
   courseLabel,
@@ -21,25 +20,34 @@ function course(id: string, overrides: Partial<Course> = {}): Course {
 const a = course('a')
 const b = course('b')
 
-describe('parseCourses', () => {
-  it('keeps usable courses and drops the rest', () => {
+describe('parseDailyCourses', () => {
+  const day = '2026-10-17'
+
+  it('keeps the usable courses of a saved day and drops the rest', () => {
     const mix = course('m', { operation: 'mixed', mixedOperations: ['addition', 'division'] })
     expect(
-      parseCourses([
-        a,
-        mix,
-        { ...a, questionCount: 'endless' },
-        { ...a, difficulty: 'extreme' },
-        { ...a, mixedOperations: ['addition'] },
-        { ...a, id: 1 },
-        null,
-      ]),
-    ).toEqual([a, mix])
+      parseDailyCourses({
+        day,
+        level: 12,
+        courses: [
+          a,
+          mix,
+          { ...a, questionCount: 'endless' },
+          { ...a, difficulty: 'extreme' },
+          { ...a, mixedOperations: ['addition'] },
+          { ...a, id: 1 },
+          null,
+        ],
+      }),
+    ).toEqual({ day, level: 12, courses: [a, mix] })
   })
 
-  it('returns nothing for anything but an array', () => {
-    expect(parseCourses(undefined)).toEqual([])
-    expect(parseCourses({ a })).toEqual([])
+  it('is null for anything that is not a usable day', () => {
+    expect(parseDailyCourses(undefined)).toBeNull()
+    expect(parseDailyCourses([a])).toBeNull()
+    expect(parseDailyCourses({ day: 'today', level: 1, courses: [a] })).toBeNull()
+    expect(parseDailyCourses({ day, courses: [a] })).toBeNull()
+    expect(parseDailyCourses({ day, level: 1, courses: [{ id: 'x' }] })).toBeNull()
   })
 })
 
@@ -91,28 +99,15 @@ describe('markCourseCleared', () => {
     expect(p.completedDays).toEqual([day])
   })
 
+  it('keeps a completed day completed', () => {
+    const p = markCourseCleared(EMPTY_PROGRESS, [a], 'a', day)
+    expect(markCourseCleared(p, [a, b], 'a', day).completedDays).toEqual([day])
+  })
+
   it('starts the clears over on a new day, keeping the completed days', () => {
     let p = markCourseCleared(EMPTY_PROGRESS, [a], 'a', '2026-10-16')
     p = markCourseCleared(p, [a, b], 'b', day)
     expect(p).toEqual({ day, clearedIds: ['b'], completedDays: ['2026-10-16'] })
-  })
-})
-
-describe('syncCompletion', () => {
-  const day = '2026-10-17'
-
-  it('completes the day when the only uncleared course is removed', () => {
-    const p = markCourseCleared(EMPTY_PROGRESS, [a, b], 'a', day)
-    expect(syncCompletion(p, [a], day).completedDays).toEqual([day])
-  })
-
-  it('keeps a completed day when a course is added afterwards', () => {
-    const p = markCourseCleared(EMPTY_PROGRESS, [a], 'a', day)
-    expect(syncCompletion(p, [a, b], day).completedDays).toEqual([day])
-  })
-
-  it('does not complete a day with no courses', () => {
-    expect(syncCompletion(EMPTY_PROGRESS, [], day)).toEqual(EMPTY_PROGRESS)
   })
 })
 

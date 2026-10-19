@@ -16,6 +16,14 @@ export const COURSE_QUESTION_COUNTS = QUESTION_COUNTS.filter(
   (c): c is FixedQuestionCount => c !== 'endless',
 )
 
+/** The courses set for one day, kept so they stay the same all day even if the level goes up */
+export interface DailyCourses {
+  day: DayKey
+  /** the player's level when the courses were set */
+  level: number
+  courses: Course[]
+}
+
 /** Which courses are cleared today, and the days on which all of them were */
 export interface CourseProgress {
   /** the day `clearedIds` were cleared on; on any other day nothing counts as cleared */
@@ -53,10 +61,14 @@ function isCourse(value: unknown): value is Course {
   )
 }
 
-/** Turns whatever was read from storage into courses, dropping entries that are not usable. */
-export function parseCourses(stored: unknown): Course[] {
-  if (!Array.isArray(stored)) return []
-  return stored.filter(isCourse).map((c) => ({ ...c }))
+/** Turns whatever was read from storage into a day's courses; null when it is not usable */
+export function parseDailyCourses(stored: unknown): DailyCourses | null {
+  if (typeof stored !== 'object' || stored === null) return null
+  const d = stored as Record<string, unknown>
+  if (!isDayKey(d.day) || typeof d.level !== 'number' || !Array.isArray(d.courses)) return null
+  const courses = d.courses.filter(isCourse).map((c) => ({ ...c }))
+  if (courses.length === 0) return null
+  return { day: d.day, level: d.level, courses }
 }
 
 export function parseProgress(stored: unknown): CourseProgress {
@@ -81,21 +93,9 @@ export function allCleared(courses: readonly Course[], clearedIds: readonly stri
 }
 
 /**
- * Adds `day` to the completed days once every course is cleared on it. Called after a clear, and
- * after the courses change, since deleting the last uncleared course also completes the day.
- * A day once completed stays completed, even if a course is added later that day.
+ * Marks a course as cleared on `day`, and the day as completed when it was the last one left.
+ * A day once completed stays completed.
  */
-export function syncCompletion(
-  progress: CourseProgress,
-  courses: readonly Course[],
-  day: DayKey,
-): CourseProgress {
-  if (progress.completedDays.includes(day)) return progress
-  if (!allCleared(courses, clearedIdsOn(progress, day))) return progress
-  return { ...progress, completedDays: [...progress.completedDays, day].sort() }
-}
-
-/** Marks a course as cleared on `day`, completing the day when it was the last one left. */
 export function markCourseCleared(
   progress: CourseProgress,
   courses: readonly Course[],
@@ -104,7 +104,13 @@ export function markCourseCleared(
 ): CourseProgress {
   const cleared = clearedIdsOn(progress, day)
   const clearedIds = cleared.includes(courseId) ? cleared : [...cleared, courseId]
-  return syncCompletion({ ...progress, day, clearedIds }, courses, day)
+  const completes = !progress.completedDays.includes(day) && allCleared(courses, clearedIds)
+  return {
+    ...progress,
+    day,
+    clearedIds,
+    completedDays: completes ? [...progress.completedDays, day].sort() : progress.completedDays,
+  }
 }
 
 /**
