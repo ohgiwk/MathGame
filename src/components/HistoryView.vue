@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import type { GameRecord } from '../types/game'
-import { DIFFICULTY_LABELS, operationLabel, questionCountLabel } from '../logic/labels'
 import { type DayKey, dayKey, summarizeByDay } from '../logic/dailyStats'
-import { formatScore, formatElapsedTime, formatTotalTime, formatDayHeading } from '../logic/format'
+import { formatTotalTime, formatDayHeading } from '../logic/format'
 import { summarize } from '../logic/statsCalculator'
+import HistoryRow from './HistoryRow.vue'
 
 const props = defineProps<{
   /** Newest first */
@@ -107,38 +107,11 @@ function toggleDay(day: DayKey) {
         <span class="section-note">{{ g.records.length }}回</span>
       </h2>
       <ul class="history-list">
-        <li
+        <HistoryRow
           v-for="r in openDays.has(g.day) ? g.records : g.records.slice(0, DAY_PREVIEW)"
           :key="r.id"
-          class="history-row"
-        >
-          <div class="history-main">
-            <div class="history-mode">
-              {{ DIFFICULTY_LABELS[r.difficulty] }} ·
-              {{ operationLabel(r.operation, r.mixedOperations) }} ·
-              {{ questionCountLabel(r.questionCount) }}
-            </div>
-          </div>
-          <div class="history-result">
-            <div class="history-score">{{ formatScore(r.score) }}</div>
-            <div class="history-time">
-              {{ r.correctCount }} / {{ r.totalAnswered }} ·
-              {{ formatElapsedTime(r.elapsedSeconds) }}
-            </div>
-          </div>
-          <span
-            class="history-badge pill"
-            :class="
-              r.questionCount === 'endless'
-                ? 'pill-endless'
-                : r.endReason === 'clear'
-                  ? 'pill-success'
-                  : 'pill-danger'
-            "
-          >
-            {{ r.questionCount === 'endless' ? '∞' : r.endReason === 'clear' ? 'クリア' : '失敗' }}
-          </span>
-        </li>
+          :record="r"
+        />
       </ul>
       <button
         v-if="g.records.length > DAY_PREVIEW"
@@ -254,56 +227,5 @@ function toggleDay(day: DayKey) {
 }
 .toggle-arrow.open {
   transform: rotate(180deg);
-}
-.history-row {
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-  padding: 0.5rem 0;
-  border-top: 1px solid rgba(var(--wash-rgb), 0.06);
-}
-.history-row:first-child {
-  border-top: none;
-  padding-top: 0;
-}
-.history-row:last-child {
-  padding-bottom: 0;
-}
-.history-main {
-  flex: 1;
-  min-width: 0;
-}
-.history-mode {
-  font-size: 0.82rem;
-  font-weight: 700;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.history-result {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-.history-score {
-  font-size: 1rem;
-  font-weight: 900;
-  color: var(--gold-light);
-}
-.history-time {
-  font-size: 0.7rem;
-  color: var(--text-sub);
-  margin-top: 1px;
-}
-/* an endless game has no clear or failure; it just ends */
-.pill-endless {
-  --pill-rgb: var(--gold-rgb);
-  color: var(--gold-light);
-}
-.history-badge {
-  flex-shrink: 0;
-  width: 3.4rem;
-  text-align: center;
-  font-size: 0.68rem;
-  padding: 3px 0;
 }
 </style>

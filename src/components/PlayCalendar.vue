@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import type { GameRecord } from '../types/game'
 import {
   type DayKey,
@@ -11,9 +11,18 @@ import {
   currentStreak,
 } from '../logic/dailyStats'
 import { WEEKDAY_LABELS } from '../logic/labels'
+import { formatDayHeading } from '../logic/format'
+import HistoryRow from './HistoryRow.vue'
 
-const props = defineProps<{ records: GameRecord[] }>()
+const props = defineProps<{
+  /** Newest first */
+  records: GameRecord[]
+}>()
+/** asks for the day to be opened in the history tab */
 const emit = defineEmits<{ select: [day: DayKey] }>()
+
+/** How many of the chosen day's games show under the calendar */
+const DAY_PREVIEW = 3
 
 const days = computed(() => summarizeByDay(props.records))
 const dayMap = computed(() => new Map(days.value.map((d) => [d.day, d])))
@@ -40,6 +49,22 @@ function shiftMonth(delta: number) {
   viewYear.value = Math.floor(i / 12)
   viewMonth.value = i % 12
 }
+
+// the day whose games show under the calendar; the latest played day unless one is tapped
+const selectedDay = ref<DayKey | null>(null)
+watch(
+  days,
+  (list) => {
+    if (!list.some((d) => d.day === selectedDay.value)) selectedDay.value = list.at(-1)?.day ?? null
+  },
+  { immediate: true },
+)
+const selectedSummary = computed(() =>
+  selectedDay.value ? (dayMap.value.get(selectedDay.value) ?? null) : null,
+)
+const selectedRecords = computed(() =>
+  props.records.filter((r) => dayKey(r.playedAt) === selectedDay.value).slice(0, DAY_PREVIEW),
+)
 
 const weeks = computed(() =>
   monthGrid(viewYear.value, viewMonth.value).map((week) =>
@@ -92,14 +117,18 @@ const weeks = computed(() =>
     <div v-for="(week, wi) in weeks" :key="wi" class="cal-grid">
       <template v-for="(cell, ci) in week" :key="ci">
         <div v-if="cell === null" class="cal-cell empty" />
-        <!-- tapping a played day opens it in the history tab -->
+        <!-- tapping a played day shows its games under the calendar -->
         <button
           v-else
           class="cal-cell"
-          :class="[`level-${cell.level}`, { today: cell.key === todayKey }]"
+          :class="[
+            `level-${cell.level}`,
+            { today: cell.key === todayKey, selected: cell.key === selectedDay },
+          ]"
           :disabled="cell.count === 0"
           :aria-label="`${cell.date}日 ${cell.count}回`"
-          @click="emit('select', cell.key)"
+          :aria-pressed="cell.key === selectedDay"
+          @click="selectedDay = cell.key"
         >
           {{ cell.date }}
         </button>
@@ -111,6 +140,23 @@ const weeks = computed(() =>
       <span class="legend-swatch level-2" />
       <span class="legend-swatch level-3" />
       <span>多</span>
+    </div>
+
+    <!-- the chosen day: how often it was played and its newest games -->
+    <div v-if="selectedSummary" class="day-detail">
+      <div class="day-head">
+        <span class="day-title">{{ formatDayHeading(selectedSummary.day) }}</span>
+        <span class="day-count">
+          <span class="day-count-value">{{ selectedSummary.playCount }}</span
+          >回プレイ
+        </span>
+      </div>
+      <ul class="day-list">
+        <HistoryRow v-for="r in selectedRecords" :key="r.id" :record="r" compact />
+      </ul>
+      <button class="more-btn" @click="emit('select', selectedSummary.day)">
+        もっと見る <span aria-hidden="true">›</span>
+      </button>
     </div>
   </div>
 </template>
@@ -202,6 +248,11 @@ const weeks = computed(() =>
 .cal-cell.today {
   border-color: var(--gem-teal);
 }
+.cal-cell.selected {
+  box-shadow:
+    0 0 0 2px var(--gold-light),
+    0 0 8px rgba(var(--gold-rgb), 0.45);
+}
 .cal-legend {
   display: flex;
   align-items: center;
@@ -215,5 +266,54 @@ const weeks = computed(() =>
   width: 10px;
   height: 10px;
   border-radius: 3px;
+}
+
+/* the chosen day */
+.day-detail {
+  margin-top: 0.7rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--border);
+}
+.day-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+.day-title {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
+.day-count {
+  font-size: 0.7rem;
+  color: var(--text-sub);
+}
+.day-count-value {
+  margin-right: 1px;
+  font-size: 1rem;
+  font-weight: 900;
+  color: var(--gold-light);
+  font-variant-numeric: tabular-nums;
+}
+.day-list {
+  list-style: none;
+}
+.more-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  margin-top: 0.6rem;
+  padding: 6px 0;
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  background: transparent;
+  color: var(--text-sub);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
 }
 </style>
