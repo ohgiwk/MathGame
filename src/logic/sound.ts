@@ -1,6 +1,6 @@
 // Short sound effects made with the Web Audio API, so the app ships no audio files.
 
-export type SoundName = 'correct' | 'incorrect'
+export type SoundName = 'correct' | 'incorrect' | 'clear' | 'gameover' | 'expTick' | 'levelUp'
 
 interface Note {
   /** seconds after the sound starts */
@@ -34,6 +34,47 @@ export const SOUNDS: Record<SoundName, SoundSpec> = {
     volume: 0.2,
     notes: [{ start: 0, duration: 0.24, frequency: 220, endFrequency: 150 }],
   },
+  // on the result screen: a quick rising C major arpeggio
+  clear: {
+    wave: 'triangle',
+    volume: 0.16,
+    notes: [
+      { start: 0, duration: 0.09, frequency: 523.25 },
+      { start: 0.07, duration: 0.09, frequency: 659.25 },
+      { start: 0.14, duration: 0.09, frequency: 783.99 },
+      { start: 0.21, duration: 0.22, frequency: 1046.5 },
+    ],
+  },
+  // on the result screen after running out of lives: a gentle falling line
+  gameover: {
+    wave: 'sine',
+    volume: 0.18,
+    notes: [
+      { start: 0, duration: 0.13, frequency: 392 },
+      { start: 0.12, duration: 0.13, frequency: 329.63 },
+      { start: 0.24, duration: 0.26, frequency: 261.63, endFrequency: 246.94 },
+    ],
+  },
+  // a faint blip, repeated while the EXP bar fills; its pitch follows the bar
+  expTick: {
+    wave: 'sine',
+    volume: 0.08,
+    notes: [{ start: 0, duration: 0.04, frequency: 523.25 }],
+  },
+  // each time the bar fills up: a sparkling pair, G6 then C7
+  levelUp: {
+    wave: 'triangle',
+    volume: 0.16,
+    notes: [
+      { start: 0, duration: 0.1, frequency: 1567.98 },
+      { start: 0.08, duration: 0.2, frequency: 2093 },
+    ],
+  },
+}
+
+/** Pitch for an EXP tick: rises an octave as the bar goes from empty (0) to full (1) */
+export function expTickPitch(ratio: number): number {
+  return 2 ** Math.min(Math.max(ratio, 0), 1)
 }
 
 /** Seconds from the start of the sound to the end of its last note */
@@ -49,7 +90,8 @@ const SILENT_GAIN = 0.0001
 export interface SoundPlayer {
   /** Starts (or restarts) audio; must run inside a user's input for iOS to allow it */
   unlock(): void
-  play(name: SoundName): void
+  /** `pitch` multiplies every frequency of the sound (2 is an octave up) */
+  play(name: SoundName, pitch?: number): void
 }
 
 /**
@@ -76,14 +118,14 @@ export function createSoundPlayer(createContext: () => AudioContext | null): Sou
     if (c && c.state !== 'running') c.resume().catch(() => {})
   }
 
-  function playNote(c: AudioContext, spec: SoundSpec, note: Note, at: number) {
+  function playNote(c: AudioContext, spec: SoundSpec, note: Note, at: number, pitch: number) {
     const start = at + note.start
     const end = start + note.duration
     const osc = c.createOscillator()
     osc.type = spec.wave
-    osc.frequency.setValueAtTime(note.frequency, start)
+    osc.frequency.setValueAtTime(note.frequency * pitch, start)
     if (note.endFrequency !== undefined) {
-      osc.frequency.exponentialRampToValueAtTime(note.endFrequency, end)
+      osc.frequency.exponentialRampToValueAtTime(note.endFrequency * pitch, end)
     }
     const gain = c.createGain()
     gain.gain.setValueAtTime(SILENT_GAIN, start)
@@ -94,11 +136,11 @@ export function createSoundPlayer(createContext: () => AudioContext | null): Sou
     osc.stop(end)
   }
 
-  function play(name: SoundName) {
+  function play(name: SoundName, pitch = 1) {
     const c = context()
     if (!c) return
     const spec = SOUNDS[name]
-    for (const note of spec.notes) playNote(c, spec, note, c.currentTime)
+    for (const note of spec.notes) playNote(c, spec, note, c.currentTime, pitch)
   }
 
   return { unlock, play }

@@ -3,6 +3,7 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useGameStore } from '../stores/gameStore'
 import { useStatsStore } from '../stores/statsStore'
 import { useCourseStore } from '../stores/courseStore'
+import { usePreferencesStore } from '../stores/preferencesStore'
 import { summarize, recordsLike } from '../logic/statsCalculator'
 import {
   formatScore,
@@ -19,12 +20,14 @@ import {
 } from '../logic/labels'
 import { courseLabel } from '../logic/dailyCourses'
 import { useCountUp } from '../composables/useCountUp'
-import { expForScore, totalExp, levelFromExp } from '../logic/level'
+import { expForScore, totalExp, levelFromExp, levelRatio } from '../logic/level'
+import { soundPlayer, expTickPitch } from '../logic/sound'
 import LevelBar from './LevelBar.vue'
 
 const store = useGameStore()
 const statsStore = useStatsStore()
 const courseStore = useCourseStore()
+const preferences = usePreferencesStore()
 const result = computed(() => store.result)
 const outcome = computed(() => store.result?.outcome)
 const isEndless = computed(() => outcome.value?.questionCount === 'endless')
@@ -69,14 +72,29 @@ const EXP_DELAY_MS = 1450
 const EXP_FILL_MS = Math.min(900 + 450 * levelsGained, 3200)
 let expTimer: ReturnType<typeof setTimeout> | null = null
 let expFrame: number | null = null
+/** Time between the blips that sound while the bar moves */
+const EXP_TICK_INTERVAL_MS = 70
 
 function fillExp() {
   const startedAt = performance.now()
+  let lastTickAt = -Infinity
   const tick = (now: number) => {
     const progress = Math.min((now - startedAt) / EXP_FILL_MS, 1)
     // eases in and out, so each level-up along the way gets a moment of its own
     const eased = progress < 0.5 ? 2 * progress ** 2 : 1 - (-2 * progress + 2) ** 2 / 2
+    const previous = shownExp.value
+    const previousLevel = shownLevel.value.level
     shownExp.value = Math.round(expBefore + gainedExp * eased)
+    if (preferences.soundEffects) {
+      // a level-up chimes instead of the blip; otherwise the blip rises with the bar
+      if (shownLevel.value.level > previousLevel) {
+        soundPlayer.play('levelUp')
+        lastTickAt = now
+      } else if (shownExp.value !== previous && now - lastTickAt >= EXP_TICK_INTERVAL_MS) {
+        soundPlayer.play('expTick', expTickPitch(levelRatio(shownLevel.value)))
+        lastTickAt = now
+      }
+    }
     expFrame = progress < 1 ? requestAnimationFrame(tick) : null
   }
   expFrame = requestAnimationFrame(tick)
@@ -121,6 +139,8 @@ function cancelAutoSlide() {
 }
 
 onMounted(() => {
+  // an endless game's finish sounds like a clear, as it is not shown as a failure either
+  if (r && preferences.soundEffects) soundPlayer.play(isGameOver.value ? 'gameover' : 'clear')
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     shownExp.value = expAfter
     return

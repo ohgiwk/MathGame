@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { createSoundPlayer, soundDuration, unlockOnUserInput, SOUNDS } from './sound'
+import { createSoundPlayer, expTickPitch, soundDuration, unlockOnUserInput, SOUNDS } from './sound'
 
 interface FakeOscillator {
   type: string
@@ -39,17 +39,47 @@ function fakeContext(state: AudioContextState = 'suspended') {
 }
 
 describe('SOUNDS', () => {
-  it('keeps every effect short', () => {
-    for (const spec of Object.values(SOUNDS)) {
+  it('keeps the answer effects short, so they finish before the next question', () => {
+    for (const spec of [SOUNDS.correct, SOUNDS.incorrect]) {
       expect(soundDuration(spec)).toBeGreaterThanOrEqual(0.1)
       expect(soundDuration(spec)).toBeLessThanOrEqual(0.3)
     }
+  })
+
+  it('keeps the result effects to about half a second', () => {
+    for (const spec of [SOUNDS.clear, SOUNDS.gameover]) {
+      expect(soundDuration(spec)).toBeLessThanOrEqual(0.5)
+    }
+  })
+
+  it('keeps an EXP tick shorter than the gap between ticks', () => {
+    expect(soundDuration(SOUNDS.expTick)).toBeLessThanOrEqual(0.06)
+  })
+
+  it('rises for a clear and falls for a game over', () => {
+    const pitches = (name: keyof typeof SOUNDS) => SOUNDS[name].notes.map((n) => n.frequency)
+    const rising = (fs: number[]) => fs.every((f, i) => i === 0 || f > fs[i - 1])
+    expect(rising(pitches('clear'))).toBe(true)
+    expect(rising([...pitches('gameover')].reverse())).toBe(true)
   })
 
   it('pitches the miss below the correct answer', () => {
     const lowest = (name: keyof typeof SOUNDS) =>
       Math.min(...SOUNDS[name].notes.map((n) => n.frequency))
     expect(SOUNDS.incorrect.notes[0].frequency).toBeLessThan(lowest('correct'))
+  })
+})
+
+describe('expTickPitch', () => {
+  it('rises an octave from an empty bar to a full one', () => {
+    expect(expTickPitch(0)).toBe(1)
+    expect(expTickPitch(0.5)).toBeCloseTo(Math.SQRT2)
+    expect(expTickPitch(1)).toBe(2)
+  })
+
+  it('stays within the octave for ratios out of range', () => {
+    expect(expTickPitch(-0.2)).toBe(1)
+    expect(expTickPitch(1.5)).toBe(2)
   })
 })
 
@@ -66,6 +96,13 @@ describe('createSoundPlayer', () => {
       expect(osc.started).toBeCloseTo(2 + note.start)
       expect(osc.stopped).toBeCloseTo(2 + note.start + note.duration)
     })
+  })
+
+  it('shifts every frequency by the pitch', () => {
+    const fake = fakeContext('running')
+    createSoundPlayer(fake.create).play('incorrect', 2)
+    const note = SOUNDS.incorrect.notes[0]
+    expect(fake.oscillators[0].frequencies).toEqual([note.frequency * 2, note.endFrequency! * 2])
   })
 
   it('slides the pitch of a note that has an end frequency', () => {
