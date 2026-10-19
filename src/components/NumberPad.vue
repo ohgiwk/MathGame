@@ -15,9 +15,10 @@ const emit = defineEmits<{
 const DIGIT_KEYS = ['7', '8', '9', '4', '5', '6', '1', '2', '3']
 /** how far outside a key a touch may land and still count for it; a little more than the gap */
 const GAP_REACH_PX = 12
-/** while tracing, a key joins the stroke only once the finger is this far inside it (each side),
-    so a path that cuts across a corner does not pick up the keys beside it */
-const TRACE_INSET_RATIO = 0.2
+/** while tracing, a key joins the stroke only once the finger is within this circle around its
+    center (a share of the key's shorter side), like a pattern lock's dots: a circle keeps well
+    away from the corners, so a curving path between rows or columns does not pick up the keys beside it */
+const TRACE_RADIUS_RATIO = 0.35
 
 const padRef = ref<HTMLElement | null>(null)
 
@@ -87,16 +88,12 @@ function digitKeyInsideAt(e: PointerEvent): HTMLButtonElement | null {
   if (!padRef.value) return null
   for (const key of padRef.value.querySelectorAll<HTMLButtonElement>('.pad-key:not(.pad-delete)')) {
     const r = key.getBoundingClientRect()
-    const insetX = r.width * TRACE_INSET_RATIO
-    const insetY = r.height * TRACE_INSET_RATIO
-    if (
-      e.clientX >= r.left + insetX &&
-      e.clientX <= r.right - insetX &&
-      e.clientY >= r.top + insetY &&
-      e.clientY <= r.bottom - insetY
-    ) {
-      return key
-    }
+    const radius = Math.min(r.width, r.height) * TRACE_RADIUS_RATIO
+    const distance = Math.hypot(
+      e.clientX - (r.left + r.width / 2),
+      e.clientY - (r.top + r.height / 2),
+    )
+    if (distance <= radius) return key
   }
   return null
 }
