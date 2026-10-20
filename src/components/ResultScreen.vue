@@ -249,8 +249,13 @@ onBeforeUnmount(() => {
                     {{ formatElapsedTime(rec.elapsedSeconds) }}
                   </div>
                   <div class="history-score">
-                    <span v-if="rec.score === sameKindBest && rec.score > 0" class="best-mark"
-                      >★</span
+                    <svg
+                      v-if="rec.score === sameKindBest && rec.score > 0"
+                      class="best-mark"
+                      viewBox="0 0 24 24"
+                      aria-label="ベストスコア"
+                    >
+                      <path d="M2 7l5 4 5-7 5 7 5-4-2 11H4L2 7Zm2 13h16v2H4v-2Z" /></svg
                     >{{ formatScore(rec.score) }}
                   </div>
                 </li>
@@ -539,9 +544,11 @@ onBeforeUnmount(() => {
   text-align: right;
 }
 .best-mark {
-  font-size: 0.7rem;
+  width: 0.8em;
+  height: 0.8em;
   margin-right: 3px;
-  color: var(--gold);
+  vertical-align: -0.05em;
+  fill: var(--gold);
   filter: drop-shadow(0 0 4px rgba(var(--gold-rgb), 0.6));
 }
 
