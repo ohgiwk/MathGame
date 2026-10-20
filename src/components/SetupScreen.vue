@@ -80,45 +80,8 @@ function handleStart() {
     </div>
 
     <div class="setup-body">
-      <!-- 問題数 -->
-      <div class="rpg-card setup-section enter-item" style="--i: 1">
-        <h2 class="section-label">
-          <span class="section-gem">◆</span> 問題数
-          <span v-if="preferences.timeLimit" class="limit-note">⏱ 制限時間あり</span>
-        </h2>
-        <div class="grid-counts">
-          <button
-            v-for="c in QUESTION_COUNTS"
-            :key="c"
-            class="opt-btn"
-            :class="{ active: selectedCount === c }"
-            @click="selectedCount = c"
-          >
-            <span v-if="c === 'endless'" class="opt-main">∞</span>
-            <span v-else class="opt-main">{{ c }}問</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- 難易度 -->
-      <div class="rpg-card setup-section enter-item" style="--i: 2">
-        <h2 class="section-label"><span class="section-gem">◆</span> 難易度</h2>
-        <div class="grid-3">
-          <button
-            v-for="d in DIFFICULTIES"
-            :key="d"
-            class="opt-btn"
-            :class="{ active: selectedDifficulty === d }"
-            @click="selectedDifficulty = d"
-          >
-            <div class="opt-main">{{ DIFFICULTY_LABELS[d] }}</div>
-            <div class="opt-sub">{{ DIFFICULTY_DESCRIPTIONS[d] }}</div>
-          </button>
-        </div>
-      </div>
-
       <!-- 計算の種類 -->
-      <div class="rpg-card setup-section enter-item" style="--i: 3">
+      <div class="rpg-card setup-section enter-item" style="--i: 1">
         <h2 class="section-label"><span class="section-gem">◆</span> 計算の種類</h2>
         <div class="grid-ops">
           <button
@@ -148,6 +111,43 @@ function handleStart() {
               {{ operationSymbols[op] }}
             </button>
           </div>
+        </div>
+      </div>
+
+      <!-- 難易度 -->
+      <div class="rpg-card setup-section enter-item" style="--i: 2">
+        <h2 class="section-label"><span class="section-gem">◆</span> 難易度</h2>
+        <div class="grid-3">
+          <button
+            v-for="d in DIFFICULTIES"
+            :key="d"
+            class="opt-btn"
+            :class="{ active: selectedDifficulty === d }"
+            @click="selectedDifficulty = d"
+          >
+            <div class="opt-main">{{ DIFFICULTY_LABELS[d] }}</div>
+            <div class="opt-sub">{{ DIFFICULTY_DESCRIPTIONS[d] }}</div>
+          </button>
+        </div>
+      </div>
+
+      <!-- 問題数 -->
+      <div class="rpg-card setup-section enter-item" style="--i: 3">
+        <h2 class="section-label">
+          <span class="section-gem">◆</span> 問題数
+          <span v-if="preferences.timeLimit" class="limit-note">⏱ 制限時間あり</span>
+        </h2>
+        <div class="grid-counts">
+          <button
+            v-for="c in QUESTION_COUNTS"
+            :key="c"
+            class="opt-btn"
+            :class="{ active: selectedCount === c }"
+            @click="selectedCount = c"
+          >
+            <span v-if="c === 'endless'" class="opt-main">∞</span>
+            <span v-else class="opt-main">{{ c }}問</span>
+          </button>
         </div>
       </div>
 
