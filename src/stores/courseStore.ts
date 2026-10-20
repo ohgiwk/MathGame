@@ -4,6 +4,7 @@ import type { Course } from '../types/game'
 import {
   parseDailyCourses,
   parseProgress,
+  EMPTY_PROGRESS,
   clearedIdsOn,
   allCleared,
   markCourseCleared,
@@ -15,7 +16,7 @@ import {
 import { generateDailyCourses } from '../logic/courseGenerator'
 import { currentStreak, dayKey, parseDayKey } from '../logic/dailyStats'
 import { levelFromExp, totalExp } from '../logic/level'
-import { readJson, writeJson } from '../logic/storage'
+import { readJson, writeJson, removeKey } from '../logic/storage'
 import { useStatsStore } from './statsStore'
 
 const DAILY_KEY = 'math-kingdom:daily-courses'
@@ -83,6 +84,18 @@ export const useCourseStore = defineStore('courses', () => {
     writeJson(PROGRESS_KEY, progress.value)
   }
 
+  /**
+   * Forgets every cleared course and completed day, and sets today's courses again for the level
+   * the records now give; for when the records are reset
+   */
+  function reset() {
+    progress.value = { ...EMPTY_PROGRESS }
+    removeKey(PROGRESS_KEY)
+    daily.value = null
+    removeKey(DAILY_KEY)
+    refreshDay()
+  }
+
   return {
     courses,
     level,
@@ -95,5 +108,6 @@ export const useCourseStore = defineStore('courses', () => {
     isCleared,
     nextCourse,
     markCleared,
+    reset,
   }
 })

@@ -101,4 +101,26 @@ describe('courseStore', () => {
     expect(store.streak).toBe(0)
     expect(store.bestStreak).toBe(2)
   })
+
+  it('forgets every cleared course and sets level 1 courses again when the records are reset', () => {
+    play(150_000)
+    const store = useCourseStore()
+    clearAll(store)
+    expect(store.streak).toBe(1)
+
+    useStatsStore().clearRecords()
+    store.reset()
+    expect(store.level).toBe(1)
+    expect(store.courses).toEqual(generateDailyCourses(1, '2026-10-17'))
+    expect(store.clearedCount).toBe(0)
+    expect(store.streak).toBe(0)
+    expect(store.bestStreak).toBe(0)
+    expect(store.completedDays).toEqual([])
+
+    // nothing of it comes back from storage
+    setActivePinia(createPinia())
+    const reloaded = useCourseStore()
+    expect(reloaded.level).toBe(1)
+    expect(reloaded.completedDays).toEqual([])
+  })
 })

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useStatsStore } from '../stores/statsStore'
+import { useCourseStore } from '../stores/courseStore'
 import { usePreferencesStore } from '../stores/preferencesStore'
 import {
   DIFFICULTIES,
@@ -16,12 +17,14 @@ import SubScreen from './SubScreen.vue'
 
 const preferences = usePreferencesStore()
 const statsStore = useStatsStore()
+const courseStore = useCourseStore()
 
 const showResetDialog = ref(false)
 const resetDone = ref(false)
 
 function confirmReset() {
   statsStore.clearRecords()
+  courseStore.reset()
   showResetDialog.value = false
   resetDone.value = true
 }
@@ -128,7 +131,7 @@ function confirmReset() {
         <div class="setting-text">
           <div class="setting-name">記録をリセット</div>
           <div class="setting-desc">
-            これまでのプレイ記録（{{ statsStore.records.length }}件）をすべて削除します
+            プレイ記録（{{ statsStore.records.length }}件）とミッションの達成状況を削除します
           </div>
         </div>
         <button
@@ -147,7 +150,7 @@ function confirmReset() {
         :open="showResetDialog"
         icon="⚠"
         title="記録をリセットしますか？"
-        message="すべてのプレイ記録が削除され、元に戻せません"
+        message="すべてのプレイ記録とデイリーミッションの達成状況が削除され、元に戻せません"
         cancel-label="やめる"
         confirm-label="リセットする"
         @cancel="showResetDialog = false"
