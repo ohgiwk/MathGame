@@ -40,9 +40,13 @@ export const useGameStore = defineStore('game', () => {
    * whether home shows the daily course list; it stays open while a course is played, so the
    * player comes back to it
    */
-  // opened on launch while today's courses are still to clear, with a greeting for the day
+  // opened on launch while today's courses are still to clear, with a greeting for the day; the
+  // courses are arithmetic games, so not while home is set to another game
   courseStore.refreshDay()
-  const opensWithCourses = courseStore.courses.length > 0 && !courseStore.allClearedToday
+  const opensWithCourses =
+    preferences.homeMode === 'arithmetic' &&
+    courseStore.courses.length > 0 &&
+    !courseStore.allClearedToday
   const courseDialogOpen = ref(opensWithCourses)
   /** whether the course list greets the player; only on launch, until they pick or close */
   const courseGreeting = ref(opensWithCourses)

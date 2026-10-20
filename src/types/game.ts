@@ -1,7 +1,12 @@
 export type Difficulty = 'easy' | 'normal' | 'hard'
 export type Operation = 'addition' | 'subtraction' | 'multiplication' | 'division' | 'mixed'
 export type ActualOperation = Exclude<Operation, 'mixed'>
-export type Screen = 'setup' | 'game' | 'result' | 'stats' | 'settings'
+export type Screen =
+  'setup' | 'game' | 'result' | 'stats' | 'settings' | 'hundred' | 'hundredResult' | 'hundredStats'
+/** The game the home screen sets up, picked from the drawer */
+export type HomeMode = 'arithmetic' | 'hundred'
+/** The operations a 百ます計算 grid can be played with */
+export type HundredOperation = Exclude<ActualOperation, 'division'>
 export type GameEndReason = 'clear' | 'gameover'
 /** How long each question may take when the time limit is on */
 export type TimeLimitLength = 'short' | 'normal' | 'long'
@@ -112,4 +117,14 @@ export interface Course {
   mixedOperations?: ActualOperation[]
   /** endless games cannot be cleared, so a course always has a fixed length */
   questionCount: FixedQuestionCount
+}
+
+/** One finished 百ます計算 grid */
+export interface HundredRecord {
+  id: string
+  playedAt: number
+  operation: HundredOperation
+  elapsedMs: number
+  /** cells answered right, out of the hundred */
+  correctCount: number
 }

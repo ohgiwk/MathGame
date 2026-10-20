@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useGameStore } from '../stores/gameStore'
 import { useStatsStore } from '../stores/statsStore'
 import { useCourseStore } from '../stores/courseStore'
 import { usePreferencesStore } from '../stores/preferencesStore'
+import { useHundredStore } from '../stores/hundredStore'
 import {
   DIFFICULTIES,
   DIFFICULTY_LABELS,
@@ -20,6 +21,9 @@ const store = useGameStore()
 const preferences = usePreferencesStore()
 const statsStore = useStatsStore()
 const courseStore = useCourseStore()
+const hundred = useHundredStore()
+/** something the reset would delete */
+const hasRecords = computed(() => statsStore.records.length > 0 || hundred.records.length > 0)
 
 const showResetDialog = ref(false)
 const resetDone = ref(false)
@@ -27,6 +31,7 @@ const resetDone = ref(false)
 function confirmReset() {
   statsStore.clearRecords()
   courseStore.reset()
+  hundred.clearRecords()
   showResetDialog.value = false
   resetDone.value = true
 }
@@ -139,14 +144,12 @@ function finishReset() {
         <div class="setting-text">
           <div class="setting-name">記録をリセット</div>
           <div class="setting-desc">
-            プレイ記録（{{ statsStore.records.length }}件）とミッションの達成状況を削除します
+            プレイ記録（{{
+              statsStore.records.length
+            }}件）、ミッションの達成状況と百ます計算のベストタイムを削除します
           </div>
         </div>
-        <button
-          class="reset-btn"
-          :disabled="statsStore.records.length === 0"
-          @click="showResetDialog = true"
-        >
+        <button class="reset-btn" :disabled="!hasRecords" @click="showResetDialog = true">
           リセット
         </button>
       </div>

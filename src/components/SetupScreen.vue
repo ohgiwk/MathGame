@@ -4,7 +4,9 @@ import { useGameStore } from '../stores/gameStore'
 import { usePreferencesStore } from '../stores/preferencesStore'
 import { useCourseStore } from '../stores/courseStore'
 import { useButtonSounds } from '../composables/useButtonSounds'
+import { useHundredStore } from '../stores/hundredStore'
 import CourseDialog from './CourseDialog.vue'
+import AppDrawer from './AppDrawer.vue'
 import type { QuestionCount, Difficulty, Operation, ActualOperation } from '../types/game'
 import {
   QUESTION_COUNTS,
@@ -19,11 +21,14 @@ import {
   DIFFICULTY_LABELS,
   DIFFICULTY_DESCRIPTIONS,
   OPERATION_LABELS,
+  HOME_MODE_LABELS,
 } from '../logic/labels'
+import { HUNDRED_OPERATIONS, formatLapTime } from '../logic/hundredGrid'
 
 const store = useGameStore()
 const preferences = usePreferencesStore()
 const courseStore = useCourseStore()
+const hundred = useHundredStore()
 courseStore.refreshDay()
 // every button here clicks, including those in the daily mission dialog
 const playButtonSound = useButtonSounds()
@@ -31,6 +36,7 @@ const playButtonSound = useButtonSounds()
 const selectedCount = ref<QuestionCount>(store.settings.questionCount)
 const selectedDifficulty = ref<Difficulty>(store.settings.difficulty)
 const selectedOperation = ref<Operation>(store.settings.operation)
+const drawerOpen = ref(false)
 const selectedMixed = ref<ActualOperation[]>(resolveMixedOperations(store.settings.mixedOperations))
 
 function isMixLocked(op: ActualOperation): boolean {
@@ -54,7 +60,17 @@ function handleStart() {
 
 <template>
   <div class="setup-root" @click="playButtonSound">
-    <button class="settings-btn" aria-label="設定" @click="store.openSettings()">
+    <button
+      class="corner-btn menu-btn"
+      aria-label="メニュー"
+      :aria-expanded="drawerOpen"
+      @click="drawerOpen = true"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 7h16M4 12h16M4 17h16" />
+      </svg>
+    </button>
+    <button class="corner-btn settings-btn" aria-label="設定" @click="store.openSettings()">
       <!-- sliders: three rails, each with a knob -->
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M4 6h3m4 0h9M4 12h9m4 0h3M4 18h5m4 0h7" />
@@ -77,9 +93,60 @@ function handleStart() {
       </div>
       <h1 class="setup-title">数の王国</h1>
       <p class="setup-sub">KINGDOM OF NUMBERS</p>
+      <p class="mode-badge">{{ HOME_MODE_LABELS[preferences.homeMode] }}</p>
     </div>
 
-    <div class="setup-body">
+    <!-- keyed by the mode, so switching it from the drawer plays the entrance again -->
+    <div v-if="preferences.homeMode === 'hundred'" key="hundred" class="setup-body">
+      <div class="rpg-card setup-section enter-item" style="--i: 1">
+        <h2 class="section-label"><span class="section-gem">◆</span> 計算の種類</h2>
+        <div class="grid-3">
+          <button
+            v-for="op in HUNDRED_OPERATIONS"
+            :key="op"
+            class="opt-btn"
+            :class="{ active: hundred.operation === op }"
+            @click="hundred.setOperation(op)"
+          >
+            <div class="opt-symbol">{{ operationSymbols[op] }}</div>
+            <div class="opt-sub">{{ OPERATION_LABELS[op] }}</div>
+          </button>
+        </div>
+      </div>
+
+      <div class="rpg-card setup-section enter-item" style="--i: 2">
+        <h2 class="section-label"><span class="section-gem">◆</span> ベストタイム</h2>
+        <p v-if="hundred.bestTimes[hundred.operation] !== undefined" class="best-time">
+          {{ formatLapTime(hundred.bestTimes[hundred.operation]!) }}
+        </p>
+        <p v-else class="best-time empty">まだ記録がありません</p>
+        <p class="hundred-note">左の数と上の数を計算して、左上から順にますを埋めよう</p>
+        <p class="hundred-note">全問正解したときのタイムが記録されます</p>
+      </div>
+
+      <button
+        class="btn-gem btn-gold start-btn enter-item"
+        style="--i: 3"
+        data-sound="start"
+        @click="hundred.start()"
+      >
+        <span class="btn-gold-gem">◆</span>
+        <span class="btn-gold-label">START</span>
+        <span class="btn-gold-gem">◆</span>
+      </button>
+      <button
+        class="btn-ghost icon-action enter-item"
+        style="--i: 4"
+        aria-label="記録を見る"
+        @click="hundred.openStats()"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 20h16M7.5 16.5v-4M12 16.5v-9M16.5 16.5v-6" />
+        </svg>
+      </button>
+    </div>
+
+    <div v-else key="arithmetic" class="setup-body">
       <!-- 計算の種類 -->
       <div class="rpg-card setup-section enter-item" style="--i: 1">
         <h2 class="section-label"><span class="section-gem">◆</span> 計算の種類</h2>
@@ -192,6 +259,7 @@ function handleStart() {
       </div>
     </div>
     <CourseDialog />
+    <AppDrawer :open="drawerOpen" @close="drawerOpen = false" />
   </div>
 </template>
 
@@ -344,10 +412,9 @@ function handleStart() {
   color: var(--gem-teal);
 }
 
-.settings-btn {
+.corner-btn {
   position: absolute;
   top: max(1rem, env(safe-area-inset-top));
-  right: 1rem;
   width: 40px;
   height: 40px;
   border: 1px solid var(--border);
@@ -360,13 +427,52 @@ function handleStart() {
   cursor: pointer;
   z-index: 2;
 }
-.settings-btn svg {
+.menu-btn {
+  left: 1rem;
+}
+.settings-btn {
+  right: 1rem;
+}
+.corner-btn svg {
   width: 22px;
   height: 22px;
   fill: none;
   stroke: currentColor;
   stroke-width: 1.6;
   stroke-linecap: round;
+}
+
+.mode-badge {
+  display: inline-block;
+  margin-top: 0.6rem;
+  padding: 2px 12px;
+  border: 1px solid rgba(var(--gold-rgb), 0.5);
+  border-radius: 99px;
+  color: var(--gold-light);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+.best-time {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  color: var(--gold-light);
+  margin-bottom: 0.5rem;
+}
+.best-time.empty {
+  font-size: 0.9rem;
+  line-height: 2.8;
+  color: var(--text-faint);
+}
+.hundred-note {
+  font-size: 0.7rem;
+  color: var(--text-sub);
+  text-align: center;
+  line-height: 1.6;
 }
 
 .grid-ops {

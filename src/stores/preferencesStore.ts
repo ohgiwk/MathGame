@@ -1,7 +1,7 @@
 import { ref, computed, watch } from 'vue'
 import { defineStore } from 'pinia'
-import type { ThemePreference, TimeLimitLength } from '../types/game'
-import { THEME_PREFERENCES, TIME_LIMIT_LENGTHS } from '../logic/labels'
+import type { HomeMode, ThemePreference, TimeLimitLength } from '../types/game'
+import { HOME_MODES, THEME_PREFERENCES, TIME_LIMIT_LENGTHS } from '../logic/labels'
 import { isOneOf } from '../logic/guards'
 import { readJson, writeJson } from '../logic/storage'
 
@@ -14,6 +14,8 @@ interface Preferences {
   timeLimitLength: TimeLimitLength
   theme: ThemePreference
   soundEffects: boolean
+  /** the game the home screen was last set to, from the drawer */
+  homeMode: HomeMode
 }
 
 const DEFAULTS: Preferences = {
@@ -21,6 +23,7 @@ const DEFAULTS: Preferences = {
   timeLimitLength: 'normal',
   theme: 'auto',
   soundEffects: true,
+  homeMode: 'arithmetic',
 }
 
 function loadPreferences(): Preferences {
@@ -35,6 +38,7 @@ function loadPreferences(): Preferences {
     theme: isOneOf(THEME_PREFERENCES, stored.theme) ? stored.theme : DEFAULTS.theme,
     soundEffects:
       typeof stored.soundEffects === 'boolean' ? stored.soundEffects : DEFAULTS.soundEffects,
+    homeMode: isOneOf(HOME_MODES, stored.homeMode) ? stored.homeMode : DEFAULTS.homeMode,
   }
 }
 
@@ -45,13 +49,15 @@ export const usePreferencesStore = defineStore('preferences', () => {
   const timeLimitLength = ref(initial.timeLimitLength)
   const theme = ref(initial.theme)
   const soundEffects = ref(initial.soundEffects)
+  const homeMode = ref(initial.homeMode)
 
-  watch([timeLimit, timeLimitLength, theme, soundEffects], () => {
+  watch([timeLimit, timeLimitLength, theme, soundEffects, homeMode], () => {
     const prefs: Preferences = {
       timeLimit: timeLimit.value,
       timeLimitLength: timeLimitLength.value,
       theme: theme.value,
       soundEffects: soundEffects.value,
+      homeMode: homeMode.value,
     }
     writeJson(STORAGE_KEY, prefs)
   })
@@ -59,5 +65,5 @@ export const usePreferencesStore = defineStore('preferences', () => {
   /** The time limit a new game is played with; undefined while it is off */
   const activeTimeLimit = computed(() => (timeLimit.value ? timeLimitLength.value : undefined))
 
-  return { timeLimit, timeLimitLength, theme, soundEffects, activeTimeLimit }
+  return { timeLimit, timeLimitLength, theme, soundEffects, homeMode, activeTimeLimit }
 })

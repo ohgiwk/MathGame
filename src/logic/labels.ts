@@ -7,6 +7,7 @@ import type {
   Rating,
   TimeLimitLength,
   ThemePreference,
+  HomeMode,
 } from '../types/game'
 
 export const QUESTION_COUNTS: QuestionCount[] = [10, 20, 30, 50, 'endless']
@@ -54,6 +55,13 @@ export const TIME_LIMIT_LABELS: Record<TimeLimitLength, string> = {
   short: '短め',
   normal: '普通',
   long: '長め',
+}
+
+export const HOME_MODES: HomeMode[] = ['arithmetic', 'hundred']
+
+export const HOME_MODE_LABELS: Record<HomeMode, string> = {
+  arithmetic: '四則演算',
+  hundred: '百ます計算',
 }
 
 export const THEME_PREFERENCES: ThemePreference[] = ['auto', 'light', 'dark']
