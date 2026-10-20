@@ -123,4 +123,19 @@ describe('courseStore', () => {
     expect(reloaded.level).toBe(1)
     expect(reloaded.completedDays).toEqual([])
   })
+
+  it('celebrates a day once, right after its last course is cleared', () => {
+    const store = useCourseStore()
+    const [a, ...rest] = store.courses
+    store.markCleared(a.id)
+    expect(store.takeCelebration()).toBe(false)
+
+    rest.forEach((c) => store.markCleared(c.id))
+    expect(store.takeCelebration()).toBe(true)
+    expect(store.takeCelebration()).toBe(false)
+
+    // clearing a course again on a completed day is nothing new
+    store.markCleared(a.id)
+    expect(store.takeCelebration()).toBe(false)
+  })
 })

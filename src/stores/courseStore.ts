@@ -14,7 +14,7 @@ import {
   type DailyCourses,
 } from '../logic/dailyCourses'
 import { generateDailyCourses } from '../logic/courseGenerator'
-import { currentStreak, dayKey, parseDayKey } from '../logic/dailyStats'
+import { currentStreak, dayKey, parseDayKey, type DayKey } from '../logic/dailyStats'
 import { levelFromExp, totalExp } from '../logic/level'
 import { readJson, writeJson, removeKey } from '../logic/storage'
 import { useStatsStore } from './statsStore'
@@ -76,12 +76,26 @@ export const useCourseStore = defineStore('courses', () => {
     return nextCourseIn(courses.value, clearedIds.value, id)
   }
 
+  /** the day the last of its courses was just cleared on, until the calendar has celebrated it */
+  const celebrationDay = ref<DayKey | null>(null)
+
   /** Checks a course off; one from an earlier day no longer counts */
   function markCleared(id: string) {
     refreshDay()
     if (!courses.value.some((c) => c.id === id)) return
+    const wasCompleted = progress.value.completedDays.includes(today.value)
     progress.value = markCourseCleared(progress.value, courses.value, id, today.value)
     writeJson(PROGRESS_KEY, progress.value)
+    if (!wasCompleted && progress.value.completedDays.includes(today.value)) {
+      celebrationDay.value = today.value
+    }
+  }
+
+  /** Whether today was just completed and not yet celebrated; it is celebrated from then on */
+  function takeCelebration(): boolean {
+    const due = celebrationDay.value === today.value
+    celebrationDay.value = null
+    return due
   }
 
   /**
@@ -90,6 +104,7 @@ export const useCourseStore = defineStore('courses', () => {
    */
   function reset() {
     progress.value = { ...EMPTY_PROGRESS }
+    celebrationDay.value = null
     removeKey(PROGRESS_KEY)
     daily.value = null
     removeKey(DAILY_KEY)
@@ -108,6 +123,7 @@ export const useCourseStore = defineStore('courses', () => {
     isCleared,
     nextCourse,
     markCleared,
+    takeCelebration,
     reset,
   }
 })

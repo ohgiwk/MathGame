@@ -17,6 +17,8 @@ const courseStore = useCourseStore()
 
 /** today's courses, or the calendar of days with all of them cleared */
 const tab = ref<'courses' | 'calendar'>('courses')
+/** whether the calendar checks today off with a show, the first time it opens after the last clear */
+const celebrate = ref(false)
 
 // the checks belong to the day the list is opened on; once all are cleared it opens on the calendar
 watch(
@@ -25,9 +27,14 @@ watch(
     if (!open) return
     courseStore.refreshDay()
     tab.value = courseStore.allClearedToday ? 'calendar' : 'courses'
+    celebrate.value = tab.value === 'calendar' && courseStore.takeCelebration()
   },
   { immediate: true },
 )
+// shown once: coming back to the calendar from the list does not celebrate again
+watch(tab, (t) => {
+  if (t !== 'calendar') celebrate.value = false
+})
 
 const greeting = computed(() => timeGreeting(new Date().getHours()))
 const greetingMessage = computed(() =>
@@ -82,7 +89,11 @@ function close() {
           </button>
         </div>
 
-        <CourseCalendar v-if="tab === 'calendar'" :completed-days="courseStore.completedDays" />
+        <CourseCalendar
+          v-if="tab === 'calendar'"
+          :completed-days="courseStore.completedDays"
+          :celebrate="celebrate"
+        />
         <template v-else>
           <div class="streaks">
             <div class="tile streak-tile">

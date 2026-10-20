@@ -4,8 +4,14 @@ import { type DayKey, dayKey, toDayKey, parseDayKey, monthGrid } from '../logic/
 import { WEEKDAY_LABELS } from '../logic/labels'
 import { useMonthNav } from '../composables/useMonthNav'
 
-/** A month at a time, with the days on which every daily course was cleared checked */
-const props = defineProps<{ completedDays: DayKey[] }>()
+/**
+ * A month at a time, with the days on which every daily course was cleared checked. With
+ * `celebrate`, today's check goes on with a burst, for when its last course was just cleared.
+ */
+const props = defineProps<{ completedDays: DayKey[]; celebrate?: boolean }>()
+
+/** the number of sparks thrown out around today's check when it is celebrated */
+const SPARK_COUNT = 12
 
 const completed = computed(() => new Set(props.completedDays))
 const todayKey = dayKey(Date.now())
@@ -42,7 +48,7 @@ const weeks = computed(() =>
       </button>
       <div class="month-title">
         {{ viewYear }}年{{ viewMonth + 1 }}月
-        <span class="month-count">{{ monthCount }}日クリア</span>
+        <span class="month-count" :class="{ celebrate }">{{ monthCount }}日クリア</span>
       </div>
       <button class="month-btn" aria-label="次の月" :disabled="!canGoNext" @click="shiftMonth(1)">
         ›
@@ -65,11 +71,31 @@ const weeks = computed(() =>
         <div
           v-else
           class="cal-cell"
-          :class="{ done: cell.done, today: cell.key === todayKey, sun: ci === 0, sat: ci === 6 }"
+          :class="{
+            done: cell.done,
+            today: cell.key === todayKey,
+            celebrate: celebrate && cell.done && cell.key === todayKey,
+            sun: ci === 0,
+            sat: ci === 6,
+          }"
           :aria-label="`${cell.date}日${cell.done ? ' 全クリア' : ''}`"
         >
+          <template v-if="celebrate && cell.done && cell.key === todayKey">
+            <!-- the date gives way to a disk that bursts in, its check drawn on, a ring and sparks -->
+            <span class="old-date" aria-hidden="true">{{ cell.date }}</span>
+            <span class="burst-ring" aria-hidden="true" />
+            <span class="burst-ring second" aria-hidden="true" />
+            <span
+              v-for="n in SPARK_COUNT"
+              :key="n"
+              class="spark"
+              :class="{ alt: n % 2 === 0 }"
+              :style="{ '--angle': `${(360 / SPARK_COUNT) * n}deg` }"
+              aria-hidden="true"
+            />
+          </template>
           <svg v-if="cell.done" viewBox="0 0 16 16" aria-hidden="true">
-            <path d="M3.5 8.5l3 3 6-7" />
+            <path d="M3.5 8.5l3 3 6-7" pathLength="1" />
           </svg>
           <span v-else>{{ cell.date }}</span>
         </div>
@@ -185,9 +211,146 @@ const weeks = computed(() =>
     transform: scale(1.2);
   }
 }
+
+/* Celebrated: once the dialog is up, the date shrinks away, a green disk bursts in past its size
+   and settles, the check is drawn on, and a ring and sparks fly out while the cell glows */
+.cal-cell.celebrate {
+  position: relative;
+  z-index: 1;
+  background: transparent;
+  animation: celebrate-glow 1.2s ease-out 0.75s backwards;
+}
+.cal-cell.celebrate::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 50%;
+  background: var(--success-text);
+  animation: disk-burst 0.55s cubic-bezier(0.34, 1.8, 0.64, 1) 0.45s backwards;
+}
+.cal-cell.done.today.celebrate svg {
+  position: relative;
+  stroke-dasharray: 1;
+  animation: check-draw 0.35s ease-out 0.75s backwards;
+}
+.old-date {
+  position: absolute;
+  animation: date-out 0.3s ease-in 0.3s forwards;
+}
+.burst-ring {
+  position: absolute;
+  inset: -1px;
+  border-radius: 50%;
+  border: 4px solid var(--gold-spark);
+  box-shadow:
+    0 0 14px rgba(var(--gold-spark-rgb), 0.9),
+    inset 0 0 8px rgba(var(--gold-spark-rgb), 0.7);
+  opacity: 0;
+  animation: ring-out 0.75s ease-out 0.8s;
+}
+.burst-ring.second {
+  border-width: 2px;
+  box-shadow: 0 0 10px rgba(var(--gold-spark-rgb), 0.8);
+  animation-delay: 0.95s;
+}
+.spark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 9px;
+  height: 9px;
+  margin: -4.5px;
+  border-radius: 50%;
+  background: var(--gold-spark);
+  box-shadow: 0 0 10px 3px rgba(var(--gold-spark-rgb), 0.85);
+  opacity: 0;
+  animation: spark-fly 0.9s cubic-bezier(0.2, 0.8, 0.4, 1) 0.8s;
+}
+.spark.alt {
+  width: 7px;
+  height: 7px;
+  margin: -3.5px;
+  box-shadow: 0 0 8px 2px rgba(var(--gold-spark-rgb), 0.7);
+  animation-duration: 0.75s;
+  --distance: 44px;
+}
+.month-count.celebrate {
+  display: inline-block;
+  animation: count-bump 0.45s ease 0.85s;
+}
+@keyframes date-out {
+  to {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+}
+@keyframes disk-burst {
+  0% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  40% {
+    opacity: 1;
+  }
+}
+@keyframes check-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+@keyframes ring-out {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(3);
+  }
+}
+@keyframes spark-fly {
+  0% {
+    opacity: 1;
+    transform: rotate(var(--angle)) translateY(0) scale(1.3);
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(var(--angle)) translateY(calc(-1 * var(--distance, 64px))) scale(0.4);
+  }
+}
+@keyframes celebrate-glow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(var(--gold-spark-rgb), 0.9);
+  }
+  30% {
+    box-shadow: 0 0 28px 12px rgba(var(--gold-spark-rgb), 0.6);
+  }
+  100% {
+    box-shadow: 0 0 28px 16px rgba(var(--gold-spark-rgb), 0);
+  }
+}
+@keyframes count-bump {
+  50% {
+    transform: scale(1.3);
+    color: var(--gold-light);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .cal-cell.done.today svg {
+  .cal-cell.done.today svg,
+  .cal-cell.celebrate,
+  .cal-cell.celebrate::before,
+  .cal-cell.done.today.celebrate svg,
+  .month-count.celebrate {
     animation: none;
+  }
+  .old-date,
+  .burst-ring,
+  .spark {
+    display: none;
   }
 }
 </style>
