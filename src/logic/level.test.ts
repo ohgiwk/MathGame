@@ -34,7 +34,7 @@ describe('totalExp', () => {
 
 describe('expToNextLevel', () => {
   it('needs more EXP the higher the level', () => {
-    expect(expToNextLevel(1)).toBe(50)
+    expect(expToNextLevel(1)).toBe(200)
     for (let level = 1; level < MAX_LEVEL - 1; level++) {
       expect(expToNextLevel(level + 1)).toBeGreaterThan(expToNextLevel(level))
     }
@@ -43,12 +43,12 @@ describe('expToNextLevel', () => {
 
 describe('levelFromExp', () => {
   it('starts at level 1', () => {
-    expect(levelFromExp(0)).toEqual({ level: 1, expInLevel: 0, expForLevel: 50, isMax: false })
+    expect(levelFromExp(0)).toEqual({ level: 1, expInLevel: 0, expForLevel: 200, isMax: false })
   })
   it('moves up a level once its EXP is reached', () => {
-    expect(levelFromExp(49).level).toBe(1)
-    expect(levelFromExp(50)).toEqual({ level: 2, expInLevel: 0, expForLevel: 60, isMax: false })
-    expect(levelFromExp(115)).toEqual({ level: 3, expInLevel: 5, expForLevel: 70, isMax: false })
+    expect(levelFromExp(199).level).toBe(1)
+    expect(levelFromExp(200)).toEqual({ level: 2, expInLevel: 0, expForLevel: 240, isMax: false })
+    expect(levelFromExp(445)).toEqual({ level: 3, expInLevel: 5, expForLevel: 280, isMax: false })
   })
   it('stops at the top level', () => {
     const top = levelFromExp(Number.MAX_SAFE_INTEGER)

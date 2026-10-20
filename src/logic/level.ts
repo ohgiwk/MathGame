@@ -16,12 +16,12 @@ export function totalExp(records: GameRecord[]): number {
 }
 
 /**
- * EXP needed to go from `level` to the next one. A game or two takes a beginner up a level,
+ * EXP needed to go from `level` to the next one. A beginner goes up a level every few games,
  * and each level after needs a little more, growing faster the higher it gets.
  */
 export function expToNextLevel(level: number): number {
   const n = level - 1
-  return 50 + 10 * n + Math.floor((n * n) / 20)
+  return 200 + 40 * n + Math.floor((n * n) / 5)
 }
 
 /** EXP needed to reach each level from zero, indexed by level (1 needs nothing) */
