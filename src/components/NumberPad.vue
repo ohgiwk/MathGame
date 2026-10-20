@@ -16,9 +16,12 @@ const DIGIT_KEYS = ['7', '8', '9', '4', '5', '6', '1', '2', '3']
 /** how far outside a key a touch may land and still count for it; a little more than the gap */
 const GAP_REACH_PX = 12
 /** while tracing, a key joins the stroke only once the finger is within this circle around its
-    center (a share of the key's shorter side), like a pattern lock's dots: a circle keeps well
-    away from the corners, so a curving path between rows or columns does not pick up the keys beside it */
-const TRACE_RADIUS_RATIO = 0.35
+    center, like a pattern lock's dots: a circle keeps well away from the corners, so a curving
+    path between rows or columns does not pick up the keys beside it. It is sized to a fingertip,
+    not the key, so taller keys leave wider margins between the circles. */
+const TRACE_RADIUS_PX = 30
+/** on small keys the circle shrinks to at most this share of the key's shorter side */
+const TRACE_RADIUS_MAX_RATIO = 0.35
 
 const padRef = ref<HTMLElement | null>(null)
 
@@ -88,7 +91,7 @@ function digitKeyInsideAt(e: PointerEvent): HTMLButtonElement | null {
   if (!padRef.value) return null
   for (const key of padRef.value.querySelectorAll<HTMLButtonElement>('.pad-key:not(.pad-delete)')) {
     const r = key.getBoundingClientRect()
-    const radius = Math.min(r.width, r.height) * TRACE_RADIUS_RATIO
+    const radius = Math.min(TRACE_RADIUS_PX, Math.min(r.width, r.height) * TRACE_RADIUS_MAX_RATIO)
     const distance = Math.hypot(
       e.clientX - (r.left + r.width / 2),
       e.clientY - (r.top + r.height / 2),
@@ -234,7 +237,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown))
    between them as hairlines */
 .num-pad {
   flex-shrink: 0;
-  height: clamp(220px, 42vh, 360px);
+  /* tall enough that the keys come close to square: short rows put the circles of the keys above
+     and below close to a path that crosses rows on a slant (4 to 9, 7 to 6) */
+  height: clamp(220px, 50vh, 440px);
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-auto-rows: 1fr;
