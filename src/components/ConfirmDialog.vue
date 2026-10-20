@@ -1,10 +1,11 @@
 <script setup lang="ts">
+/** Asks to confirm an action; without `cancelLabel` it only reports something, with one button */
 defineProps<{
   open: boolean
   icon: string
   title: string
   message: string
-  cancelLabel: string
+  cancelLabel?: string
   confirmLabel: string
 }>()
 
@@ -21,8 +22,10 @@ const emit = defineEmits<{
         <div class="dialog-icon">{{ icon }}</div>
         <h2 class="dialog-title">{{ title }}</h2>
         <p class="dialog-sub">{{ message }}</p>
-        <div class="dialog-actions">
-          <button class="dialog-cancel" @click="emit('cancel')">{{ cancelLabel }}</button>
+        <div class="dialog-actions" :class="{ notice: !cancelLabel }">
+          <button v-if="cancelLabel" class="dialog-cancel" @click="emit('cancel')">
+            {{ cancelLabel }}
+          </button>
           <button class="dialog-confirm" @click="emit('confirm')">{{ confirmLabel }}</button>
         </div>
       </div>
@@ -116,6 +119,15 @@ const emit = defineEmits<{
 }
 .dialog-confirm:active {
   transform: scale(0.96);
+}
+.dialog-actions.notice {
+  grid-template-columns: 1fr;
+}
+/* a report has nothing dangerous to confirm */
+.notice .dialog-confirm {
+  background: var(--success-text);
+  color: var(--bg-card);
+  box-shadow: none;
 }
 
 .dialog-enter-active {

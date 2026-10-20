@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useGameStore } from '../stores/gameStore'
 import { useStatsStore } from '../stores/statsStore'
 import { useCourseStore } from '../stores/courseStore'
 import { usePreferencesStore } from '../stores/preferencesStore'
@@ -15,6 +16,7 @@ import { TIME_LIMIT_SECONDS } from '../logic/constants'
 import ConfirmDialog from './ConfirmDialog.vue'
 import SubScreen from './SubScreen.vue'
 
+const store = useGameStore()
 const preferences = usePreferencesStore()
 const statsStore = useStatsStore()
 const courseStore = useCourseStore()
@@ -27,6 +29,12 @@ function confirmReset() {
   courseStore.reset()
   showResetDialog.value = false
   resetDone.value = true
+}
+
+/** Once the reset has been reported, back home to start over */
+function finishReset() {
+  resetDone.value = false
+  store.goHome()
 }
 </script>
 
@@ -142,7 +150,6 @@ function confirmReset() {
           リセット
         </button>
       </div>
-      <p v-if="resetDone" class="reset-done" role="status">記録をリセットしました</p>
     </div>
 
     <template #overlay>
@@ -155,6 +162,15 @@ function confirmReset() {
         confirm-label="リセットする"
         @cancel="showResetDialog = false"
         @confirm="confirmReset"
+      />
+      <ConfirmDialog
+        :open="resetDone"
+        icon="✓"
+        title="記録をリセットしました"
+        message="ホームに戻ります"
+        confirm-label="OK"
+        @cancel="finishReset"
+        @confirm="finishReset"
       />
     </template>
   </SubScreen>
@@ -237,12 +253,6 @@ function confirmReset() {
   opacity: 0.35;
   cursor: default;
 }
-.reset-done {
-  margin-top: 0.6rem;
-  font-size: 0.75rem;
-  color: var(--success-text);
-}
-
 /* テーマ */
 .theme-options {
   margin-top: 0.7rem;
