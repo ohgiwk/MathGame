@@ -9,6 +9,7 @@ import { type DayKey, dayKey } from '../logic/dailyStats'
 import { formatDayHeading, formatTotalTime } from '../logic/format'
 import SubScreen from './SubScreen.vue'
 import LevelBar from './LevelBar.vue'
+import TrendChart, { type TrendPoint } from './TrendChart.vue'
 
 const hundred = useHundredStore()
 
@@ -18,13 +19,36 @@ const DAY_PREVIEW = 5
 const total = computed(() => summarizeHundred(hundred.records))
 const bestIds = computed(() => bestRecordIds(hundred.records))
 
+/** How many of an operation's latest grids its time chart shows */
+const CHART_PLAYS = 20
+
 const bestRows = computed(() =>
-  HUNDRED_OPERATIONS.map((operation) => ({
-    operation,
-    best: hundred.bestRecords[operation],
-    plays: hundred.records.filter((r) => r.operation === operation).length,
-  })),
+  HUNDRED_OPERATIONS.map((operation) => {
+    const played = hundred.records.filter((r) => r.operation === operation)
+    return {
+      operation,
+      best: hundred.bestRecords[operation],
+      plays: played.length,
+      // the latest grids, oldest first, each plotted by its time
+      chart: played
+        .slice(0, CHART_PLAYS)
+        .reverse()
+        .map((r): TrendPoint => ({ key: r.id, value: r.elapsedMs, label: shortDate(r.playedAt) })),
+    }
+  }),
 )
+
+/** e.g. '10/22' */
+function shortDate(timestamp: number): string {
+  const d = new Date(timestamp)
+  return `${d.getMonth() + 1}/${d.getDate()}`
+}
+
+/** A y axis tick, e.g. '2:30' */
+function formatAxisTime(ms: number): string {
+  const seconds = Math.round(ms / 1000)
+  return `${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, '0')}`
+}
 
 // ---- history: narrowed to one operation if picked, one panel per day, newest first ----
 const operationFilter = ref<HundredOperation | null>(null)
@@ -78,6 +102,14 @@ function timeOfDay(timestamp: number): string {
           <span class="best-time">{{
             row.best !== undefined ? formatLapTime(row.best.elapsedMs) : '–'
           }}</span>
+          <TrendChart
+            v-if="row.chart.length > 0"
+            class="best-chart"
+            :points="row.chart"
+            :format-value="formatLapTime"
+            :format-axis="formatAxisTime"
+            :label="`${OPERATION_LABELS[row.operation]}のタイムの推移`"
+          />
         </li>
       </ul>
     </div>
@@ -188,7 +220,8 @@ function timeOfDay(timestamp: number): string {
   grid-template-columns: 1fr auto;
   grid-template-areas:
     'name time'
-    'detail time';
+    'detail time'
+    'chart chart';
   align-items: center;
   column-gap: 0.8rem;
   padding: 8px 0;
@@ -208,6 +241,10 @@ function timeOfDay(timestamp: number): string {
   margin-top: 2px;
   font-size: 0.68rem;
   color: var(--text-sub);
+}
+.best-chart {
+  grid-area: chart;
+  margin-top: 0.4rem;
 }
 .best-misses {
   font-weight: 700;
