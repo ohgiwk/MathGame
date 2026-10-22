@@ -6,6 +6,8 @@ import { useButtonSounds } from '../composables/useButtonSounds'
 import { CELL_COUNT, formatLapTime } from '../logic/hundredGrid'
 import { OPERATION_LABELS } from '../logic/labels'
 import HundredGridView from './HundredGridView.vue'
+import ExpCard from './ExpCard.vue'
+import { BEST_TIME_MIN_CORRECT, countsForBestTime, missCount } from '../logic/hundredRecords'
 
 const store = useGameStore()
 const hundred = useHundredStore()
@@ -13,7 +15,21 @@ const playButtonSound = useButtonSounds()
 
 const result = computed(() => hundred.result)
 const perfect = computed(() => result.value?.correctCount === CELL_COUNT)
-const bestMs = computed(() => hundred.bestTimes[result.value?.grid.operation ?? 'addition'])
+const best = computed(() => hundred.bestRecords[result.value?.grid.operation ?? 'addition'])
+/** faster than the best before, but with more misses, so it did not take over */
+const fasterWithMoreMisses = computed(() => {
+  const r = result.value
+  const previous = r?.previousBest
+  return (
+    r !== null &&
+    previous !== undefined &&
+    countsForBestTime(r) &&
+    r.elapsedMs < previous.elapsedMs &&
+    missCount(r) > missCount(previous)
+  )
+})
+/** the EXP pours into the level bar once the result has had a moment to be read */
+const EXP_DELAY_MS = 700
 </script>
 
 <template>
@@ -44,12 +60,24 @@ const bestMs = computed(() => hundred.bestTimes[result.value?.grid.operation ?? 
           <div class="tile hr-tile">
             <div class="tile-label">ベスト</div>
             <div class="tile-value best">
-              {{ bestMs !== undefined ? formatLapTime(bestMs) : '—' }}
+              {{ best !== undefined ? formatLapTime(best.elapsedMs) : '—' }}
             </div>
+            <div v-if="best !== undefined" class="tile-sub">ミス回数：{{ missCount(best) }}</div>
           </div>
         </div>
-        <p v-if="!perfect" class="hr-note">全問正解するとタイムが記録されます</p>
+        <p v-if="!countsForBestTime(result)" class="hr-note">
+          {{ BEST_TIME_MIN_CORRECT }}問以上正解するとタイムが記録されます
+        </p>
+        <p v-else-if="fasterWithMoreMisses" class="hr-note">
+          ベストより速いけれど、ミスが多いので記録されません
+        </p>
       </div>
+
+      <ExpCard
+        :exp-before="result.expBefore"
+        :gained-exp="result.gainedExp"
+        :delay="EXP_DELAY_MS"
+      />
 
       <div class="grid-wrap">
         <HundredGridView :grid="result.grid" :inputs="result.inputs" :current-index="null" reveal />
@@ -159,8 +187,15 @@ const bestMs = computed(() => hundred.bestTimes[result.value?.grid.operation ?? 
   color: var(--danger-text);
 }
 .tile-value.best {
+  color: var(--gold-light);
   font-size: 0.95rem;
   line-height: 1.6;
+}
+.tile-sub {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--danger-text);
+  font-variant-numeric: tabular-nums;
 }
 .hr-note {
   text-align: center;

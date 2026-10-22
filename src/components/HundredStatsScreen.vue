@@ -3,11 +3,12 @@ import { ref, computed } from 'vue'
 import type { HundredOperation, HundredRecord } from '../types/game'
 import { useHundredStore } from '../stores/hundredStore'
 import { HUNDRED_OPERATIONS, CELL_COUNT, formatLapTime } from '../logic/hundredGrid'
-import { bestRecordIds, isPerfect, summarizeHundred } from '../logic/hundredRecords'
+import { bestRecordIds, isPerfect, missCount, summarizeHundred } from '../logic/hundredRecords'
 import { OPERATION_LABELS, OPERATION_BUTTON_SYMBOLS } from '../logic/labels'
 import { type DayKey, dayKey } from '../logic/dailyStats'
 import { formatDayHeading, formatTotalTime } from '../logic/format'
 import SubScreen from './SubScreen.vue'
+import LevelBar from './LevelBar.vue'
 
 const hundred = useHundredStore()
 
@@ -20,7 +21,7 @@ const bestIds = computed(() => bestRecordIds(hundred.records))
 const bestRows = computed(() =>
   HUNDRED_OPERATIONS.map((operation) => ({
     operation,
-    best: hundred.bestTimes[operation],
+    best: hundred.bestRecords[operation],
     plays: hundred.records.filter((r) => r.operation === operation).length,
   })),
 )
@@ -52,6 +53,12 @@ function timeOfDay(timestamp: number): string {
 
 <template>
   <SubScreen title="My Records">
+    <!-- レベル -->
+    <div class="rpg-card stats-section">
+      <h2 class="section-label"><span class="section-gem">◆</span> 百ます計算 · レベル</h2>
+      <LevelBar :progress="hundred.level" />
+    </div>
+
     <!-- ベストタイム -->
     <div class="rpg-card stats-section">
       <h2 class="section-label"><span class="section-gem">◆</span> 百ます計算 · ベストタイム</h2>
@@ -64,10 +71,12 @@ function timeOfDay(timestamp: number): string {
         >
           <span class="best-name">{{ OPERATION_LABELS[row.operation] }}</span>
           <span class="best-detail">
-            {{ row.plays > 0 ? `${row.plays}回プレイ` : 'まだ記録がありません' }}
+            <template v-if="row.best"
+              ><span class="best-misses">ミス回数：{{ missCount(row.best) }}</span> · </template
+            >{{ row.plays > 0 ? `${row.plays}回プレイ` : 'まだ記録がありません' }}
           </span>
           <span class="best-time">{{
-            row.best !== undefined ? formatLapTime(row.best) : '–'
+            row.best !== undefined ? formatLapTime(row.best.elapsedMs) : '–'
           }}</span>
         </li>
       </ul>
@@ -199,6 +208,10 @@ function timeOfDay(timestamp: number): string {
   margin-top: 2px;
   font-size: 0.68rem;
   color: var(--text-sub);
+}
+.best-misses {
+  font-weight: 700;
+  color: var(--danger-text);
 }
 .best-time {
   grid-area: time;

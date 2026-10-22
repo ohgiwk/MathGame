@@ -30,7 +30,7 @@ describe('hundredStore', () => {
     expect(useGameStore().screen).toBe('hundredResult')
     expect(store.result).toMatchObject({ correctCount: CELL_COUNT, elapsedMs: 100_000 })
     expect(store.result?.isBestTime).toBe(true)
-    expect(store.bestTimes.addition).toBe(100_000)
+    expect(store.bestRecords.addition?.elapsedMs).toBe(100_000)
     expect(store.records).toMatchObject([
       { operation: 'addition', elapsedMs: 100_000, correctCount: CELL_COUNT },
     ])
@@ -47,25 +47,58 @@ describe('hundredStore', () => {
       ['multiplication', CELL_COUNT],
       ['addition', CELL_COUNT - 3],
     ])
-    // a grid with a miss sets no best time
-    expect(store.bestTimes).toEqual({ multiplication: 100_000 })
+    // a grid with a few misses sets a best time too
+    expect(store.bestRecords.addition?.correctCount).toBe(CELL_COUNT - 3)
+    expect(store.bestRecords.multiplication?.correctCount).toBe(CELL_COUNT)
     store.clearRecords()
     expect(store.records).toEqual([])
-    expect(store.bestTimes).toEqual({})
+    expect(store.bestRecords).toEqual({})
   })
 
-  it('keeps the best time only for a perfect grid that is faster', () => {
+  it('updates the best only for a faster grid with no more misses and 90 cells right', () => {
     const store = useHundredStore()
+    const best = () => [
+      store.bestRecords.addition?.elapsedMs,
+      store.bestRecords.addition?.correctCount,
+    ]
     store.start()
-    fillGrid(store)
+    fillGrid(store, 2)
+    expect(best()).toEqual([100_000, CELL_COUNT - 2])
+    // faster, but more misses
     store.start()
-    fillGrid(store, 1, 500)
-    expect(store.result?.correctCount).toBe(CELL_COUNT - 1)
+    fillGrid(store, 3, 500)
     expect(store.result?.isBestTime).toBe(false)
+    expect(best()).toEqual([100_000, CELL_COUNT - 2])
+    // fewer misses, but slower
     store.start()
     fillGrid(store, 0, 1200)
     expect(store.result?.isBestTime).toBe(false)
-    expect(store.bestTimes.addition).toBe(100_000)
+    // faster with the same misses
+    store.start()
+    fillGrid(store, 2, 500)
+    expect(store.result?.isBestTime).toBe(true)
+    expect(store.result?.previousBest?.elapsedMs).toBe(100_000)
+    expect(best()).toEqual([50_000, CELL_COUNT - 2])
+    // too many misses: not a best time, however fast
+    store.clearRecords()
+    store.start()
+    fillGrid(store, 11, 100)
+    expect(store.result?.isBestTime).toBe(false)
+    expect(store.bestRecords).toEqual({})
+  })
+
+  it('earns EXP with each grid and builds up the level', () => {
+    const store = useHundredStore()
+    store.start()
+    fillGrid(store)
+    // 100 right, no miss, 200 seconds under 5 minutes
+    expect(store.result).toMatchObject({ expBefore: 0, gainedExp: 350 })
+    expect(store.level.level).toBe(2)
+    store.start()
+    fillGrid(store, 100)
+    expect(store.result).toMatchObject({ expBefore: 350, gainedExp: 0 })
+    store.clearRecords()
+    expect(store.level.level).toBe(1)
   })
 
   it('leaves time spent paused out of the time', () => {

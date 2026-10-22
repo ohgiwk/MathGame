@@ -9,7 +9,14 @@ import {
   cellAnswer,
   countCorrect,
 } from '../logic/hundredGrid'
-import { parseHundredRecords, bestTimesOf } from '../logic/hundredRecords'
+import {
+  parseHundredRecords,
+  bestRecordsOf,
+  beatsBest,
+  expForHundred,
+  totalHundredExp,
+  hundredLevel,
+} from '../logic/hundredRecords'
 import { isOneOf } from '../logic/guards'
 import { readJson, writeJson } from '../logic/storage'
 import { useGameStore } from './gameStore'
@@ -49,10 +56,14 @@ export interface HundredResult {
   inputs: (string | null)[]
   elapsedMs: number
   correctCount: number
-  /** the best time before this game; undefined when there was none */
-  previousBestMs: number | undefined
-  /** every cell right, faster than any earlier time */
+  /** the best grid before this game; undefined when there was none */
+  previousBest: HundredRecord | undefined
+  /** this grid took over as the best: enough cells right, faster, and with no more misses */
   isBestTime: boolean
+  /** EXP this grid earned */
+  gainedExp: number
+  /** EXP over every grid before this one */
+  expBefore: number
 }
 
 /** 百ます計算: fill a 10 × 10 grid as fast as possible */
@@ -62,7 +73,8 @@ export const useHundredStore = defineStore('hundred', () => {
   /** the operation picked on the home screen, kept for the next visit */
   const operation = ref<HundredOperation>(saved.operation)
   const records = ref<HundredRecord[]>(saved.records)
-  const bestTimes = computed(() => bestTimesOf(records.value))
+  const bestRecords = computed(() => bestRecordsOf(records.value))
+  const level = computed(() => hundredLevel(records.value))
   const play = ref<HundredPlay | null>(null)
   const result = ref<HundredResult | null>(null)
 
@@ -117,9 +129,9 @@ export const useHundredStore = defineStore('hundred', () => {
   function finish(p: HundredPlay) {
     const ms = elapsedMs()
     const correctCount = countCorrect(p.grid, p.inputs)
-    const previousBestMs = bestTimes.value[p.grid.operation]
-    const isBestTime =
-      correctCount === CELL_COUNT && (previousBestMs === undefined || ms < previousBestMs)
+    const previousBest = bestRecords.value[p.grid.operation]
+    const isBestTime = beatsBest({ elapsedMs: ms, correctCount }, previousBest)
+    const expBefore = totalHundredExp(records.value)
     const playedAt = Date.now()
     records.value.unshift({
       id: `${playedAt}-${Math.random().toString(36).slice(2, 8)}`,
@@ -134,8 +146,10 @@ export const useHundredStore = defineStore('hundred', () => {
       inputs: [...p.inputs],
       elapsedMs: ms,
       correctCount,
-      previousBestMs,
+      previousBest,
       isBestTime,
+      gainedExp: expForHundred({ elapsedMs: ms, correctCount }),
+      expBefore,
     }
     play.value = null
     game.screen = 'hundredResult'
@@ -166,7 +180,8 @@ export const useHundredStore = defineStore('hundred', () => {
   return {
     operation,
     records,
-    bestTimes,
+    bestRecords,
+    level,
     play,
     result,
     currentAnswer,

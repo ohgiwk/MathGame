@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useGameStore } from '../stores/gameStore'
 import { usePreferencesStore } from '../stores/preferencesStore'
 import { useCourseStore } from '../stores/courseStore'
@@ -24,11 +24,13 @@ import {
   HOME_MODE_LABELS,
 } from '../logic/labels'
 import { HUNDRED_OPERATIONS, formatLapTime } from '../logic/hundredGrid'
+import { missCount } from '../logic/hundredRecords'
 
 const store = useGameStore()
 const preferences = usePreferencesStore()
 const courseStore = useCourseStore()
 const hundred = useHundredStore()
+const hundredBest = computed(() => hundred.bestRecords[hundred.operation])
 courseStore.refreshDay()
 // every button here clicks, including those in the daily mission dialog
 const playButtonSound = useButtonSounds()
@@ -116,12 +118,12 @@ function handleStart() {
 
       <div class="rpg-card setup-section enter-item" style="--i: 2">
         <h2 class="section-label"><span class="section-gem">◆</span> ベストタイム</h2>
-        <p v-if="hundred.bestTimes[hundred.operation] !== undefined" class="best-time">
-          {{ formatLapTime(hundred.bestTimes[hundred.operation]!) }}
-        </p>
+        <template v-if="hundredBest !== undefined">
+          <p class="best-time">{{ formatLapTime(hundredBest.elapsedMs) }}</p>
+          <p class="best-misses">ミス回数：{{ missCount(hundredBest) }}</p>
+        </template>
         <p v-else class="best-time empty">まだ記録がありません</p>
         <p class="hundred-note">左の数と上の数を計算して、左上から順にますを埋めよう</p>
-        <p class="hundred-note">全問正解したときのタイムが記録されます</p>
       </div>
 
       <button
@@ -462,6 +464,13 @@ function handleStart() {
   letter-spacing: 0.04em;
   color: var(--gold-light);
   margin-bottom: 0.5rem;
+}
+.best-misses {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--danger-text);
+  margin: -0.5rem 0 0.5rem;
 }
 .best-time.empty {
   font-size: 0.9rem;

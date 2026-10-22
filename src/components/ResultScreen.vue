@@ -14,9 +14,9 @@ import {
 } from '../logic/format'
 import { RATING_LABELS, gameKindLabel } from '../logic/labels'
 import { useCountUp } from '../composables/useCountUp'
-import { expForScore, totalExp, levelFromExp, levelRatio } from '../logic/level'
-import { soundPlayer, expTickPitch } from '../logic/sound'
-import LevelBar from './LevelBar.vue'
+import { expForScore, totalExp, levelFromExp } from '../logic/level'
+import { soundPlayer } from '../logic/sound'
+import ExpCard from './ExpCard.vue'
 
 const store = useGameStore()
 const statsStore = useStatsStore()
@@ -50,49 +50,12 @@ const shownSeconds = useCountUp(r?.outcome.elapsedSeconds ?? 0, { duration: 600,
 const averageTime = r ? formatAverageTime(r.outcome.elapsedSeconds, r.outcome.totalAnswered) : null
 
 // The score turns into EXP, which pours into the level bar once the numbers have counted up.
-// The bar fills, empties and fills again for every level gained on the way.
 // This game is already among the records, so the EXP before it is the total less its share.
 const gainedExp = r ? expForScore(r.score.score) : 0
 const expAfter = totalExp(statsStore.records)
 const expBefore = Math.max(expAfter - gainedExp, 0)
-const startLevel = levelFromExp(expBefore).level
 const finalLevel = levelFromExp(expAfter)
-const levelsGained = finalLevel.level - startLevel
-const shownExp = ref(expBefore)
-const shownLevel = computed(() => levelFromExp(shownExp.value))
-/** levels gained so far on screen; the level-up flourish plays again each time it goes up */
-const levelUps = computed(() => shownLevel.value.level - startLevel)
 const EXP_DELAY_MS = 1450
-const EXP_FILL_MS = Math.min(900 + 450 * levelsGained, 3200)
-let expTimer: ReturnType<typeof setTimeout> | null = null
-let expFrame: number | null = null
-/** Time between the blips that sound while the bar moves */
-const EXP_TICK_INTERVAL_MS = 70
-
-function fillExp() {
-  const startedAt = performance.now()
-  let lastTickAt = -Infinity
-  const tick = (now: number) => {
-    const progress = Math.min((now - startedAt) / EXP_FILL_MS, 1)
-    // eases in and out, so each level-up along the way gets a moment of its own
-    const eased = progress < 0.5 ? 2 * progress ** 2 : 1 - (-2 * progress + 2) ** 2 / 2
-    const previous = shownExp.value
-    const previousLevel = shownLevel.value.level
-    shownExp.value = Math.round(expBefore + gainedExp * eased)
-    if (preferences.soundEffects) {
-      // a level-up chimes instead of the blip; otherwise the blip rises with the bar
-      if (shownLevel.value.level > previousLevel) {
-        soundPlayer.play('levelUp')
-        lastTickAt = now
-      } else if (shownExp.value !== previous && now - lastTickAt >= EXP_TICK_INTERVAL_MS) {
-        soundPlayer.play('expTick', expTickPitch(levelRatio(shownLevel.value)))
-        lastTickAt = now
-      }
-    }
-    expFrame = progress < 1 ? requestAnimationFrame(tick) : null
-  }
-  expFrame = requestAnimationFrame(tick)
-}
 
 // The panel has three slides side by side: this game's result, the earlier games with the same
 // settings (this one included, as the newest), and the totals over every game played so far.
@@ -135,11 +98,7 @@ function cancelAutoSlide() {
 onMounted(() => {
   // an endless game's finish sounds like a clear, as it is not shown as a failure either
   if (r && preferences.soundEffects) soundPlayer.play(isGameOver.value ? 'gameover' : 'clear')
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    shownExp.value = expAfter
-    return
-  }
-  expTimer = setTimeout(fillExp, EXP_DELAY_MS)
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
   autoSlideTimer = setTimeout(() => {
     autoSlideTimer = null
     showSlide(1)
@@ -148,8 +107,6 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   cancelAutoSlide()
-  if (expTimer !== null) clearTimeout(expTimer)
-  if (expFrame !== null) cancelAnimationFrame(expFrame)
 })
 </script>
 
@@ -310,17 +267,7 @@ onBeforeUnmount(() => {
         </div>
       </div>
 
-      <!-- EXP earned and the level it leads to -->
-      <div class="exp-card rpg-card">
-        <div class="exp-head">
-          <span class="exp-label">EXP</span>
-          <span class="exp-gain">+{{ formatScore(gainedExp) }}</span>
-          <span v-if="levelUps > 0" :key="levelUps" class="level-up">
-            LEVEL UP!<template v-if="levelUps > 1"> ×{{ levelUps }}</template>
-          </span>
-        </div>
-        <LevelBar :progress="shownLevel" :bump-key="levelUps" />
-      </div>
+      <ExpCard :exp-before="expBefore" :gained-exp="gainedExp" :delay="EXP_DELAY_MS" />
 
       <!-- Buttons -->
       <div class="result-actions">
@@ -605,9 +552,7 @@ onBeforeUnmount(() => {
 }
 @media (prefers-reduced-motion: reduce) {
   .stat-tile,
-  .best-badge,
-  .exp-card,
-  .level-up {
+  .best-badge {
     animation: none;
   }
   .slides {
@@ -676,50 +621,6 @@ onBeforeUnmount(() => {
   font-variant-numeric: tabular-nums;
 }
 
-.exp-card {
-  padding: 0.7rem 1rem 0.85rem;
-  animation: tile-pop 0.4s cubic-bezier(0.22, 1, 0.36, 1) 1.2s backwards;
-}
-.exp-head {
-  display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
-  margin-bottom: 0.35rem;
-}
-.exp-label {
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: var(--text-sub);
-  letter-spacing: 0.1em;
-}
-.exp-gain {
-  font-size: 0.95rem;
-  font-weight: 900;
-  color: var(--gem-teal);
-  font-variant-numeric: tabular-nums;
-}
-.level-up {
-  margin-left: auto;
-  font-size: 0.95rem;
-  font-weight: 900;
-  letter-spacing: 0.08em;
-  color: var(--gold-light);
-  text-shadow: 0 0 12px rgba(var(--gold-light-rgb), 0.6);
-  animation: level-up-pop 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-}
-:root[data-theme='light'] .level-up {
-  text-shadow: none;
-}
-@keyframes level-up-pop {
-  0% {
-    opacity: 0;
-    transform: translateY(6px) scale(0.6);
-  }
-  50% {
-    opacity: 1;
-    transform: translateY(-3px) scale(1.2);
-  }
-}
 .level-prefix {
   font-size: 1.1rem;
   margin-right: 3px;
